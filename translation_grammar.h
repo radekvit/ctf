@@ -4,26 +4,23 @@
 #include <generic_types.h>
 #include <utility>
 
-namespace tg
-{
+namespace tg {
 
-class TranslationGrammar
-{
+class TranslationGrammar {
 public:
-    class LookupFailure
-    {
+    class LookupFailure {
         string msg_;
+
     public:
         string what() { return msg_; }
     };
 
-    class Terminal
-    {
+    class Terminal {
         string name_;
         string attribute_;
+
     public:
-        Terminal(string &name, string &str = ""):
-        name_(name), attribute_(str)
+        Terminal(string &name, string &str = "") : name_(name), attribute_(str)
         {
         }
 
@@ -39,20 +36,14 @@ public:
             return lhs.name() == rhs.name();
         }
 
-        static Terminal EOI()
-        {
-            return Terminal("EOI");
-        }
+        static Terminal EOI() { return Terminal("EOI"); }
     };
 
-    class Nonterminal
-    {
+    class Nonterminal {
         string name_;
+
     public:
-        Nonterminal(string &name_):
-        name_(name)
-        {
-        }
+        Nonterminal(string &name_) : name_(name) {}
 
         const string &name() const { return name_; }
 
@@ -67,13 +58,12 @@ public:
         }
     };
 
-    struct Symbol
-    {
+    struct Symbol {
         enum class Type {
             TERMINAL,
             NONTERMINAL,
             EPSILON,
-            OPENING_BRACKET,    //allow precedence analysis
+            OPENING_BRACKET, // allow precedence analysis
         } type;
         union {
             Terminal terminal;
@@ -81,13 +71,13 @@ public:
         } value;
     };
 
-    class Rule
-    {
+    class Rule {
     private:
         Symbol nonterm_;
 
-        vector<Symbol> input_; //input of length at least 1
+        vector<Symbol> input_; // input of length at least 1
         vector<Symbol> output_;
+
     public:
         void swap_sides() { std::swap(input_, output_); }
 
@@ -97,6 +87,7 @@ public:
     };
 
     using RuleMap = map<Nonterminal, vector<Rule>>;
+
 private:
     LetterMap mapper_;
     ReverseLetterMap revmapper_;
@@ -111,12 +102,17 @@ public:
     TranslationGrammar();
     ~TranslationGrammar();
 
-    void swap_sides() { for (auto &n: nonterminals_) for (auto &r: rules_[n]) { r.swap_sides(); } }
+    void swap_sides()
+    {
+        for (auto &n : nonterminals_)
+            for (auto &r : rules_[n]) {
+                r.swap_sides();
+            }
+    }
     string map_value(Value v);
-    const &vector<Rule> rules() const { return rules_; } 
+    const &vector<Rule> rules() const { return rules_; }
 
-    const Rule & 
+    const Rule &
 };
-
 }
 #endif

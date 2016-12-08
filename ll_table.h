@@ -4,21 +4,19 @@
 #include <generic_types.h>
 #include <translation_grammar.h>
 
-namespace bp
-{
+namespace bp {
 
-class LLTable
-{
+class LLTable {
 public:
     using col = size_t;
     using row = vector<col>;
     using Terminal = TranslationGrammar::Terminal;
     using Nonterminal = TranslationGrammar::Nonterminal;
+
 private:
 public:
     LLTable();
 };
-
 }
 
 #endif
