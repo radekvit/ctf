@@ -19,7 +19,7 @@ constexpr void TranslationGrammar::create_ll_table()
     create_first(empty, first);
     create_follow(empty, first, follow);
     create_predict(empty, first, follow);
-    return create_ll(empty, first, follow, predict);
+    return create_ll(predict);
 }
 
 void TranslationGrammar::create_empty(vector<bool> &empty)
@@ -190,10 +190,7 @@ bool TranslationGrammar::rule_follow(const Rule &r, const vector<bool> &empty,
     return changed;
 }
 
-void create_predict(const vector<bool> &empty,
-                    const vector<vector<Terminal>> &first,
-                    const vector<vector<Terminal>> &follow,
-                    vector<vector<Terminal>> &predict)
+void create_predict(vector<vector<Terminal>> &predict)
 {
     for (auto &n : nonterminals_) {
         for (auto &r : rules_[n]) {
@@ -247,5 +244,6 @@ LLTable create_ll(const vector<bool> &empty,
         }
         offset += rules_[n].size();
     }
+    return LLTable(rows);
 }
 }
