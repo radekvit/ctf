@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <ll_table.h>
 #include <translation_grammar.h>
 namespace bp {
 
@@ -8,7 +9,7 @@ size_t TranslationGrammar::nonterm_index(const Nonterminal &nt)
            nonterminals_.begin();
 }
 
-constexpr void TranslationGrammar::create_ll_table()
+LLTable TranslationGrammar::create_ll_table()
 {
     vector<bool> empty;
     vector<vector<Terminal>> first;
@@ -18,7 +19,7 @@ constexpr void TranslationGrammar::create_ll_table()
     create_empty(empty);
     create_first(empty, first);
     create_follow(empty, first, follow);
-    create_predict(empty, first, follow);
+    create_predict(empty, first, follow, predict);
     return create_ll(predict);
 }
 
@@ -27,7 +28,7 @@ void TranslationGrammar::create_empty(vector<bool> &empty)
     for (auto &n : nonterminals_) {
         bool isempty = false;
         for (auto &r : rules_[n]) {
-            if (r.input()[0].type == Rule::type::EPSILON) {
+            if (r.input()[0].type == Symbol::Type::EPSILON) {
                 isempty = true;
                 break;
             }
@@ -48,7 +49,7 @@ void TranslationGrammar::create_empty(vector<bool> &empty)
                 for (auto &s : r.input()) {
                     switch (s.type) {
                     case Symbol::Type::NONTERMINAL:
-                        if (empty[nonterm_index(s.value.Nonterminal)] == false)
+                        if (empty[nonterm_index(s.value.nonterminal)] == false)
                             isempty = false;
                         break;
                     case Symbol::Type::TERMINAL:
@@ -57,7 +58,7 @@ void TranslationGrammar::create_empty(vector<bool> &empty)
                     case Symbol::Type::EPSILON:
                         break;
                     default:
-                        // not defined
+                        break; // not defined
                     }
                 }
                 if (isempty) {
@@ -73,6 +74,7 @@ void TranslationGrammar::create_first(const vector<bool> &empty,
                                       vector<vector<Terminal>> &first)
 {
     for (auto &n : nonterminals_) {
+        (void)n;
         first.push_back(vector<Terminal>());
     }
     bool changed;
@@ -83,12 +85,15 @@ void TranslationGrammar::create_first(const vector<bool> &empty,
             size_t i = it - nonterminals_.begin();
             auto &rfirst = first[i];
             for (auto &r : rules_[n]) {
-                if (modify_first(rfirst, r.input()[0]))
+                if (modify_first(rfirst, r.input()[0], first))
                     changed = true;
                 for (auto nit = r.input().begin() + 1;
-                     it != r.input().end() && empty[nonterm_index(*nit)];
-                     ++it) {
-                    if (modify_first(rfirst, *nit))
+                     nit != r.input().end() &&
+                     nit->type == Symbol::Type::NONTERMINAL &&
+                     empty[nonterm_index(
+                         nit->value.nonterminal)]; // TODO look into this
+                     ++nit) {
+                    if (modify_first(rfirst, *nit, first))
                         changed = true;
                 }
             }
@@ -97,7 +102,8 @@ void TranslationGrammar::create_first(const vector<bool> &empty,
 }
 
 bool TranslationGrammar::modify_first(vector<Terminal> &target,
-                                      const Symbol &symbol)
+                                      const Symbol &symbol,
+                                      const vector<vector<Terminal>> &first)
 {
     switch (symbol.type) {
     case Symbol::Type::TERMINAL:
@@ -110,12 +116,11 @@ bool TranslationGrammar::modify_first(vector<Terminal> &target,
     case Symbol::Type::NONTERMINAL:
         if (modify_set(target, first[nonterm_index(symbol.value.nonterminal)]))
             return true;
+        break;
+    default:
+        break;
     }
-    break;
-default:
-    break;
-}
-return false;
+    return false;
 }
 
 bool TranslationGrammar::modify_set(vector<Terminal> &target,
@@ -131,6 +136,7 @@ void TranslationGrammar::create_follow(const vector<bool> &empty,
                                        vector<vector<Terminal>> &follow)
 {
     for (auto &n : nonterminals_) {
+        (void)n;
         follow.push_back(vector<Terminal>());
     }
     follow[nonterm_index(starting_symbol_.value.nonterminal)].push_back(
@@ -140,7 +146,7 @@ void TranslationGrammar::create_follow(const vector<bool> &empty,
     do {
         changed = false;
         for (auto &n : nonterminals_) {
-            for (auto &r : rules_) {
+            for (auto &r : rules_[n]) {
                 if (rule_follow(r, empty, first, follow))
                     changed = true;
             }
@@ -155,7 +161,7 @@ bool TranslationGrammar::rule_follow(const Rule &r, const vector<bool> &empty,
     bool changed = false;
     for (auto it = r.input().begin(); it < r.input().end(); ++it) {
         if (it->type == Symbol::Type::NONTERMINAL) {
-            size_t i = nonterm_index(*it);
+            size_t i = nonterm_index(it->value.nonterminal);
             bool isepsilon = true;
             vector<Terminal> groupfirst;
             for (auto it2 = it + 1; it != r.input().end(); ++it2) {
@@ -177,7 +183,9 @@ bool TranslationGrammar::rule_follow(const Rule &r, const vector<bool> &empty,
                 }
             }
             if (isepsilon) {
-                if(modify_set(follow[i], follow[nonterm_index(r.nonterm().value.nonterminal]))
+                if (modify_set(
+                        follow[i],
+                        follow[nonterm_index(r.nonterm().value.nonterminal)]))
                     changed = true;
             }
             if (it != r.input().end() - 1) // at least one symbol
@@ -190,7 +198,10 @@ bool TranslationGrammar::rule_follow(const Rule &r, const vector<bool> &empty,
     return changed;
 }
 
-void create_predict(vector<vector<Terminal>> &predict)
+void TranslationGrammar::create_predict(const vector<bool> &empty,
+                                        const vector<vector<Terminal>> &first,
+                                        const vector<vector<Terminal>> &follow,
+                                        vector<vector<Terminal>> &predict)
 {
     for (auto &n : nonterminals_) {
         for (auto &r : rules_[n]) {
@@ -199,7 +210,7 @@ void create_predict(vector<vector<Terminal>> &predict)
                 follow[nonterm_index(r.nonterm().value.nonterminal)];
             bool isEmpty = true;
             for (auto &s : r.input()) {
-                modify_first(groupfirst, s);
+                modify_first(groupfirst, s, first);
                 if (s.type == Symbol::Type::TERMINAL) {
                     isEmpty = false;
                     break;
@@ -213,31 +224,27 @@ void create_predict(vector<vector<Terminal>> &predict)
             predict.push_back(groupfirst);
 
             if (isEmpty) {
-                predict.back() = set_intersection(predict.back(), rfollow);
+                predict.back() = set_union(predict.back(), rfollow);
             }
         }
     }
 }
 
-LLTable create_ll(const vector<bool> &empty,
-                  const vector<vector<Terminal>> &first,
-                  const vector<vector<Terminal>> &follow)
+LLTable TranslationGrammar::create_ll(const vector<vector<Terminal>> &predict)
 {
     vector<LLTable::row> rows;
     size_t offset = 0;
-    for (auto it = nonterminals_.begin(); it != nonterminals_.end(); ++it) {
-        size_t i = it - nonterminals_begin();
-        auto &n = *it;
+    for (auto &n: nonterminals_) {
         const LLTable::col invalid_value = rules_[n].size();
         rows.push_back(LLTable::row());
         LLTable::row &row = rows.back();
         for (auto &t : terminals_) {
             row.push_back(invalid_value);
-            for (auto it2 = rules_[n].begin(); it2 != rules_[n].end(); ++it) {
-                size_t i2 = it2 = rules_[n].begin();
-                auto &r = *it2;
-                if (is_in(predict[i2 + offset], t)) {
-                    row.back() = i2;
+            for (auto it = rules_[n].begin(); it != rules_[n].end(); ++it) {
+                size_t i = it - rules_[n].begin();
+
+                if (is_in(predict[i + offset], t)) {
+                    row.back() = i;
                     break; // assuming no other rule has it
                 }
             }
