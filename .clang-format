@@ -1,0 +1,6 @@
+BasedOnStyle: llvm
+IndentWidth: 4
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction:   true
+AccessModifierOffset: -4
