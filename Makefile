@@ -1,15 +1,23 @@
 APPNAME=bp
 INCLUDEDIR=include
 SRCDIR=src
-CXXFLAGS=-std=c++14 -Wall -Wextra -pedantic -I. -I $(INCLUDEDIR)
+CXXFLAGS+=-std=c++14 -Wall -Wextra -pedantic -I. -I $(INCLUDEDIR)
 
 HEADERS=$(INCLUDEDIR)/generic_types.h $(INCLUDEDIR)/ll_table.h \
 $(INCLUDEDIR)/translation_grammar.h
 OBJFILES=main.o translation_grammar.o
 
-.PHONY: all format clean format
+.PHONY: all format clean debug build
 
-all: $(APPNAME)
+all: debug
+
+build: $(APPNAME)
+
+debug: CXXFLAGS+=-g -O0
+debug: build
+
+deploy: CXXFLAGS+=-O3
+deploy: build
 
 $(APPNAME): $(OBJFILES)
 	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
