@@ -1,11 +1,13 @@
 APPNAME=bp
-INCLUDEDIR=include
-SRCDIR=src
-CXXFLAGS+=-std=c++14 -Wall -Wextra -pedantic -I. -I $(INCLUDEDIR)
+INCLUDE=include
+SRC=src
+CXXFLAGS+=-std=c++14 -Wall -Wextra -pedantic -I. -I $(INCLUDE)
+OBJ=obj
+$(shell mkdir -p $(OBJ))
 
-HEADERS=$(INCLUDEDIR)/generic_types.h $(INCLUDEDIR)/ll_table.h \
-$(INCLUDEDIR)/translation_grammar.h
-OBJFILES=main.o translation_grammar.o
+HEADERS=$(INCLUDE)/generic_types.h $(INCLUDE)/ll_table.h \
+$(INCLUDE)/translation_grammar.h
+OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
 
 .PHONY: all format clean debug build
 
@@ -16,17 +18,17 @@ build: $(APPNAME)
 debug: CXXFLAGS+=-g -O0
 debug: build
 
-deploy: CXXFLAGS+=-O3
+deploy: CXXFLAGS+=-O3 -DNDEBUG
 deploy: build
 
 $(APPNAME): $(OBJFILES)
 	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
 
-%.o: $(SRCDIR)/%.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) -c $<
+$(OBJ)/%.o: $(SRC)/%.cpp $(HEADERS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	-rm -f $(OBJFILES) $(APPNAME)
 
 format:
-	clang-format -style=file -i $(SRCDIR)/*.cpp $(INCLUDEDIR)/*.h
+	clang-format -style=file -i $(SRC)/*.cpp $(INCLUDE)/*.h

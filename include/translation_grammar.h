@@ -78,15 +78,21 @@ public:
 
         Terminal terminal;
         Nonterminal nonterminal;
-        Symbol(Type _type, Value _value);
+        Symbol(Type _type) : type(_type) {}
+        Symbol(Terminal _terminal) : type(Type::TERMINAL), terminal(_terminal)
+        {
+        }
+        Symbol(Nonterminal _nonterminal)
+            : type(Type::NONTERMINAL), nonterminal(_nonterminal)
+        {
+        }
         ~Symbol() = default;
 
         friend bool operator<(const Symbol &lhs, const Symbol &rhs)
         {
-            if(lhs.type != rhs.type)
+            if (lhs.type != rhs.type)
                 return false;
-            switch(lhs.type)
-            {
+            switch (lhs.type) {
             case Symbol::Type::TERMINAL:
                 return lhs.terminal < rhs.terminal;
             case Symbol::Type::NONTERMINAL:
@@ -98,10 +104,9 @@ public:
 
         friend bool operator==(const Symbol &lhs, const Symbol &rhs)
         {
-            if(lhs.type != rhs.type)
+            if (lhs.type != rhs.type)
                 return false;
-            switch(lhs.type)
-            {
+            switch (lhs.type) {
             case Symbol::Type::TERMINAL:
                 return lhs.terminal == rhs.terminal;
             case Symbol::Type::NONTERMINAL:
@@ -121,9 +126,10 @@ public:
 
     public:
         Rule(const Nonterminal &_nonterm, const vector<Symbol> &_input,
-             const vector<Symbol> &_output):
-             nonterm_(_nonterm), input_(_input), output_(_output)
-        {}
+             const vector<Symbol> &_output)
+            : nonterm_(_nonterm), input_(_input), output_(_output)
+        {
+        }
         ~Rule() = default;
         void swap_sides() { std::swap(input_, output_); }
 
@@ -133,7 +139,8 @@ public:
 
         friend bool operator<(const Rule &lhs, const Rule &rhs)
         {
-            return lhs.nonterm() < rhs.nonterm() ? true : lhs.input() < rhs.input();
+            return lhs.nonterm() < rhs.nonterm() ? true
+                                                 : lhs.input() < rhs.input();
         }
         friend bool operator>(const Rule &lhs, const Rule &rhs)
         {
@@ -141,7 +148,8 @@ public:
         }
         friend bool operator==(const Rule &lhs, const Rule &rhs)
         {
-            return lhs.nonterm() == rhs.nonterm() ? lhs.input() == rhs.input() : false;
+            return lhs.nonterm() == rhs.nonterm() ? lhs.input() == rhs.input()
+                                                  : false;
         }
         friend bool operator!=(const Rule &lhs, const Rule &rhs)
         {
@@ -179,8 +187,10 @@ private:
 
 public:
     TranslationGrammar();
-    TranslationGrammar(const vector<Terminal> &terminals, const vector<Nonterminal> &nonterminals, vector<Rule> &rules, const Symbol &starting_symbol);
-    ~TranslationGrammar();
+    TranslationGrammar(const vector<Terminal> &terminals,
+                       const vector<Nonterminal> &nonterminals,
+                       vector<Rule> &rules, const Symbol &starting_symbol);
+    ~TranslationGrammar() = default;
 
     void swap_sides()
     {

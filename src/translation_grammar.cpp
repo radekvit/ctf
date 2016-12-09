@@ -1,26 +1,29 @@
 #include <algorithm>
 #include <ll_table.h>
-#include <translation_grammar.h>
 #include <stdexcept>
+#include <translation_grammar.h>
+#include <iostream>
 namespace bp {
 
-TranslationGrammar::TranslationGrammar(const vector<Terminal> &terminals, const vector<Nonterminal> &nonterminals, vector<Rule> &rules, const Symbol &starting_symbol):
-terminals_(terminals), nonterminals_(nonterminals), starting_symbol_(starting_symbol)
+TranslationGrammar::TranslationGrammar(const vector<Terminal> &terminals,
+                                       const vector<Nonterminal> &nonterminals,
+                                       vector<Rule> &rules,
+                                       const Symbol &starting_symbol)
+    : terminals_(terminals), nonterminals_(nonterminals),
+      starting_symbol_(starting_symbol)
 {
     sort(terminals_.begin(), terminals_.end());
     sort(nonterminals_.begin(), nonterminals_.end());
     sort(rules.begin(), rules.end());
-    if(starting_symbol_.type != Symbol::Type::NONTERMINAL)
+    if (starting_symbol_.type != Symbol::Type::NONTERMINAL)
         throw std::invalid_argument("Starting symbol must be a nonterminal");
-    for (auto &r: rules)
-    {
-        if(!is_in(nonterminals_, r.nonterm()))
-            throw std::invalid_argument("No nonterminal exists" + r.nonterm().name());
+    for (auto &r : rules) {
+        if (!is_in(nonterminals_, r.nonterm()))
+            throw std::invalid_argument("No nonterminal exists" +
+                                        r.nonterm().name());
         rules_[r.nonterm()].push_back(r);
     }
-
 }
-
 
 size_t TranslationGrammar::nonterm_index(const Nonterminal &nt)
 {
@@ -39,6 +42,38 @@ LLTable TranslationGrammar::create_ll_table()
     create_first(empty, first);
     create_follow(empty, first, follow);
     create_predict(empty, first, follow, predict);
+    #ifndef NDEBUG
+    using std::cerr;
+
+    size_t i = 0;
+    for (auto &n: nonterminals_) for (auto &r: rules_[n]) {
+        cerr << "Predict for rule" << i << " from " << r.nonterm().name() << "=> ";
+        for (auto &s: r.input())
+        {
+            switch(s.type)
+            {
+            case Symbol::Type::EPSILON:
+                cerr << "EPSION ";
+                break;
+            case Symbol::Type::NONTERMINAL:
+                cerr << s.nonterminal.name() << " ";
+                break;
+            case Symbol::Type::TERMINAL:
+                cerr << s.terminal.name() << " ";
+                break;
+            default:
+                break;
+            }
+        }
+        cerr << "\n";
+        for(auto &t: predict[i])
+        {
+            cerr << t.name() << " ";
+        }
+        cerr << "\n";
+        i++;
+    }
+    #endif
     return create_ll(predict);
 }
 
@@ -106,11 +141,13 @@ void TranslationGrammar::create_first(const vector<bool> &empty,
             for (auto &r : rules_[n]) {
                 if (modify_first(rfirst, r.input()[0], first))
                     changed = true;
+                if(r.input()[0].type != Symbol::Type::NONTERMINAL || !empty[nonterm_index(r.input()[0].nonterminal)])
+                    continue;
                 for (auto nit = r.input().begin() + 1;
                      nit != r.input().end() &&
                      nit->type == Symbol::Type::NONTERMINAL &&
                      empty[nonterm_index(
-                         nit->nonterminal)]; // TODO look into this
+                         nit->nonterminal)];
                      ++nit) {
                     if (modify_first(rfirst, *nit, first))
                         changed = true;
@@ -183,7 +220,7 @@ bool TranslationGrammar::rule_follow(const Rule &r, const vector<bool> &empty,
             size_t i = nonterm_index(it->nonterminal);
             bool isepsilon = true;
             vector<Terminal> groupfirst;
-            for (auto it2 = it + 1; it != r.input().end(); ++it2) {
+            for (auto it2 = it + 1; it2 != r.input().end(); ++it2) {
                 size_t i2 = 0;
                 if (it2->type == Symbol::Type::NONTERMINAL) {
                     i2 = nonterm_index(it2->nonterminal);
@@ -202,8 +239,7 @@ bool TranslationGrammar::rule_follow(const Rule &r, const vector<bool> &empty,
                 }
             }
             if (isepsilon) {
-                if (modify_set(follow[i],
-                               follow[nonterm_index(r.nonterm())]))
+                if (modify_set(follow[i], follow[nonterm_index(r.nonterm())]))
                     changed = true;
             }
             if (it != r.input().end() - 1) // at least one symbol
@@ -224,8 +260,7 @@ void TranslationGrammar::create_predict(const vector<bool> &empty,
     for (auto &n : nonterminals_) {
         for (auto &r : rules_[n]) {
             vector<Terminal> groupfirst;
-            vector<Terminal> rfollow =
-                follow[nonterm_index(r.nonterm())];
+            vector<Terminal> rfollow = follow[nonterm_index(r.nonterm())];
             bool isEmpty = true;
             for (auto &s : r.input()) {
                 modify_first(groupfirst, s, first);
