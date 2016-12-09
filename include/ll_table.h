@@ -14,8 +14,10 @@ public:
     using Nonterminal = TranslationGrammar::Nonterminal;
 
 private:
+    vector<row> rows_;
+
 public:
-    LLTable();
+    LLTable(vector<row> rows) : rows_(rows) {}
 };
 }
 

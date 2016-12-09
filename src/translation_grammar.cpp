@@ -49,7 +49,7 @@ void TranslationGrammar::create_empty(vector<bool> &empty)
                 for (auto &s : r.input()) {
                     switch (s.type) {
                     case Symbol::Type::NONTERMINAL:
-                        if (empty[nonterm_index(s.value.nonterminal)] == false)
+                        if (empty[nonterm_index(s.nonterminal)] == false)
                             isempty = false;
                         break;
                     case Symbol::Type::TERMINAL:
@@ -91,7 +91,7 @@ void TranslationGrammar::create_first(const vector<bool> &empty,
                      nit != r.input().end() &&
                      nit->type == Symbol::Type::NONTERMINAL &&
                      empty[nonterm_index(
-                         nit->value.nonterminal)]; // TODO look into this
+                         nit->nonterminal)]; // TODO look into this
                      ++nit) {
                     if (modify_first(rfirst, *nit, first))
                         changed = true;
@@ -107,14 +107,14 @@ bool TranslationGrammar::modify_first(vector<Terminal> &target,
 {
     switch (symbol.type) {
     case Symbol::Type::TERMINAL:
-        if (!is_in(target, symbol.value.terminal)) {
-            target.push_back(symbol.value.terminal);
+        if (!is_in(target, symbol.terminal)) {
+            target.push_back(symbol.terminal);
             sort(target.begin(), target.end());
             return true;
         }
         break;
     case Symbol::Type::NONTERMINAL:
-        if (modify_set(target, first[nonterm_index(symbol.value.nonterminal)]))
+        if (modify_set(target, first[nonterm_index(symbol.nonterminal)]))
             return true;
         break;
     default:
@@ -139,7 +139,7 @@ void TranslationGrammar::create_follow(const vector<bool> &empty,
         (void)n;
         follow.push_back(vector<Terminal>());
     }
-    follow[nonterm_index(starting_symbol_.value.nonterminal)].push_back(
+    follow[nonterm_index(starting_symbol_.nonterminal)].push_back(
         Terminal::EOI());
 
     bool changed;
@@ -161,17 +161,17 @@ bool TranslationGrammar::rule_follow(const Rule &r, const vector<bool> &empty,
     bool changed = false;
     for (auto it = r.input().begin(); it < r.input().end(); ++it) {
         if (it->type == Symbol::Type::NONTERMINAL) {
-            size_t i = nonterm_index(it->value.nonterminal);
+            size_t i = nonterm_index(it->nonterminal);
             bool isepsilon = true;
             vector<Terminal> groupfirst;
             for (auto it2 = it + 1; it != r.input().end(); ++it2) {
                 size_t i2 = 0;
                 if (it2->type == Symbol::Type::NONTERMINAL) {
-                    i2 = nonterm_index(it2->value.nonterminal);
+                    i2 = nonterm_index(it2->nonterminal);
                     groupfirst = set_union(groupfirst, first[i2]); // set first
                 } else if (it2->type == Symbol::Type::TERMINAL) {
-                    if (!is_in(groupfirst, it2->value.terminal)) {
-                        groupfirst.push_back(it2->value.terminal);
+                    if (!is_in(groupfirst, it2->terminal)) {
+                        groupfirst.push_back(it2->terminal);
                         sort(groupfirst.begin(), groupfirst.end());
                     }
                 }
@@ -183,9 +183,8 @@ bool TranslationGrammar::rule_follow(const Rule &r, const vector<bool> &empty,
                 }
             }
             if (isepsilon) {
-                if (modify_set(
-                        follow[i],
-                        follow[nonterm_index(r.nonterm().value.nonterminal)]))
+                if (modify_set(follow[i],
+                               follow[nonterm_index(r.nonterm().nonterminal)]))
                     changed = true;
             }
             if (it != r.input().end() - 1) // at least one symbol
@@ -207,7 +206,7 @@ void TranslationGrammar::create_predict(const vector<bool> &empty,
         for (auto &r : rules_[n]) {
             vector<Terminal> groupfirst;
             vector<Terminal> rfollow =
-                follow[nonterm_index(r.nonterm().value.nonterminal)];
+                follow[nonterm_index(r.nonterm().nonterminal)];
             bool isEmpty = true;
             for (auto &s : r.input()) {
                 modify_first(groupfirst, s, first);
@@ -215,7 +214,7 @@ void TranslationGrammar::create_predict(const vector<bool> &empty,
                     isEmpty = false;
                     break;
                 } else if (s.type == Symbol::Type::NONTERMINAL) {
-                    if (empty[nonterm_index(s.value.nonterminal)] == false) {
+                    if (empty[nonterm_index(s.nonterminal)] == false) {
                         isEmpty = false;
                         break;
                     }
@@ -234,7 +233,7 @@ LLTable TranslationGrammar::create_ll(const vector<vector<Terminal>> &predict)
 {
     vector<LLTable::row> rows;
     size_t offset = 0;
-    for (auto &n: nonterminals_) {
+    for (auto &n : nonterminals_) {
         const LLTable::col invalid_value = rules_[n].size();
         rows.push_back(LLTable::row());
         LLTable::row &row = rows.back();

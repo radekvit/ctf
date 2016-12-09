@@ -20,7 +20,7 @@ template <class T> T set_union(const T &lhs, const T &rhs)
 {
     T r;
     std::set_union(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(),
-                          back_inserter(r));
+                   back_inserter(r));
     return r;
 }
 

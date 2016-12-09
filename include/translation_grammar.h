@@ -26,10 +26,23 @@ public:
             : name_(name), attribute_(str)
         {
         }
+        ~Terminal() = default;
 
         const string &name() const { return name_; }
 
         static Terminal EOI() { return Terminal("EOI"); }
+
+        friend bool operator<(const TranslationGrammar::Terminal &lhs,
+                              const TranslationGrammar::Terminal &rhs)
+        {
+            return lhs.name() < rhs.name();
+        }
+
+        friend bool operator==(const TranslationGrammar::Terminal &lhs,
+                               const TranslationGrammar::Terminal &rhs)
+        {
+            return lhs.name() == rhs.name();
+        }
     };
 
     class Nonterminal {
@@ -37,8 +50,21 @@ public:
 
     public:
         Nonterminal(const string &name) : name_(name) {}
+        ~Nonterminal() = default;
 
         const string &name() const { return name_; }
+
+        friend bool operator<(const TranslationGrammar::Nonterminal &lhs,
+                              const TranslationGrammar::Nonterminal &rhs)
+        {
+            return lhs.name() < rhs.name();
+        }
+
+        friend bool operator==(const TranslationGrammar::Nonterminal &lhs,
+                               const TranslationGrammar::Nonterminal &rhs)
+        {
+            return lhs.name() == rhs.name();
+        }
     };
 
     struct Symbol {
@@ -46,12 +72,12 @@ public:
             TERMINAL,
             NONTERMINAL,
             EPSILON,
-            OPENING_BRACKET, // allow precedence analysis
         } type;
-        union {
-            Terminal terminal;
-            Nonterminal nonterminal;
-        } value;
+
+        Terminal terminal;
+        Nonterminal nonterminal;
+        Symbol(Type _type, Value _value);
+        ~Symbol() = default;
     };
 
     class Rule {
@@ -62,8 +88,9 @@ public:
         vector<Symbol> output_;
 
     public:
-        Rule();
-        ~Rule();
+        Rule(const Symbol &nonterm, const vector<Symbol> input,
+             const vector<Symbol> output_);
+        ~Rule() = default;
         void swap_sides() { std::swap(input_, output_); }
 
         const Symbol &nonterm() const { return nonterm_; }
@@ -119,29 +146,5 @@ public:
 
     LLTable create_ll_table();
 };
-
-bool operator<(const TranslationGrammar::Nonterminal &lhs,
-               const TranslationGrammar::Nonterminal &rhs)
-{
-    return lhs.name() < rhs.name();
-}
-
-bool operator==(const TranslationGrammar::Nonterminal &lhs,
-                const TranslationGrammar::Nonterminal &rhs)
-{
-    return lhs.name() == rhs.name();
-}
-
-bool operator<(const TranslationGrammar::Terminal &lhs,
-               const TranslationGrammar::Terminal &rhs)
-{
-    return lhs.name() < rhs.name();
-}
-
-bool operator==(const TranslationGrammar::Terminal &lhs,
-                const TranslationGrammar::Terminal &rhs)
-{
-    return lhs.name() == rhs.name();
-}
 }
 #endif
