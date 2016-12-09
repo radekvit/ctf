@@ -1,7 +1,26 @@
 #include <algorithm>
 #include <ll_table.h>
 #include <translation_grammar.h>
+#include <stdexcept>
 namespace bp {
+
+TranslationGrammar::TranslationGrammar(const vector<Terminal> &terminals, const vector<Nonterminal> &nonterminals, vector<Rule> &rules, const Symbol &starting_symbol):
+terminals_(terminals), nonterminals_(nonterminals), starting_symbol_(starting_symbol)
+{
+    sort(terminals_.begin(), terminals_.end());
+    sort(nonterminals_.begin(), nonterminals_.end());
+    sort(rules.begin(), rules.end());
+    if(starting_symbol_.type != Symbol::Type::NONTERMINAL)
+        throw std::invalid_argument("Starting symbol must be a nonterminal");
+    for (auto &r: rules)
+    {
+        if(!is_in(nonterminals_, r.nonterm()))
+            throw std::invalid_argument("No nonterminal exists" + r.nonterm().name());
+        rules_[r.nonterm()].push_back(r);
+    }
+
+}
+
 
 size_t TranslationGrammar::nonterm_index(const Nonterminal &nt)
 {
@@ -184,7 +203,7 @@ bool TranslationGrammar::rule_follow(const Rule &r, const vector<bool> &empty,
             }
             if (isepsilon) {
                 if (modify_set(follow[i],
-                               follow[nonterm_index(r.nonterm().nonterminal)]))
+                               follow[nonterm_index(r.nonterm())]))
                     changed = true;
             }
             if (it != r.input().end() - 1) // at least one symbol
@@ -206,7 +225,7 @@ void TranslationGrammar::create_predict(const vector<bool> &empty,
         for (auto &r : rules_[n]) {
             vector<Terminal> groupfirst;
             vector<Terminal> rfollow =
-                follow[nonterm_index(r.nonterm().nonterminal)];
+                follow[nonterm_index(r.nonterm())];
             bool isEmpty = true;
             for (auto &s : r.input()) {
                 modify_first(groupfirst, s, first);

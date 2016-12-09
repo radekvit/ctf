@@ -21,6 +21,7 @@ public:
         string attribute_;
 
     public:
+        Terminal() = default;
         Terminal(const string &name) : name_(name) {}
         Terminal(const string &name, const string &str)
             : name_(name), attribute_(str)
@@ -49,6 +50,7 @@ public:
         string name_;
 
     public:
+        Nonterminal() = default;
         Nonterminal(const string &name) : name_(name) {}
         ~Nonterminal() = default;
 
@@ -78,32 +80,78 @@ public:
         Nonterminal nonterminal;
         Symbol(Type _type, Value _value);
         ~Symbol() = default;
+
+        friend bool operator<(const Symbol &lhs, const Symbol &rhs)
+        {
+            if(lhs.type != rhs.type)
+                return false;
+            switch(lhs.type)
+            {
+            case Symbol::Type::TERMINAL:
+                return lhs.terminal < rhs.terminal;
+            case Symbol::Type::NONTERMINAL:
+                return lhs.nonterminal < rhs.nonterminal;
+            default:
+                return false;
+            }
+        }
+
+        friend bool operator==(const Symbol &lhs, const Symbol &rhs)
+        {
+            if(lhs.type != rhs.type)
+                return false;
+            switch(lhs.type)
+            {
+            case Symbol::Type::TERMINAL:
+                return lhs.terminal == rhs.terminal;
+            case Symbol::Type::NONTERMINAL:
+                return lhs.nonterminal == rhs.nonterminal;
+            default:
+                return true;
+            }
+        }
     };
 
     class Rule {
     private:
-        Symbol nonterm_;
+        Nonterminal nonterm_;
 
         vector<Symbol> input_; // input of length at least 1
         vector<Symbol> output_;
 
     public:
-        Rule(const Symbol &nonterm, const vector<Symbol> input,
-             const vector<Symbol> output_);
+        Rule(const Nonterminal &_nonterm, const vector<Symbol> &_input,
+             const vector<Symbol> &_output):
+             nonterm_(_nonterm), input_(_input), output_(_output)
+        {}
         ~Rule() = default;
         void swap_sides() { std::swap(input_, output_); }
 
-        const Symbol &nonterm() const { return nonterm_; }
+        const Nonterminal &nonterm() const { return nonterm_; }
         const vector<Symbol> &input() const { return input_; }
         const vector<Symbol> &output() const { return output_; }
+
+        friend bool operator<(const Rule &lhs, const Rule &rhs)
+        {
+            return lhs.nonterm() < rhs.nonterm() ? true : lhs.input() < rhs.input();
+        }
+        friend bool operator>(const Rule &lhs, const Rule &rhs)
+        {
+            return rhs < lhs;
+        }
+        friend bool operator==(const Rule &lhs, const Rule &rhs)
+        {
+            return lhs.nonterm() == rhs.nonterm() ? lhs.input() == rhs.input() : false;
+        }
+        friend bool operator!=(const Rule &lhs, const Rule &rhs)
+        {
+            return !(lhs == rhs);
+        }
     };
 
     using RuleMap = map<Nonterminal, vector<Rule>>;
 
 private:
-    LetterMap mapper_;
-    ReverseLetterMap revmapper_;
-
     vector<Terminal> terminals_;
     vector<Nonterminal> nonterminals_;
     RuleMap rules_;
@@ -131,6 +179,7 @@ private:
 
 public:
     TranslationGrammar();
+    TranslationGrammar(const vector<Terminal> &terminals, const vector<Nonterminal> &nonterminals, vector<Rule> &rules, const Symbol &starting_symbol);
     ~TranslationGrammar();
 
     void swap_sides()
