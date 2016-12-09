@@ -3,17 +3,19 @@
 
 #include <generic_types.h>
 #include <utility>
+#include <stdexcept>
 
 namespace bp {
 class LLTable;
 
 class TranslationGrammar {
 public:
-    class LookupFailure {
-        string msg_;
+    class NotLLException : public std::logic_error {
+        using std::logic_error::logic_error;
+    };
 
-    public:
-        string what() { return msg_; }
+    class LLConversionException : public std::logic_error {
+        using std::logic_error::logic_error;        
     };
 
     class Terminal {
@@ -115,31 +117,37 @@ public:
                 return true;
             }
         }
+
+        friend bool operator!=(const Symbol &lhs, const Symbol &rhs)
+        {
+            return !(lhs == rhs);
+        }
     };
 
     class Rule {
     private:
-        Nonterminal nonterm_;
+        Nonterminal nonterminal_;
 
         vector<Symbol> input_; // input of length at least 1
         vector<Symbol> output_;
 
     public:
-        Rule(const Nonterminal &_nonterm, const vector<Symbol> &_input,
+
+        Rule(const Nonterminal &_nonterminal, const vector<Symbol> &_input,
              const vector<Symbol> &_output)
-            : nonterm_(_nonterm), input_(_input), output_(_output)
+            : nonterminal_(_nonterminal), input_(_input), output_(_output)
         {
         }
         ~Rule() = default;
         void swap_sides() { std::swap(input_, output_); }
 
-        const Nonterminal &nonterm() const { return nonterm_; }
+        const Nonterminal &nonterminal() const { return nonterminal_; }
         const vector<Symbol> &input() const { return input_; }
         const vector<Symbol> &output() const { return output_; }
 
         friend bool operator<(const Rule &lhs, const Rule &rhs)
         {
-            return lhs.nonterm() < rhs.nonterm() ? true
+            return lhs.nonterminal() < rhs.nonterminal() ? true
                                                  : lhs.input() < rhs.input();
         }
         friend bool operator>(const Rule &lhs, const Rule &rhs)
@@ -148,7 +156,7 @@ public:
         }
         friend bool operator==(const Rule &lhs, const Rule &rhs)
         {
-            return lhs.nonterm() == rhs.nonterm() ? lhs.input() == rhs.input()
+            return lhs.nonterminal() == rhs.nonterminal() ? lhs.input() == rhs.input()
                                                   : false;
         }
         friend bool operator!=(const Rule &lhs, const Rule &rhs)
@@ -186,10 +194,12 @@ private:
     LLTable create_ll(const vector<vector<Terminal>> &predict);
 
 public:
+    static const vector<Symbol> EPSILON_RULE_STRING;
+
     TranslationGrammar();
     TranslationGrammar(const vector<Terminal> &terminals,
                        const vector<Nonterminal> &nonterminals,
-                       vector<Rule> &rules, const Symbol &starting_symbol);
+                       const vector<Rule> &rules, const Symbol &starting_symbol);
     ~TranslationGrammar() = default;
 
     void swap_sides()
@@ -200,10 +210,14 @@ public:
             }
     }
 
-    string map_value(Value v);
+    const vector<Terminal> &terminals() const {return terminals_; }
+    const vector<Nonterminal> &nonterminals() const {return nonterminals_;}
     const RuleMap &rules() const { return rules_; }
+    const Symbol &starting_symbol() const {return starting_symbol_;}
 
     LLTable create_ll_table();
+
+    static TranslationGrammar make_LL(const TranslationGrammar &tg);
 };
 }
 #endif

@@ -1,5 +1,5 @@
-#include <translation_grammar.h>
 #include <ll_table.h>
+#include <translation_grammar.h>
 
 using namespace bp;
 

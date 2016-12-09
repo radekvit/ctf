@@ -4,23 +4,27 @@
 #include <translation_grammar.h>
 namespace bp {
 
+const vector<TranslationGrammar::Symbol> TranslationGrammar::EPSILON_RULE_STRING{
+            Symbol(Symbol::Type::EPSILON)};
+
 TranslationGrammar::TranslationGrammar(const vector<Terminal> &terminals,
                                        const vector<Nonterminal> &nonterminals,
-                                       vector<Rule> &rules,
+                                       const vector<Rule> &_rules,
                                        const Symbol &starting_symbol)
     : terminals_(terminals), nonterminals_(nonterminals),
       starting_symbol_(starting_symbol)
 {
     sort(terminals_.begin(), terminals_.end());
     sort(nonterminals_.begin(), nonterminals_.end());
-    sort(rules.begin(), rules.end());
+    vector<Rule> nrules(_rules);
+    sort(nrules.begin(), nrules.end());
     if (starting_symbol_.type != Symbol::Type::NONTERMINAL)
         throw std::invalid_argument("Starting symbol must be a nonterminal");
-    for (auto &r : rules) {
-        if (!is_in(nonterminals_, r.nonterm()))
+    for (auto &r : nrules) {
+        if (!is_in(nonterminals_, r.nonterminal()))
             throw std::invalid_argument("No nonterminal exists" +
-                                        r.nonterm().name());
-        rules_[r.nonterm()].push_back(r);
+                                        r.nonterminal().name());
+        rules_[r.nonterminal()].push_back(r);
     }
 }
 
@@ -108,13 +112,13 @@ void TranslationGrammar::create_first(const vector<bool> &empty,
             for (auto &r : rules_[n]) {
                 if (modify_first(rfirst, r.input()[0], first))
                     changed = true;
-                if(r.input()[0].type != Symbol::Type::NONTERMINAL || !empty[nonterm_index(r.input()[0].nonterminal)])
+                if (r.input()[0].type != Symbol::Type::NONTERMINAL ||
+                    !empty[nonterm_index(r.input()[0].nonterminal)])
                     continue;
                 for (auto nit = r.input().begin() + 1;
                      nit != r.input().end() &&
                      nit->type == Symbol::Type::NONTERMINAL &&
-                     empty[nonterm_index(
-                         nit->nonterminal)];
+                     empty[nonterm_index(nit->nonterminal)];
                      ++nit) {
                     if (modify_first(rfirst, *nit, first))
                         changed = true;
@@ -206,7 +210,7 @@ bool TranslationGrammar::rule_follow(const Rule &r, const vector<bool> &empty,
                 }
             }
             if (isepsilon) {
-                if (modify_set(follow[i], follow[nonterm_index(r.nonterm())]))
+                if (modify_set(follow[i], follow[nonterm_index(r.nonterminal())]))
                     changed = true;
             }
             if (it != r.input().end() - 1) // at least one symbol
@@ -227,7 +231,7 @@ void TranslationGrammar::create_predict(const vector<bool> &empty,
     for (auto &n : nonterminals_) {
         for (auto &r : rules_[n]) {
             vector<Terminal> groupfirst;
-            vector<Terminal> rfollow = follow[nonterm_index(r.nonterm())];
+            vector<Terminal> rfollow = follow[nonterm_index(r.nonterminal())];
             bool isEmpty = true;
             for (auto &s : r.input()) {
                 modify_first(groupfirst, s, first);
@@ -264,13 +268,95 @@ LLTable TranslationGrammar::create_ll(const vector<vector<Terminal>> &predict)
                 size_t i = it - rules_[n].begin();
 
                 if (is_in(predict[i + offset], t)) {
+                    if (row.back() != invalid_value)
+                        throw NotLLException("Multiple rules found for a "
+                                             "single cell of LL table.");
                     row.back() = i;
-                    break; // assuming no other rule has it
                 }
             }
         }
         offset += rules_[n].size();
     }
     return LLTable(rows);
+}
+
+TranslationGrammar
+TranslationGrammar::make_LL(const TranslationGrammar &tg) // tries to transform
+                                                          // this translation
+                                                          // grammar to input-ll
+                                                          // translation grammar
+{
+    const vector<Terminal> &terminals_ = tg.terminals();
+    const vector<Nonterminal> &nonterminals_ = tg.nonterminals();
+    const RuleMap &rules_ = tg.rules();
+    const Symbol &starting_symbol_ = tg.starting_symbol();
+    static const char EXPANTION_SYMBOL = '\'';
+    static const char RECURSION_SYMBOL = 'r';
+    vector<Nonterminal> nonterminals(nonterminals_);
+    RuleMap newRules(rules_);
+    // factorization
+
+    // left recursion removal
+    for (auto &n : nonterminals) {
+        bool leftRecursion = false;
+        size_t recursionIndex = 0;
+        for (auto it = newRules[n].begin(); it != newRules[n].end(); ++it) {
+            auto &r = *it;
+            size_t i = it - newRules[n].begin();
+            if (r.nonterminal() == r.input()[0]) { // rule with left recursion found
+                leftRecursion = true; // there should be at most one such rule
+                recursionIndex = i;
+                break;
+            }
+        }
+        if (leftRecursion) // remove left recursion by appending new nonterminal
+                           // to all other rules and creating right recursion in
+                           // place
+        {
+            vector<Rule> inPlaceRules(newRules[n]); // rules for old nonterminal
+            vector<Rule> newNewRules{
+                newRules[n][recursionIndex]}; // rules for new nonterminal
+            inPlaceRules.erase(inPlaceRules.begin() + recursionIndex);
+
+            string newNonterminalName = n.name(); // create new nonterminal
+            do {
+                newNonterminalName += RECURSION_SYMBOL; // new nonterminal name;
+            } while (is_in(nonterminals, Nonterminal(newNonterminalName)));
+            Nonterminal newNonterminal(newNonterminalName);
+            Symbol newNonterminalSymbol(newNonterminal);
+            nonterminals.push_back(newNonterminal);
+
+            // fix rule in newNewRules
+            vector<Symbol> input(newNewRules[0].input());
+            vector<Symbol> output(newNewRules[0].output());
+            if(output[0] != input[0])
+                throw LLConversionException("This grammar cannot be converted.");
+            input.erase(input.begin()); //remove nonterminal
+            input.push_back(newNonterminalSymbol);//append new nonterminal
+            output.erase(output.begin()); //remove origin nonterminal
+            output.push_back(newNonterminalSymbol); //append new nonterminal
+            newNewRules[0] = Rule(newNonterminal,input,output);
+            //add epsilon rule to newNewRules
+            newNewRules.push_back(
+                Rule(newNonterminal, EPSILON_RULE_STRING,
+                     EPSILON_RULE_STRING)); // add rule to epsilon
+
+            for (auto &r : inPlaceRules) // append new nonterminal
+            {
+                vector<Symbol> input(r.input());
+                input.push_back(newNonterminalSymbol);
+                vector<Symbol> output(r.output());
+                output.push_back(newNonterminalSymbol);
+                Rule tmp(r.nonterminal(), input, output);
+                std::swap(r, tmp);
+            }
+            newRules[inPlaceRules[0].nonterminal()] = inPlaceRules;
+            newRules[newNonterminal] = newNewRules;
+        }
+    }
+    vector<Rule> allRules;
+    //TODO push all rules into allRules
+    return TranslationGrammar(terminals_, nonterminals, allRules,
+                              starting_symbol_);
 }
 }
