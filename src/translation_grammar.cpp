@@ -2,7 +2,6 @@
 #include <ll_table.h>
 #include <stdexcept>
 #include <translation_grammar.h>
-#include <iostream>
 namespace bp {
 
 TranslationGrammar::TranslationGrammar(const vector<Terminal> &terminals,
@@ -42,38 +41,6 @@ LLTable TranslationGrammar::create_ll_table()
     create_first(empty, first);
     create_follow(empty, first, follow);
     create_predict(empty, first, follow, predict);
-    #ifndef NDEBUG
-    using std::cerr;
-
-    size_t i = 0;
-    for (auto &n: nonterminals_) for (auto &r: rules_[n]) {
-        cerr << "Predict for rule" << i << " from " << r.nonterm().name() << "=> ";
-        for (auto &s: r.input())
-        {
-            switch(s.type)
-            {
-            case Symbol::Type::EPSILON:
-                cerr << "EPSION ";
-                break;
-            case Symbol::Type::NONTERMINAL:
-                cerr << s.nonterminal.name() << " ";
-                break;
-            case Symbol::Type::TERMINAL:
-                cerr << s.terminal.name() << " ";
-                break;
-            default:
-                break;
-            }
-        }
-        cerr << "\n";
-        for(auto &t: predict[i])
-        {
-            cerr << t.name() << " ";
-        }
-        cerr << "\n";
-        i++;
-    }
-    #endif
     return create_ll(predict);
 }
 
