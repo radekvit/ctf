@@ -2,20 +2,22 @@
 #define XVITRA00_TG_H
 
 #include <generic_types.h>
-#include <utility>
 #include <stdexcept>
+#include <utility>
+#include <ostream>
 
 namespace bp {
 class LLTable;
 
 class TranslationGrammar {
 public:
+
     class NotLLException : public std::logic_error {
         using std::logic_error::logic_error;
     };
 
     class LLConversionException : public std::logic_error {
-        using std::logic_error::logic_error;        
+        using std::logic_error::logic_error;
     };
 
     class Terminal {
@@ -90,6 +92,26 @@ public:
         }
         ~Symbol() = default;
 
+        static const Symbol EPSILON;
+
+        void print(std::ostream &o) const
+        {
+            switch(type)
+            {
+            case Type::TERMINAL:
+                o << terminal.name();
+                return;
+            case Type::NONTERMINAL:
+                o << nonterminal.name();
+                return;
+            case Type::EPSILON:
+                o << "\u03B5";
+                return;
+            default:
+                return;
+            }
+        }
+
         friend bool operator<(const Symbol &lhs, const Symbol &rhs)
         {
             if (lhs.type != rhs.type)
@@ -131,11 +153,22 @@ public:
         vector<Symbol> input_; // input of length at least 1
         vector<Symbol> output_;
 
-    public:
+        //checks if nonterminals are in same space
+        void check_nonterminals();
 
+    public:
         Rule(const Nonterminal &_nonterminal, const vector<Symbol> &_input,
              const vector<Symbol> &_output)
             : nonterminal_(_nonterminal), input_(_input), output_(_output)
+        {
+            if(input_.size() == 0)
+                input_.push_back(Symbol::EPSILON);
+            if(output_.size() == 0)
+                output_.push_back(Symbol::EPSILON);
+            check_nonterminals();
+        }
+        Rule(const Nonterminal &_nonterminal, const vector<Symbol> &_both)
+            : Rule(_nonterminal, _both, _both)
         {
         }
         ~Rule() = default;
@@ -147,8 +180,9 @@ public:
 
         friend bool operator<(const Rule &lhs, const Rule &rhs)
         {
-            return lhs.nonterminal() < rhs.nonterminal() ? true
-                                                 : lhs.input() < rhs.input();
+            return lhs.nonterminal() < rhs.nonterminal()
+                       ? true
+                       : lhs.input() < rhs.input();
         }
         friend bool operator>(const Rule &lhs, const Rule &rhs)
         {
@@ -156,8 +190,9 @@ public:
         }
         friend bool operator==(const Rule &lhs, const Rule &rhs)
         {
-            return lhs.nonterminal() == rhs.nonterminal() ? lhs.input() == rhs.input()
-                                                  : false;
+            return lhs.nonterminal() == rhs.nonterminal()
+                       ? lhs.input() == rhs.input()
+                       : false;
         }
         friend bool operator!=(const Rule &lhs, const Rule &rhs)
         {
@@ -173,6 +208,11 @@ private:
     RuleMap rules_;
 
     Symbol starting_symbol_;
+
+    TranslationGrammar(const vector<Terminal> &terminals,
+                       const vector<Nonterminal> &nonterminals,
+                       const RuleMap &rules,
+                       const Symbol &starting_symbol);
 
     size_t nonterm_index(const Nonterminal &nt);
     void create_empty(vector<bool> &empty);
@@ -193,13 +233,17 @@ private:
                         vector<vector<Terminal>> &predict);
     LLTable create_ll(const vector<vector<Terminal>> &predict);
 
+    static TranslationGrammar factorize(const TranslationGrammar &);
+    static TranslationGrammar remove_left_recursion(const TranslationGrammar &);
+
 public:
     static const vector<Symbol> EPSILON_RULE_STRING;
 
     TranslationGrammar();
     TranslationGrammar(const vector<Terminal> &terminals,
                        const vector<Nonterminal> &nonterminals,
-                       const vector<Rule> &rules, const Symbol &starting_symbol);
+                       const vector<Rule> &rules,
+                       const Symbol &starting_symbol);
     ~TranslationGrammar() = default;
 
     void swap_sides()
@@ -210,14 +254,16 @@ public:
             }
     }
 
-    const vector<Terminal> &terminals() const {return terminals_; }
-    const vector<Nonterminal> &nonterminals() const {return nonterminals_;}
+    const vector<Terminal> &terminals() const { return terminals_; }
+    const vector<Nonterminal> &nonterminals() const { return nonterminals_; }
     const RuleMap &rules() const { return rules_; }
-    const Symbol &starting_symbol() const {return starting_symbol_;}
+    const Symbol &starting_symbol() const { return starting_symbol_; }
 
     LLTable create_ll_table();
 
-    static TranslationGrammar make_LL(const TranslationGrammar &tg);
+    static TranslationGrammar make_LL(const TranslationGrammar &);
+
+    void print(std::ostream &o);
 };
 }
 #endif
