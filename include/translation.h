@@ -11,13 +11,22 @@
 
 namespace bp {
 
+class TranslationException
+{
+};
+
 class Translation {
+    LexicalAnalyzer &lexicalAnalyzer_;
+    TranslationControl &translationControl_;
+    TranslationGrammar &translationGrammar_;
+    OutputGenerator &outputGenerator_;
+
 public:
-    Translation(Lexical_analyzer &la, TranslationControl &tc, TranslationGrammar &tg, SemanticAnalyzer &sa);
+    Translation(Lexical_analyzer &la, TranslationControl &tc, TranslationGrammar &tg, OutputGenerator &og);
     ~Translation() = default;
 
     void run(std::istream &input, std::ostream &output);
-}
+};
 
 }
 

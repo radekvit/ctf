@@ -10,6 +10,7 @@ namespace bp {
 
 using vector = std::vector;
 using string = std::string;
+using list = std::list;
 using Value = uint64_t;
 using map = std::map;
 using LetterMap = map<Value, string>;

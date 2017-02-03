@@ -6,10 +6,13 @@
 
 namespace bp {
 
+using Token = Terminal;
+
 class LexicalAnalyzer {
 public:
-    virtual void set_stream(std::istream &s) = 0;
-}
+    virtual void set_input(std::istream &s) = 0;
+    Token get_token();
+};
 
 }
 
