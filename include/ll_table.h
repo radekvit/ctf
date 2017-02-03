@@ -17,8 +17,13 @@ private:
     vector<row> rows_;
 
 public:
+    LLTable() = default;
+    LLTable(const LLTable &) = default;
+    LLTable(LLTable &&) = default;
     LLTable(vector<row> rows) : rows_(rows) {}
+    ~LLTable() = default;
 };
+
 }
 
 #endif

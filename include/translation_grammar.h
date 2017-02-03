@@ -1,151 +1,16 @@
 #ifndef XVITRA00_TG_H
 #define XVITRA00_TG_H
 
-#include <generic_types.h>
+#include <base.h>
+#include <ostream>
 #include <stdexcept>
 #include <utility>
-#include <ostream>
 
 namespace bp {
 class LLTable;
 
 class TranslationGrammar {
 public:
-
-    class NotLLException : public std::logic_error {
-        using std::logic_error::logic_error;
-    };
-
-    class LLConversionException : public std::logic_error {
-        using std::logic_error::logic_error;
-    };
-
-    class Terminal {
-        string name_;
-        string attribute_;
-
-    public:
-        Terminal() = default;
-        Terminal(const string &name) : name_(name) {}
-        Terminal(const string &name, const string &str)
-            : name_(name), attribute_(str)
-        {
-        }
-        ~Terminal() = default;
-
-        const string &name() const { return name_; }
-
-        static Terminal EOI() { return Terminal("EOI"); }
-
-        friend bool operator<(const TranslationGrammar::Terminal &lhs,
-                              const TranslationGrammar::Terminal &rhs)
-        {
-            return lhs.name() < rhs.name();
-        }
-
-        friend bool operator==(const TranslationGrammar::Terminal &lhs,
-                               const TranslationGrammar::Terminal &rhs)
-        {
-            return lhs.name() == rhs.name();
-        }
-    };
-
-    class Nonterminal {
-        string name_;
-
-    public:
-        Nonterminal() = default;
-        Nonterminal(const string &name) : name_(name) {}
-        ~Nonterminal() = default;
-
-        const string &name() const { return name_; }
-
-        friend bool operator<(const TranslationGrammar::Nonterminal &lhs,
-                              const TranslationGrammar::Nonterminal &rhs)
-        {
-            return lhs.name() < rhs.name();
-        }
-
-        friend bool operator==(const TranslationGrammar::Nonterminal &lhs,
-                               const TranslationGrammar::Nonterminal &rhs)
-        {
-            return lhs.name() == rhs.name();
-        }
-    };
-
-    struct Symbol {
-        enum class Type {
-            TERMINAL,
-            NONTERMINAL,
-            EPSILON,
-        } type;
-
-        Terminal terminal;
-        Nonterminal nonterminal;
-        Symbol(Type _type) : type(_type) {}
-        Symbol(Terminal _terminal) : type(Type::TERMINAL), terminal(_terminal)
-        {
-        }
-        Symbol(Nonterminal _nonterminal)
-            : type(Type::NONTERMINAL), nonterminal(_nonterminal)
-        {
-        }
-        ~Symbol() = default;
-
-        static const Symbol EPSILON;
-
-        void print(std::ostream &o) const
-        {
-            switch(type)
-            {
-            case Type::TERMINAL:
-                o << terminal.name();
-                return;
-            case Type::NONTERMINAL:
-                o << nonterminal.name();
-                return;
-            case Type::EPSILON:
-                o << "\u03B5";
-                return;
-            default:
-                return;
-            }
-        }
-
-        friend bool operator<(const Symbol &lhs, const Symbol &rhs)
-        {
-            if (lhs.type != rhs.type)
-                return false;
-            switch (lhs.type) {
-            case Symbol::Type::TERMINAL:
-                return lhs.terminal < rhs.terminal;
-            case Symbol::Type::NONTERMINAL:
-                return lhs.nonterminal < rhs.nonterminal;
-            default:
-                return false;
-            }
-        }
-
-        friend bool operator==(const Symbol &lhs, const Symbol &rhs)
-        {
-            if (lhs.type != rhs.type)
-                return false;
-            switch (lhs.type) {
-            case Symbol::Type::TERMINAL:
-                return lhs.terminal == rhs.terminal;
-            case Symbol::Type::NONTERMINAL:
-                return lhs.nonterminal == rhs.nonterminal;
-            default:
-                return true;
-            }
-        }
-
-        friend bool operator!=(const Symbol &lhs, const Symbol &rhs)
-        {
-            return !(lhs == rhs);
-        }
-    };
-
     class Rule {
     private:
         Nonterminal nonterminal_;
@@ -153,7 +18,7 @@ public:
         vector<Symbol> input_; // input of length at least 1
         vector<Symbol> output_;
 
-        //checks if nonterminals are in same space
+        // checks if nonterminals are in same space
         void check_nonterminals();
 
     public:
@@ -161,9 +26,9 @@ public:
              const vector<Symbol> &_output)
             : nonterminal_(_nonterminal), input_(_input), output_(_output)
         {
-            if(input_.size() == 0)
+            if (input_.size() == 0)
                 input_.push_back(Symbol::EPSILON);
-            if(output_.size() == 0)
+            if (output_.size() == 0)
                 output_.push_back(Symbol::EPSILON);
             check_nonterminals();
         }
@@ -211,8 +76,7 @@ private:
 
     TranslationGrammar(const vector<Terminal> &terminals,
                        const vector<Nonterminal> &nonterminals,
-                       const RuleMap &rules,
-                       const Symbol &starting_symbol);
+                       const RuleMap &rules, const Symbol &starting_symbol);
 
     size_t nonterm_index(const Nonterminal &nt);
     void create_empty(vector<bool> &empty);

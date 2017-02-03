@@ -8,10 +8,10 @@
 
 namespace bp {
 
-using std::vector;
+using vector = std::vector;
 using string = std::string;
 using Value = uint64_t;
-using std::map;
+using map = std::map;
 using LetterMap = map<Value, string>;
 using ReverseLetterMap = map<string, Value>;
 using std::sort;
