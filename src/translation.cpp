@@ -14,11 +14,12 @@ Translation::Translation(Lexical_analyzer &la, TranslationControl &tc,
 void Translation::run(std::istream &input, std::ostream &output)
 {
     lexicalAnalyzer_.set_input(input);
-    semanticAnalyzer_.set_output(output);
+    outputGenerator_.set_output(output);
 
-    vector<Terminal> output = translationControl_.run();
-    for (auto &t : output) {
+    vector<Terminal> outputTokens = translationControl_.run();
+    for (auto &t : outputTokens) {
         outputGenerator_.get_token(s);
     }
 }
+
 }

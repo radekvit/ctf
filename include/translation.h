@@ -4,16 +4,13 @@
 #include <istream>
 #include <ostream>
 
+#include <generic_types.h>
 #include <lexical_analyzer.h>
 #include <translation_control.h>
 #include <translation_grammar.h>
-#include <semantic_analysis.h>
+#include <output_generator.h>
 
 namespace bp {
-
-class TranslationException
-{
-};
 
 class Translation {
     LexicalAnalyzer &lexicalAnalyzer_;

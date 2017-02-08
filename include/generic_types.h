@@ -5,14 +5,17 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <list>
+#include <stack>
 
 namespace bp {
 
-using vector = std::vector;
-using string = std::string;
-using list = std::list;
+using std::vector;
+using std::string;
+using std::list;
+using std::stack;
 using Value = uint64_t;
-using map = std::map;
+using std::map;
 using LetterMap = map<Value, string>;
 using ReverseLetterMap = map<string, Value>;
 using std::sort;

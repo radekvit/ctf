@@ -2,15 +2,35 @@
 #define XVITRA00_BASE_H
 
 #include <generic_types.h>
+#include <ostream>
 
 namespace bp {
 
+class TranslationException
+{
+    string msg_;
+public:
+    TranslationException(string msg):
+        msg_(msg)
+    {
+    }
+    string what() { return msg_; }
+};
+
+/**
+\brief Terminal representation with name and optional attribute.
+
+Empty name denotes EOF terminal.
+ */
 class Terminal {
 protected:
     string name_;
     string attribute_;
 
 public:
+    /**
+    \brief Default constructor with empty name and attributes.
+    */
     Terminal() = default;
     Terminal(const Terminal &) = default;
     Terminal(Terminal &&) = default;
@@ -22,8 +42,6 @@ public:
     ~Terminal() = default;
 
     const string &name() const { return name_; }
-
-    static Terminal EOI() { return Terminal("EOI"); }
 
     friend bool operator<(const Terminal &lhs,
                           const Terminal &rhs)
@@ -51,14 +69,14 @@ public:
 
     const string &name() const { return name_; }
 
-    friend bool operator<(const TranslationGrammar::Nonterminal &lhs,
-                          const TranslationGrammar::Nonterminal &rhs)
+    friend bool operator<(const Nonterminal &lhs,
+                          const Nonterminal &rhs)
     {
         return lhs.name() < rhs.name();
     }
 
-    friend bool operator==(const TranslationGrammar::Nonterminal &lhs,
-                           const TranslationGrammar::Nonterminal &rhs)
+    friend bool operator==(const Nonterminal &lhs,
+                           const Nonterminal &rhs)
     {
         return lhs.name() == rhs.name();
     }
@@ -68,11 +86,12 @@ struct Symbol {
     enum class Type {
         TERMINAL,
         NONTERMINAL,
-        EPSILON,
+        EOI,
     } type;
 
     Terminal terminal;
     Nonterminal nonterminal;
+    Symbol() = delete;
     Symbol(Type _type) : type(_type) {}
     Symbol(Terminal _terminal) : type(Type::TERMINAL), terminal(_terminal)
     {
@@ -83,7 +102,9 @@ struct Symbol {
     }
     ~Symbol() = default;
 
-    static const Symbol EPSILON;
+    static Symbol EOI() { //end of input
+        return Symbol(Type::EOI);
+    }
 
     void print(std::ostream &o) const
     {
@@ -94,8 +115,8 @@ struct Symbol {
         case Type::NONTERMINAL:
             o << nonterminal.name();
             return;
-        case Type::EPSILON:
-            o << "\u03B5";
+        case Type::EOI:
+            o << "\\$";
             return;
         default:
             return;

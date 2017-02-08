@@ -78,7 +78,6 @@ private:
                        const vector<Nonterminal> &nonterminals,
                        const RuleMap &rules, const Symbol &starting_symbol);
 
-    size_t nonterm_index(const Nonterminal &nt);
     void create_empty(vector<bool> &empty);
     void create_first(const vector<bool> &empty,
                       vector<vector<Terminal>> &first);
@@ -122,6 +121,9 @@ public:
     const vector<Nonterminal> &nonterminals() const { return nonterminals_; }
     const RuleMap &rules() const { return rules_; }
     const Symbol &starting_symbol() const { return starting_symbol_; }
+
+    size_t nonterminal_index(const Nonterminal &nt);
+    size_t terminal_index(const Terminal &t);
 
     LLTable create_ll_table();
 
