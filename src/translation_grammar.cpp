@@ -4,7 +4,7 @@
 #include <translation_grammar.h>
 namespace bp {
 
-const TranslationGrammar::Symbol TranslationGrammar::Symbol::EPSILON{Type::EPSILON};
+const vector<Symbol> EPSILON_RULE_STRING();
 
 void TranslationGrammar::Rule::check_nonterminals()
 {
@@ -23,9 +23,6 @@ void TranslationGrammar::Rule::check_nonterminals()
     if(inputNonterminals != outputNonterminals)
         throw std::invalid_argument("Input and output nonterminals must match.");
 }
-
-const vector<TranslationGrammar::Symbol>
-    TranslationGrammar::EPSILON_RULE_STRING{Symbol(Symbol::Type::EPSILON)};
 
 TranslationGrammar::TranslationGrammar(const vector<Terminal> &terminals,
                                        const vector<Nonterminal> &nonterminals,
@@ -322,15 +319,15 @@ LLTable TranslationGrammar::create_ll(const vector<vector<Terminal>> &predict)
     return LLTable(rows);
 }
 
-TranslationGrammar::Nonterminal create_new_nonterminal(const vector<TranslationGrammar::Nonterminal> &nonterminals,
+Nonterminal create_new_nonterminal(const vector<Nonterminal> &nonterminals,
                                    const string &base, const char suffix)
 {
     string name = base;
     do {
         name += suffix;
-    } while (is_in(nonterminals, TranslationGrammar::Nonterminal(name)));
+    } while (is_in(nonterminals, Nonterminal(name)));
 
-    return TranslationGrammar::Nonterminal(name);
+    return Nonterminal(name);
 }
 
 TranslationGrammar

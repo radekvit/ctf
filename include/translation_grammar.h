@@ -15,7 +15,7 @@ public:
     private:
         Nonterminal nonterminal_;
 
-        vector<Symbol> input_; // input of length at least 1
+        vector<Symbol> input_;
         vector<Symbol> output_;
 
         // checks if nonterminals are in same space
@@ -26,10 +26,6 @@ public:
              const vector<Symbol> &_output)
             : nonterminal_(_nonterminal), input_(_input), output_(_output)
         {
-            if (input_.size() == 0)
-                input_.push_back(Symbol::EPSILON);
-            if (output_.size() == 0)
-                output_.push_back(Symbol::EPSILON);
             check_nonterminals();
         }
         Rule(const Nonterminal &_nonterminal, const vector<Symbol> &_both)

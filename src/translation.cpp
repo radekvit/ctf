@@ -2,7 +2,7 @@
 
 namespace bp {
 
-Translation::Translation(Lexical_analyzer &la, TranslationControl &tc,
+Translation::Translation(LexicalAnalyzer &la, TranslationControl &tc,
                          TranslationGrammar &tg, OutputGenerator &og)
     : lexicalAnalyzer_(la), translationControl_(tc), translationGrammar_(tg),
       outputGenerator_(og)

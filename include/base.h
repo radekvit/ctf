@@ -8,6 +8,7 @@ namespace bp {
 
 class TranslationException
 {
+protected:
     string msg_;
 public:
     TranslationException(string msg):
@@ -31,15 +32,11 @@ public:
     /**
     \brief Default constructor with empty name and attributes.
     */
-    Terminal() = default;
-    Terminal(const Terminal &) = default;
-    Terminal(Terminal &&) = default;
     Terminal(const string &name) : name_(name) {}
     Terminal(const string &name, const string &str)
         : name_(name), attribute_(str)
     {
     }
-    ~Terminal() = default;
 
     const string &name() const { return name_; }
 
@@ -61,11 +58,7 @@ protected:
     string name_;
 
 public:
-    Nonterminal() = default;
-    Nonterminal(const Nonterminal &) = default;
-    Nonterminal(Nonterminal &&) = default;
     Nonterminal(const string &name) : name_(name) {}
-    ~Nonterminal() = default;
 
     const string &name() const { return name_; }
 
@@ -91,7 +84,7 @@ struct Symbol {
 
     Terminal terminal;
     Nonterminal nonterminal;
-    Symbol() = delete;
+    Symbol() = default;
     Symbol(Type _type) : type(_type) {}
     Symbol(Terminal _terminal) : type(Type::TERMINAL), terminal(_terminal)
     {

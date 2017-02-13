@@ -13,6 +13,9 @@ class TranslationControlException: public TranslationException {
 };
 
 class TranslationControl {
+protected:
+    using Rule = TranslationGrammar::Rule;
+
     LexicalAnalyzer *lexicalAnalyzer_ = nullptr;
     const TranslationGrammar *translationGrammar_ = nullptr;
 public:
@@ -29,13 +32,13 @@ public:
     virtual vector<Terminal> run() = 0;
 
     Token next_token(vector<Terminal> &string) {
-        string.push_back(lexicalAnalyzer_.get_token());
+        string.push_back(lexicalAnalyzer_->get_token());
         return string.back();
     }
 };
 
 class LLTranslationControl: public TranslationControl {
-private:
+protected:
     LLTable llTable_;
 
     void create_ll_table(const TranslationGrammar &tg);
