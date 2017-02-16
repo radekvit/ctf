@@ -3,12 +3,12 @@
 
 #include <base.h>
 #include <lexical_analyzer.h>
-#include <translation_grammar.h>
 #include <ll_table.h>
+#include <translation_grammar.h>
 
 namespace bp {
 
-class TranslationControlException: public TranslationException {
+class TranslationControlException : public TranslationException {
     using TranslationException::TranslationException;
 };
 
@@ -18,30 +18,42 @@ protected:
 
     LexicalAnalyzer *lexicalAnalyzer_ = nullptr;
     const TranslationGrammar *translationGrammar_ = nullptr;
+
 public:
     virtual ~TranslationControl() = 0;
 
-    void set_lexical_analyzer(LexicalAnalyzer &la) {
-        lexicalAnalyzer_ = &la;
-    }
+    void set_lexical_analyzer(LexicalAnalyzer &la) { lexicalAnalyzer_ = &la; }
 
-    virtual void set_grammar(const TranslationGrammar &tg) {
+    virtual void set_grammar(const TranslationGrammar &tg)
+    {
         translationGrammar_ = &tg;
     }
 
-    virtual vector<Terminal> run() = 0;
+    virtual void run() = 0;
 
-    Token next_token(vector<Terminal> &string) {
+    Token next_token(vector<Terminal> &string)
+    {
         string.push_back(lexicalAnalyzer_->get_token());
         return string.back();
     }
 };
 
-class LLTranslationControl: public TranslationControl {
+class LLTranslationControl : public TranslationControl {
 protected:
+    vector<bool> empty_;
+    vector<vector<Terminal>> first_;
+    vector<vector<Terminal>> follow_;
+    vector<vector<Terminal>> predict_;
+
     LLTable llTable_;
 
-    void create_ll_table(const TranslationGrammar &tg);
+    void create_ll_table();
+
+    void create_empty();
+    void create_first();
+    void create_follow();
+    void create_predict();
+
 public:
     LLTranslationControl() = default;
     virtual ~LLTranslationControl() = default;
@@ -51,7 +63,6 @@ public:
 
     virtual void run();
 };
-
 }
 
 #endif

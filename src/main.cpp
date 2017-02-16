@@ -4,10 +4,7 @@
 
 using namespace bp;
 
-using Terminal = TranslationGrammar::Terminal;
-using Nonterminal = TranslationGrammar::Nonterminal;
 using Rule = TranslationGrammar::Rule;
-using Symbol = TranslationGrammar::Symbol;
 
 int main()
 {
@@ -24,8 +21,5 @@ int main()
         Rule(F, vector<Symbol>{Symbol(i)}),
     };
     TranslationGrammar tg(t, n, r, Symbol(E));
-    tg.print(std::cout);
-    tg.make_LL(tg).print(std::cout);
-    // tg.create_ll_table();
     return 0;
 }

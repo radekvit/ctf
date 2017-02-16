@@ -6,15 +6,12 @@
 
 namespace bp {
 
-class TranslationException
-{
+class TranslationException {
 protected:
     string msg_;
+
 public:
-    TranslationException(string msg):
-        msg_(msg)
-    {
-    }
+    TranslationException(string msg) : msg_(msg) {}
     string what() { return msg_; }
 };
 
@@ -32,22 +29,24 @@ public:
     /**
     \brief Default constructor with empty name and attributes.
     */
-    Terminal(const string &name) : name_(name) {}
-    Terminal(const string &name, const string &str)
-        : name_(name), attribute_(str)
+    Terminal(const string &name = "", const string &atr = "")
+        : name_(name), attribute_(atr)
     {
     }
 
-    const string &name() const { return name_; }
+    static Terminal EOI() { return Terminal(); }
 
-    friend bool operator<(const Terminal &lhs,
-                          const Terminal &rhs)
+    string &name() { return name_; }
+    const string &name() const { return name_; }
+    string &attribute() { return attribute_; }
+    const string &attribute() const { return attribute_; }
+
+    friend bool operator<(const Terminal &lhs, const Terminal &rhs)
     {
         return lhs.name() < rhs.name();
     }
 
-    friend bool operator==(const Terminal &lhs,
-                           const Terminal &rhs)
+    friend bool operator==(const Terminal &lhs, const Terminal &rhs)
     {
         return lhs.name() == rhs.name();
     }
@@ -58,18 +57,17 @@ protected:
     string name_;
 
 public:
-    Nonterminal(const string &name) : name_(name) {}
+    Nonterminal(const string &name = "") : name_(name) {}
 
+    string &name() { return name_; }
     const string &name() const { return name_; }
 
-    friend bool operator<(const Nonterminal &lhs,
-                          const Nonterminal &rhs)
+    friend bool operator<(const Nonterminal &lhs, const Nonterminal &rhs)
     {
         return lhs.name() < rhs.name();
     }
 
-    friend bool operator==(const Nonterminal &lhs,
-                           const Nonterminal &rhs)
+    friend bool operator==(const Nonterminal &lhs, const Nonterminal &rhs)
     {
         return lhs.name() == rhs.name();
     }
@@ -79,41 +77,22 @@ struct Symbol {
     enum class Type {
         TERMINAL,
         NONTERMINAL,
-        EOI,
     } type;
 
     Terminal terminal;
     Nonterminal nonterminal;
     Symbol() = default;
     Symbol(Type _type) : type(_type) {}
-    Symbol(Terminal _terminal) : type(Type::TERMINAL), terminal(_terminal)
-    {
-    }
+    Symbol(Terminal _terminal) : type(Type::TERMINAL), terminal(_terminal) {}
     Symbol(Nonterminal _nonterminal)
         : type(Type::NONTERMINAL), nonterminal(_nonterminal)
     {
     }
     ~Symbol() = default;
 
-    static Symbol EOI() { //end of input
-        return Symbol(Type::EOI);
-    }
-
-    void print(std::ostream &o) const
-    {
-        switch (type) {
-        case Type::TERMINAL:
-            o << terminal.name();
-            return;
-        case Type::NONTERMINAL:
-            o << nonterminal.name();
-            return;
-        case Type::EOI:
-            o << "\\$";
-            return;
-        default:
-            return;
-        }
+    static Symbol EOI()
+    { // end of input
+        return Symbol(Terminal::EOI());
     }
 
     friend bool operator<(const Symbol &lhs, const Symbol &rhs)

@@ -9,10 +9,9 @@
 namespace bp {
 class LLTable;
 
-class TranslationGrammar {
-public:
+struct TranslationGrammar {
     class Rule {
-    private:
+    protected:
         Nonterminal nonterminal_;
 
         vector<Symbol> input_;
@@ -35,8 +34,11 @@ public:
         ~Rule() = default;
         void swap_sides() { std::swap(input_, output_); }
 
+        Nonterminal &nonterminal() { return nonterminal_; }
         const Nonterminal &nonterminal() const { return nonterminal_; }
+        vector<Symbol> &input() { return input_; }
         const vector<Symbol> &input() const { return input_; }
+        vector<Symbol> &output() { return output_; }
         const vector<Symbol> &output() const { return output_; }
 
         friend bool operator<(const Rule &lhs, const Rule &rhs)
@@ -52,7 +54,8 @@ public:
         friend bool operator==(const Rule &lhs, const Rule &rhs)
         {
             return lhs.nonterminal() == rhs.nonterminal()
-                       ? lhs.input() == rhs.input()
+                       ? lhs.input() == rhs.input() &&
+                             lhs.output() == rhs.output()
                        : false;
         }
         friend bool operator!=(const Rule &lhs, const Rule &rhs)
@@ -63,41 +66,13 @@ public:
 
     using RuleMap = map<Nonterminal, vector<Rule>>;
 
-private:
+protected:
     vector<Terminal> terminals_;
     vector<Nonterminal> nonterminals_;
-    RuleMap rules_;
-
+    vector<Rule> rules_;
     Symbol starting_symbol_;
 
-    TranslationGrammar(const vector<Terminal> &terminals,
-                       const vector<Nonterminal> &nonterminals,
-                       const RuleMap &rules, const Symbol &starting_symbol);
-
-    void create_empty(vector<bool> &empty);
-    void create_first(const vector<bool> &empty,
-                      vector<vector<Terminal>> &first);
-    bool modify_first(vector<Terminal> &target, const Symbol &symbol,
-                      const vector<vector<Terminal>> &first);
-    bool modify_set(vector<Terminal> &target, const vector<Terminal> &addition);
-    void create_follow(const vector<bool> &empty,
-                       const vector<vector<Terminal>> &first,
-                       vector<vector<Terminal>> &follow);
-    bool rule_follow(const Rule &r, const vector<bool> &empty,
-                     const vector<vector<Terminal>> &first,
-                     vector<vector<Terminal>> &follow);
-    void create_predict(const vector<bool> &empty,
-                        const vector<vector<Terminal>> &first,
-                        const vector<vector<Terminal>> &follow,
-                        vector<vector<Terminal>> &predict);
-    LLTable create_ll(const vector<vector<Terminal>> &predict);
-
-    static TranslationGrammar factorize(const TranslationGrammar &);
-    static TranslationGrammar remove_left_recursion(const TranslationGrammar &);
-
 public:
-    static const vector<Symbol> EPSILON_RULE_STRING;
-
     TranslationGrammar();
     TranslationGrammar(const vector<Terminal> &terminals,
                        const vector<Nonterminal> &nonterminals,
@@ -105,27 +80,26 @@ public:
                        const Symbol &starting_symbol);
     ~TranslationGrammar() = default;
 
+    static const vector<Symbol> EPSILON_STRING;
+
     void swap_sides()
     {
-        for (auto &n : nonterminals_)
-            for (auto &r : rules_[n]) {
-                r.swap_sides();
-            }
+        for (auto &r : rules_) {
+            r.swap_sides();
+        }
     }
 
+    vector<Terminal> &terminals() { return terminals_; }
     const vector<Terminal> &terminals() const { return terminals_; }
+    vector<Nonterminal> &nonterminals() { return nonterminals_; }
     const vector<Nonterminal> &nonterminals() const { return nonterminals_; }
-    const RuleMap &rules() const { return rules_; }
+    vector<Rule> &rules() { return rules_; }
+    const vector<Rule> &rules() const { return rules_; }
+    Symbol &starting_symbol() { return starting_symbol_; }
     const Symbol &starting_symbol() const { return starting_symbol_; }
 
-    size_t nonterminal_index(const Nonterminal &nt);
-    size_t terminal_index(const Terminal &t);
-
-    LLTable create_ll_table();
-
-    static TranslationGrammar make_LL(const TranslationGrammar &);
-
-    void print(std::ostream &o);
+    size_t nonterminal_index(const Nonterminal &nt) const;
+    size_t terminal_index(const Terminal &t) const;
 };
 }
 #endif

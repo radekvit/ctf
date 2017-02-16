@@ -2,11 +2,11 @@
 #define XVITRA00_GT_H
 
 #include <algorithm>
+#include <list>
 #include <map>
+#include <stack>
 #include <string>
 #include <vector>
-#include <list>
-#include <stack>
 
 namespace bp {
 
@@ -20,6 +20,12 @@ using LetterMap = map<Value, string>;
 using ReverseLetterMap = map<string, Value>;
 using std::sort;
 
+template <class T> bool is_in(const vector<T> &v, const T &e)
+{
+    auto it = std::lower_bound(v.begin(), v.end(), e);
+    return it != v.end() && it->name() == e.name();
+}
+
 template <class T> T set_union(const T &lhs, const T &rhs)
 {
     T r;
@@ -28,10 +34,12 @@ template <class T> T set_union(const T &lhs, const T &rhs)
     return r;
 }
 
-template <class T> bool is_in(const vector<T> &v, const T &e)
+template<class T> bool modify_set(vector<T> &target,
+                                    const vector<T> &addition)
 {
-    auto it = std::lower_bound(v.begin(), v.end(), e);
-    return it != v.end() && it->name() == e.name();
+    auto before = target.size();
+    target = set_union(target, addition);
+    return before != target.size();
 }
 }
 

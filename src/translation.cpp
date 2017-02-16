@@ -15,11 +15,10 @@ void Translation::run(std::istream &input, std::ostream &output)
 {
     lexicalAnalyzer_.set_input(input);
     outputGenerator_.set_output(output);
-
-    vector<Terminal> outputTokens = translationControl_.run();
+    translationControl_.run();
+    vector<Terminal> outputTokens; //TODO get rules and output from control
     for (auto &t : outputTokens) {
-        outputGenerator_.get_token(s);
+        outputGenerator_.get_token(t);
     }
 }
-
 }
