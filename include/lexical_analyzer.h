@@ -11,7 +11,7 @@ using Token = Terminal;
 class LexicalAnalyzer {
 public:
     virtual void set_input(std::istream &s) = 0;
-    Token get_token();
+    virtual Token get_token() = 0;
 };
 }
 

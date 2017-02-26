@@ -20,7 +20,7 @@ protected:
     const TranslationGrammar *translationGrammar_ = nullptr;
 
 public:
-    virtual ~TranslationControl() = 0;
+    virtual ~TranslationControl() = default;
 
     void set_lexical_analyzer(LexicalAnalyzer &la) { lexicalAnalyzer_ = &la; }
 

@@ -77,13 +77,18 @@ struct Symbol {
     enum class Type {
         TERMINAL,
         NONTERMINAL,
+        EOI,
     } type;
 
     Terminal terminal;
     Nonterminal nonterminal;
-    Symbol() = default;
+    Symbol() : type(Type::EOI){};
     Symbol(Type _type) : type(_type) {}
-    Symbol(Terminal _terminal) : type(Type::TERMINAL), terminal(_terminal) {}
+    Symbol(Terminal _terminal) : type(Type::TERMINAL), terminal(_terminal)
+    {
+        if (terminal.name() == "")
+            type = Type::EOI;
+    }
     Symbol(Nonterminal _nonterminal)
         : type(Type::NONTERMINAL), nonterminal(_nonterminal)
     {
@@ -128,7 +133,6 @@ struct Symbol {
         return !(lhs == rhs);
     }
 };
-
 }
 
 #endif

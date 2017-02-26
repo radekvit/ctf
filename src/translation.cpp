@@ -16,7 +16,7 @@ void Translation::run(std::istream &input, std::ostream &output)
     lexicalAnalyzer_.set_input(input);
     outputGenerator_.set_output(output);
     translationControl_.run();
-    vector<Terminal> outputTokens; //TODO get rules and output from control
+    vector<Terminal> outputTokens; // TODO get rules and output from control
     for (auto &t : outputTokens) {
         outputGenerator_.get_token(t);
     }

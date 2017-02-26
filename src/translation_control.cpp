@@ -55,7 +55,7 @@ void LLTranslationControl::run()
             }
             break;
         case Type::NONTERMINAL:
-            ruleIndex = llTable_.rule_index(top, token);
+            ruleIndex = llTable_.rule_index(top.nonterminal, token);
             if (ruleIndex < translationGrammar_->rules().size()) {
                 auto &rule = translationGrammar_->rules()[ruleIndex];
                 input.pop();

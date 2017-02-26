@@ -34,8 +34,7 @@ template <class T> T set_union(const T &lhs, const T &rhs)
     return r;
 }
 
-template<class T> bool modify_set(vector<T> &target,
-                                    const vector<T> &addition)
+template <class T> bool modify_set(vector<T> &target, const vector<T> &addition)
 {
     auto before = target.size();
     target = set_union(target, addition);
