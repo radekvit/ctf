@@ -2,6 +2,7 @@
 #define XVITRA00_TG_H
 
 #include <base.h>
+#include <functional>
 #include <ostream>
 #include <stdexcept>
 #include <utility>
@@ -11,24 +12,38 @@ class LLTable;
 
 struct TranslationGrammar {
     class Rule {
+    public:
+        using attribute_function =
+            std::function<void(const vector<Symbol> &, vector<Symbol>)>;
+
     protected:
         Nonterminal nonterminal_;
 
         vector<Symbol> input_;
         vector<Symbol> output_;
 
+        attribute_function attributeSetter_;
+
         // checks if nonterminals are in same space
         void check_nonterminals();
 
     public:
         Rule(const Nonterminal &_nonterminal, const vector<Symbol> &_input,
-             const vector<Symbol> &_output)
-            : nonterminal_(_nonterminal), input_(_input), output_(_output)
+             const vector<Symbol> &_output,
+             attribute_function attributeSetter = attribute_function())
+            : nonterminal_(_nonterminal), input_(_input), output_(_output),
+              attributeSetter_(attributeSetter)
         {
             check_nonterminals();
         }
         Rule(const Nonterminal &_nonterminal, const vector<Symbol> &_both)
-            : Rule(_nonterminal, _both, _both)
+            : Rule(_nonterminal, _both, _both, [](auto input, auto output) {
+                  for (size_t i = 0; i < input.size(); ++i) {
+                      output[i].terminal.attribute() =
+                          input[i].terminal.attribute();
+                  }
+                  return;
+              })
         {
         }
         ~Rule() = default;

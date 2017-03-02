@@ -32,18 +32,20 @@ public:
                 "sizes when constructing LLTable.");
         /* create index maps for terminals and nonterminals */
         for (size_t i = 0; i < tg.nonterminals().size(); ++i) {
-            nonterminalMap.insert(
-                std::make_pair(tg.nonterminals()[i], i));
+            nonterminalMap.insert(std::make_pair(tg.nonterminals()[i], i));
         }
         for (size_t i = 0; i < tg.terminals().size(); ++i) {
-            terminalMap.insert(
-                std::make_pair(tg.terminals()[i], i));
+            terminalMap.insert(std::make_pair(tg.terminals()[i], i));
         }
         /* fill table */
         for (size_t i = 0; i < tg.rules().size(); ++i) {
             auto &terminals = predict[i];
             size_t ni = nonterminalMap.at(tg.rules()[i].nonterminal());
             for (auto &t : terminals) {
+                if (table_[ni][terminalMap.at(t)] != predict.size()) {
+                    throw std::invalid_argument("Constructing LLTable from a "
+                                                "non-LL TranslationGrammar.");
+                }
                 table_[ni][terminalMap.at(t)] = i;
             }
         }

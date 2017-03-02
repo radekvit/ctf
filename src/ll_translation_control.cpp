@@ -54,12 +54,9 @@ void LLTranslationControl::create_empty()
 
 void LLTranslationControl::create_first()
 {
-    first_.clear();
     const TranslationGrammar &tg = *translationGrammar_;
-    for (auto &n : tg.nonterminals()) {
-        (void)n;
-        first_.push_back(vector<Terminal>());
-    }
+    first_ = {tg.nonterminals().size(), vector<Terminal>{}};
+
     bool changed = false;
     do {
         changed = false;
@@ -93,16 +90,12 @@ void LLTranslationControl::create_first()
 
 void LLTranslationControl::create_follow()
 {
-    follow_.clear();
     const TranslationGrammar &tg = *translationGrammar_;
-    for (auto &n : tg.nonterminals()) {
-        (void)n;
-        follow_.push_back(vector<Terminal>());
-    }
+    follow_ = {tg.nonterminals().size(), vector<Terminal>{}};
     follow_[tg.nonterminal_index(tg.starting_symbol().nonterminal)].push_back(
         Terminal::EOI());
 
-    bool changed;
+    bool changed = false;
     do {
         changed = false;
         for (auto &r : tg.rules()) {
@@ -120,10 +113,10 @@ void LLTranslationControl::create_follow()
                 switch (it->type) {
                 case Symbol::Type::NONTERMINAL:
                     ti = tg.nonterminal_index(it->nonterminal);
-                    if (modify_set(first_[ti], compoundFirst))
+                    if (modify_set(follow_[ti], compoundFirst))
                         changed = true;
                     break;
-                    if (compoundEmpty && modify_set(first_[ti], first_[i]))
+                    if (compoundEmpty && modify_set(follow_[ti], follow_[i]))
                         changed = true;
                 default:
                     break;
@@ -137,7 +130,7 @@ void LLTranslationControl::create_follow()
                         compoundFirst = first_[ti];
                         break;
                     case Symbol::Type::TERMINAL:
-                        compoundFirst = vector<Terminal>({it->terminal});
+                        compoundFirst = {it->terminal};
                         break;
                     default:
                         break;
