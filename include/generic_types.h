@@ -88,10 +88,11 @@ public:
     tstack(std::initializer_list<T> ilist) : list_(ilist) {}
 
     T &top() { return list_.front(); }
+    const T &top() const { return list_.front(); }
 
-    bool empty() { return list_.size() == 0; }
+    bool empty() const { return list_.size() == 0; }
 
-    size_type size() { return list_.size(); }
+    size_type size() const { return list_.size(); }
 
     void push(const T &t)
     { // TODO: if C++17, return reference
@@ -105,6 +106,14 @@ public:
         return temp;
     }
 
+    void replace(iterator it, const vector<T> string)
+    {
+        for (auto &t: reverse(string)) {
+            list_.insert(it, t);
+        }
+        list_.erase(it);
+    }
+
     void replace(const T &target, const vector<T> &string)
     {
         auto it = list_.begin();
@@ -112,13 +121,25 @@ public:
             if (*it == target)
                 break;
         }
-        for (auto &t : reverse(string)) {
-            list_.insert(it, t);
-        }
-        list_.erase(it);
+        if(it == list_.end())
+            return;
+        replace(it, string);
     }
 
     void swap(tstack &other) { std::swap(list_, other.list_); }
+
+    iterator begin() { return list_.begin(); }
+    iterator end() { return list_.end(); }
+    const_iterator begin() const { return list_.begin(); }
+    const_iterator end() const { return list_.end(); }
+    const_iterator cbegin() const { return list_.begin(); }
+    const_iterator cend() const { return list_.end(); }
+    reverse_iterator rbegin() { return list_.rbegin(); }
+    reverse_iterator rend() { return list_.rend(); }
+    const_reverse_iterator rbegin() const { return list_.rbegin(); }
+    const_reverse_iterator rend() const { return list_.rend(); }
+    const_reverse_iterator crbegin() const { return list_.rbegin(); }
+    const_reverse_iterator crend() const { return list_.rend(); }
 
 friend bool operator==(const tstack<T> &lhs, const tstack<T> &rhs)
 {
