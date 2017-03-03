@@ -1,7 +1,7 @@
 #include <iostream>
 #include <ll_table.h>
-#include <translation_grammar.h>
 #include <translation.h>
+#include <translation_grammar.h>
 
 using namespace bp;
 
@@ -9,7 +9,7 @@ using Rule = TranslationGrammar::Rule;
 
 class DummyLexicalAnalyzer : public LexicalAnalyzer {
 public:
-    void set_input(std::istream &) override {};
+    void set_input(std::istream &) override{};
     virtual Token get_token() override { return Token(); }
 } dla;
 
@@ -33,6 +33,5 @@ int main()
 
     LLTranslationControl(dla, tg);
 
-    
     return 0;
 }
