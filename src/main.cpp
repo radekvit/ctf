@@ -7,14 +7,9 @@ using namespace bp;
 
 using Rule = TranslationGrammar::Rule;
 
-class DummyLexicalAnalyzer : public LexicalAnalyzer {
-public:
-    void set_input(std::istream &) override{};
-    virtual Token get_token() override { return Token(); }
-} dla;
-
 int main()
 {
+    LexicalAnalyzer dla;
     Terminal i("i"), plus("+"), ast("*"), parl("("), parr(")");
     Nonterminal E("E"), E_("E'"), T("T"), T_("T'"), F("F");
     vector<Terminal> t{i, plus, ast, parl, parr};

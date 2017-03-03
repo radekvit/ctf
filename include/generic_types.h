@@ -2,13 +2,13 @@
 #define XVITRA00_GT_H
 
 #include <algorithm>
+#include <functional>
 #include <list>
 #include <list>
 #include <map>
 #include <stack>
 #include <string>
 #include <vector>
-#include <functional>
 
 namespace bp {
 
@@ -112,7 +112,7 @@ public:
                         [](auto lhs, auto rhs) { return lhs == rhs; })
     {
         iterator it;
-        for (it = list_.begin(); it < list_.end(); ++it) {
+        for (it = list_.begin(); it != list_.end(); ++it) {
             if (searchOperator(*it, target))
                 break;
         }
@@ -125,7 +125,7 @@ public:
                [](auto lhs, auto rhs) { return lhs == rhs; }) const
     {
         const_iterator it;
-        for (it = list_.cbegin(); it < list_.cend(); ++it) {
+        for (it = list_.cbegin(); it != list_.cend(); ++it) {
             if (searchOperator(*it, target))
                 break;
         }
@@ -134,7 +134,7 @@ public:
 
     void replace(iterator it, const vector<T> string)
     {
-        if(it == list_.end())
+        if (it == list_.end())
             return;
         for (auto &t : reverse(string)) {
             list_.insert(it, t);
@@ -176,7 +176,7 @@ public:
     {
         return lhs.list_ < rhs.list_;
     }
-    friend bool operator<(const tstack<T> &lhs, const tstack<T> &rhs)
+    friend bool operator>(const tstack<T> &lhs, const tstack<T> &rhs)
     {
         return rhs.list_ < lhs.list_;
     }

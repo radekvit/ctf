@@ -25,8 +25,8 @@ void LLTranslationControl::run()
         throw TranslationControlException(
             "No translation grammar was attached.");
 
-    stack<Symbol> input;
-    stack<Symbol> output;
+    tstack<Symbol> input;
+    tstack<Symbol> output;
     vector<Terminal> inputString;
     vector<const Rule *> rules;
 
@@ -57,10 +57,8 @@ void LLTranslationControl::run()
             ruleIndex = llTable_.rule_index(top.nonterminal, token);
             if (ruleIndex < translationGrammar_->rules().size()) {
                 auto &rule = translationGrammar_->rules()[ruleIndex];
-                input.pop();
-                for (auto &s : rule.input()) {
-                    input.push(s);
-                }
+                input.replace(input.begin(), rule.input());
+                output.replace(top, rule.output());
                 rules.push_back(&(rule));
             } else {
                 throw TranslationControlException("No rule can be applied.");
