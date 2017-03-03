@@ -8,6 +8,7 @@
 #include <stack>
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace bp {
 
@@ -106,24 +107,46 @@ public:
         return temp;
     }
 
+    iterator search(const T &target,
+                    std::function<bool(const T &, const T &)> searchOperator =
+                        [](auto lhs, auto rhs) { return lhs == rhs; })
+    {
+        iterator it;
+        for (it = list_.begin(); it < list_.end(); ++it) {
+            if (searchOperator(*it, target))
+                break;
+        }
+        return it;
+    }
+
+    const_iterator
+    search(const T &target,
+           std::function<bool(const T &, const T &)> searchOperator =
+               [](auto lhs, auto rhs) { return lhs == rhs; }) const
+    {
+        const_iterator it;
+        for (it = list_.cbegin(); it < list_.cend(); ++it) {
+            if (searchOperator(*it, target))
+                break;
+        }
+        return it;
+    }
+
     void replace(iterator it, const vector<T> string)
     {
-        for (auto &t: reverse(string)) {
+        if(it == list_.end())
+            return;
+        for (auto &t : reverse(string)) {
             list_.insert(it, t);
         }
         list_.erase(it);
     }
 
-    void replace(const T &target, const vector<T> &string)
+    void replace(const T &target, const vector<T> &string,
+                 std::function<bool(const T &, const T &)> searchOperator =
+                     [](auto lhs, auto rhs) { return lhs == rhs; })
     {
-        auto it = list_.begin();
-        for (it = list_.begin(); it < list_.end(); ++it) {
-            if (*it == target)
-                break;
-        }
-        if(it == list_.end())
-            return;
-        replace(it, string);
+        replace(search(target, searchOperator), string);
     }
 
     void swap(tstack &other) { std::swap(list_, other.list_); }
@@ -141,31 +164,30 @@ public:
     const_reverse_iterator crbegin() const { return list_.rbegin(); }
     const_reverse_iterator crend() const { return list_.rend(); }
 
-friend bool operator==(const tstack<T> &lhs, const tstack<T> &rhs)
-{
-    return lhs.list_ == rhs.list_;
-}
-friend bool operator!=(const tstack<T> &lhs, const tstack<T> &rhs)
-{
-    return !(lhs == rhs);
-}
-friend bool operator<(const tstack<T> &lhs, const tstack<T> &rhs)
-{
-    return lhs.list_ < rhs.list_;
-}
-friend bool operator<(const tstack<T> &lhs, const tstack<T> &rhs)
-{
-    return rhs.list_ < lhs.list_;
-}
-friend bool operator<=(const tstack<T> &lhs, const tstack<T> &rhs)
-{
-    return lhs < rhs || lhs == rhs;
-}
-friend bool operator>=(const tstack<T> &lhs, const tstack<T> &rhs)
-{
-    return lhs > rhs || lhs == rhs;
-}
+    friend bool operator==(const tstack<T> &lhs, const tstack<T> &rhs)
+    {
+        return lhs.list_ == rhs.list_;
+    }
+    friend bool operator!=(const tstack<T> &lhs, const tstack<T> &rhs)
+    {
+        return !(lhs == rhs);
+    }
+    friend bool operator<(const tstack<T> &lhs, const tstack<T> &rhs)
+    {
+        return lhs.list_ < rhs.list_;
+    }
+    friend bool operator<(const tstack<T> &lhs, const tstack<T> &rhs)
+    {
+        return rhs.list_ < lhs.list_;
+    }
+    friend bool operator<=(const tstack<T> &lhs, const tstack<T> &rhs)
+    {
+        return lhs < rhs || lhs == rhs;
+    }
+    friend bool operator>=(const tstack<T> &lhs, const tstack<T> &rhs)
+    {
+        return lhs > rhs || lhs == rhs;
+    }
 };
-
 }
 #endif
