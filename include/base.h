@@ -3,16 +3,12 @@
 
 #include <generic_types.h>
 #include <ostream>
+#include <stdexcept>
 
 namespace bp {
 
-class TranslationException {
-protected:
-    string msg_;
-
-public:
-    TranslationException(string msg) : msg_(msg) {}
-    string what() { return msg_; }
+class TranslationException : public std::runtime_error {
+    using std::runtime_error::runtime_error;
 };
 
 /**

@@ -95,6 +95,8 @@ public:
 
     size_type size() const { return list_.size(); }
 
+    void clear() noexcept { list_.clear(); }
+
     void push(const T &t)
     { // TODO: if C++17, return reference
         list_.emplace_front(t);
@@ -136,7 +138,7 @@ public:
     {
         if (it == list_.end())
             return;
-        for (auto &t : reverse(string)) {
+        for (auto &t : string) {
             list_.insert(it, t);
         }
         list_.erase(it);

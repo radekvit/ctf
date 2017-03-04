@@ -17,6 +17,7 @@ void LLTranslationControl::set_grammar(const TranslationGrammar &tg)
 
 void LLTranslationControl::run()
 {
+    //TODO: set output attributes from inputString_
     using Type = Symbol::Type;
 
     if (!lexicalAnalyzer_)
@@ -25,17 +26,18 @@ void LLTranslationControl::run()
         throw TranslationControlException(
             "No translation grammar was attached.");
 
-    tstack<Symbol> input;
-    tstack<Symbol> output;
-    vector<Terminal> inputString;
+    input_.clear();
+    output_.clear();
+    inputString_.clear();
     vector<const Rule *> rules;
 
-    Terminal token = next_token(inputString);
+    Terminal token = next_token(inputString_);
 
-    input.push(Symbol::EOI());
-    input.push(translationGrammar_->starting_symbol());
+    input_.push(Symbol::EOI());
+    input_.push(translationGrammar_->starting_symbol());
+    output_.push(translationGrammar_->starting_symbol());
     while (1) {
-        Symbol &top = input.top();
+        Symbol &top = input_.top();
         size_t ruleIndex;
         switch (top.type) {
         case Type::EOI:
@@ -47,8 +49,8 @@ void LLTranslationControl::run()
             break;
         case Type::TERMINAL:
             if (top.terminal == token) {
-                input.pop();
-                token = next_token(inputString);
+                input_.pop();
+                token = next_token(inputString_);
             } else {
                 throw TranslationControlException("Unexpected token.");
             }
@@ -57,8 +59,8 @@ void LLTranslationControl::run()
             ruleIndex = llTable_.rule_index(top.nonterminal, token);
             if (ruleIndex < translationGrammar_->rules().size()) {
                 auto &rule = translationGrammar_->rules()[ruleIndex];
-                input.replace(input.begin(), rule.input());
-                output.replace(top, rule.output());
+                input_.replace(input_.begin(), rule.input());
+                output_.replace(top, rule.output());
                 rules.push_back(&(rule));
             } else {
                 throw TranslationControlException("No rule can be applied.");
@@ -174,31 +176,31 @@ void LLTranslationControl::create_follow()
             /* first set of all symbols to the right of the current symbol */
             vector<Terminal> compoundFirst;
             /* track symbols from back */
-            for (auto it = r.input().rbegin(); it < r.input().rend(); ++it) {
+            for (auto &s: reverse(r.input())) {
                 // index of nonterminal in input string, only valid with
                 // nonterminal symbol
                 size_t ti = 0;
-                switch (it->type) {
+                switch (s.type) {
                 case Symbol::Type::NONTERMINAL:
-                    ti = tg.nonterminal_index(it->nonterminal);
+                    ti = tg.nonterminal_index(s.nonterminal);
                     if (modify_set(follow_[ti], compoundFirst))
                         changed = true;
-                    break;
                     if (compoundEmpty && modify_set(follow_[ti], follow_[i]))
                         changed = true;
+                    break;                        
                 default:
                     break;
                 }
                 /* if empty = false */
-                if (it->type != Symbol::Type::NONTERMINAL ||
-                    !empty_[tg.nonterminal_index(it->nonterminal)]) {
+                if (s.type != Symbol::Type::NONTERMINAL ||
+                    !empty_[tg.nonterminal_index(s.nonterminal)]) {
                     compoundEmpty = false;
-                    switch (it->type) {
+                    switch (s.type) {
                     case Symbol::Type::NONTERMINAL:
                         compoundFirst = first_[ti];
                         break;
                     case Symbol::Type::TERMINAL:
-                        compoundFirst = {it->terminal};
+                        compoundFirst = {s.terminal};
                         break;
                     default:
                         break;
@@ -222,15 +224,15 @@ void LLTranslationControl::create_predict()
         vector<Terminal> rfollow =
             follow_[tg.nonterminal_index(r.nonterminal())];
         bool compoundEmpty = true;
-        for (auto it = r.input().rbegin(); it < r.input().rend(); ++it) {
+        for (auto &s: reverse(r.input())) {
             size_t i;
-            switch (it->type) {
+            switch (s.type) {
             case Symbol::Type::TERMINAL:
                 compoundEmpty = false;
-                compoundFirst = vector<Terminal>({it->terminal});
+                compoundFirst = vector<Terminal>({s.terminal});
                 break;
             case Symbol::Type::NONTERMINAL:
-                i = tg.nonterminal_index(it->nonterminal);
+                i = tg.nonterminal_index(s.nonterminal);
                 if (!empty_[i]) {
                     compoundEmpty = false;
                     compoundFirst = first_[i];

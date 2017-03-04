@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <ll_table.h>
 #include <translation.h>
 #include <translation_grammar.h>
@@ -26,7 +27,16 @@ int main()
     };
     TranslationGrammar tg(t, n, r, {E});
 
-    LLTranslationControl(dla, tg);
+    LLTranslationControl tc(dla, tg);
+
+    std::ifstream in("in");
+    std::ofstream out("out");
+
+    LexicalAnalyzer la{};
+    OutputGenerator og{};
+
+    Translation tranny{la, tc, tg, og};
+    tranny.run(in, out);
 
     return 0;
 }

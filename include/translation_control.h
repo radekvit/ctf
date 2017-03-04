@@ -19,6 +19,8 @@ protected:
     LexicalAnalyzer *lexicalAnalyzer_ = nullptr;
     const TranslationGrammar *translationGrammar_ = nullptr;
 
+    tstack<Symbol> output_;
+
 public:
     virtual ~TranslationControl() = default;
 
@@ -36,6 +38,8 @@ public:
         string.push_back(lexicalAnalyzer_->get_token());
         return string.back();
     }
+
+    const tstack<Symbol> &output() { return output_; }
 };
 
 class LLTranslationControl : public TranslationControl {
@@ -46,6 +50,9 @@ protected:
     vector<vector<Terminal>> predict_;
 
     LLTable llTable_;
+
+    tstack<Symbol> input_;
+    vector<Terminal> inputString_;
 
     void create_ll_table();
 

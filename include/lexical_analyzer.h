@@ -4,6 +4,7 @@
 #include <base.h>
 #include <functional>
 #include <istream>
+#include <cctype>
 
 namespace bp {
 
@@ -20,8 +21,12 @@ private:
 public:
     LexicalAnalyzer(token_function f = [](std::istream &is) -> Token {
         char c;
-        if (is.get(c))
-            return Token{{1, c}};
+read:
+        if (is.get(c)) {
+            if(std::isspace(static_cast<unsigned char>(c)))
+                                goto read;
+            return Token{{c}};
+        }
         else
             return Token::EOI();
     })
@@ -31,8 +36,12 @@ public:
     LexicalAnalyzer(std::istream &_i,
                     token_function f = [](std::istream &is) -> Token {
                         char c;
-                        if (is.get(c))
-                            return Token{{1, c}};
+            read:
+                        if (is.get(c)) {
+                            if(std::isspace(static_cast<unsigned char>(c)))
+                                goto read;
+                            return Token{{c}};
+                        }
                         else
                             return Token::EOI();
                     })
@@ -41,8 +50,8 @@ public:
     }
 
     bool stream_set() const { return is; }
-    virtual void set_input(std::istream &s) { is = &s; }
-    virtual Token get_token() { return tokenFunction(*is); };
+    void set_input(std::istream &s) { is = &s; }
+    Token get_token() { return tokenFunction(*is); };
 };
 }
 

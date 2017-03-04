@@ -7,6 +7,8 @@
 #include <translation_grammar.h>
 #include <utility>
 
+#include <iostream>//TEMP
+
 namespace bp {
 
 class LLTable {
@@ -24,7 +26,7 @@ public:
     LLTable(const TranslationGrammar &tg,
             const vector<vector<Terminal>> &predict)
         : table_(tg.nonterminals().size(),
-                 vector<size_t>(tg.terminals().size(), tg.rules().size()))
+                 vector<size_t>(tg.terminals().size() + 1, tg.rules().size()))
     {
         if (predict.size() != tg.rules().size())
             throw std::invalid_argument(
@@ -37,6 +39,7 @@ public:
         for (size_t i = 0; i < tg.terminals().size(); ++i) {
             terminalMap.insert(std::make_pair(tg.terminals()[i], i));
         }
+        terminalMap.insert(std::make_pair(Terminal::EOI(), tg.terminals().size()));
         /* fill table */
         for (size_t i = 0; i < tg.rules().size(); ++i) {
             auto &terminals = predict[i];
@@ -49,6 +52,32 @@ public:
                 table_[ni][terminalMap.at(t)] = i;
             }
         }
+#if 0
+        //TEMP
+        using std::cout;
+        cout << "\t";
+        for(auto &t: tg.terminals())
+            cout << t.name() << "\t";
+        cout << "\n";
+        for(size_t i = 0; i < tg.nonterminals().size(); ++i)
+        {
+            auto &nt = tg.nonterminals()[i];
+            cout << nt.name() << "\t";
+            for(size_t i2 = 0; i2 < tg.terminals().size() + 1; ++i2) {
+                auto &t = tg.terminals()[i2];
+                auto & rule = tg.rules()[table_[i][i2]];
+                if(table_[i][i2] < tg.rules().size()) {
+                    cout << rule.nonterminal().name() << "-";
+                    for(auto &s: rule.input()) {
+                        cout << s.terminal.name() << s.nonterminal.name();
+                    }
+                }
+                cout << "\t";
+                cout << std::flush;
+            }
+            cout << "\n";
+        }
+#endif
     }
 
     size_t rule_index(const Nonterminal &nt, const Terminal &t)
