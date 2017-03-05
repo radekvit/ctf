@@ -12,38 +12,73 @@ class LLTable;
 
 struct TranslationGrammar {
     class Rule {
-    public:
-        using attribute_function =
-            std::function<void(const vector<Symbol> &, vector<Symbol>)>;
-
     protected:
         Nonterminal nonterminal_;
 
         vector<Symbol> input_;
         vector<Symbol> output_;
 
-        attribute_function attributeSetter_;
+        /**
+        \brief Attribute copying from input to output in each rule. Implicitly
+        created to copy in-order.
+         */
+        vector<vector<size_t>> attributeTargets;
 
         // checks if nonterminals are in same space
         void check_nonterminals();
+        size_t count_input_terminals() const
+        {
+            size_t count = 0;
+            for (auto &s : input_) {
+                if (s.type == Symbol::Type::TERMINAL)
+                    count++;
+            }
+            return count;
+        }
+        void create_implicit_targets()
+        {
+            attributeTargets = vector<vector<size_t>>(count_input_terminals(),
+                                                      vector<size_t>());
+            auto oit = output_.begin();
+            while (oit != output_.end() &&
+                   oit->type != Symbol::Type::TERMINAL) {
+                ++oit;
+            }
+            if (oit == output_.end())
+                return;
+            int i = 0;
+            for (auto it = input_.begin(); it < input_.end(); ++it) {
+                if (it->type != Symbol::Type::TERMINAL)
+                    continue;
+                attributeTargets[i].push_back(oit - output_.begin());
+                ++i;
+                while (oit != output_.end() &&
+                       oit->type != Symbol::Type::TERMINAL) {
+                    ++oit;
+                }
+                if (oit == output_.end())
+                    return;
+            }
+        }
 
     public:
         Rule(const Nonterminal &_nonterminal, const vector<Symbol> &_input,
              const vector<Symbol> &_output,
-             attribute_function attributeSetter = attribute_function())
+             const vector<vector<size_t>> &_attributeTargets =
+                 vector<vector<size_t>>{})
             : nonterminal_(_nonterminal), input_(_input), output_(_output),
-              attributeSetter_(attributeSetter)
+              attributeTargets(_attributeTargets)
         {
             check_nonterminals();
+            if (attributeTargets.size() == 0)
+                create_implicit_targets();
+            else if (attributeTargets.size() != count_input_terminals())
+                throw std::invalid_argument("Invalid attributeTargets when "
+                                            "constructing class "
+                                            "TranslationGrammar::Rule.");
         }
         Rule(const Nonterminal &_nonterminal, const vector<Symbol> &_both)
-            : Rule(_nonterminal, _both, _both, [](auto input, auto output) {
-                  for (size_t i = 0; i < input.size(); ++i) {
-                      output[i].terminal.attribute() =
-                          input[i].terminal.attribute();
-                  }
-                  return;
-              })
+            : Rule(_nonterminal, _both, _both)
         {
         }
         ~Rule() = default;
@@ -55,6 +90,12 @@ struct TranslationGrammar {
         const vector<Symbol> &input() const { return input_; }
         vector<Symbol> &output() { return output_; }
         const vector<Symbol> &output() const { return output_; }
+
+        vector<vector<size_t>> &targets() { return attributeTargets; }
+        const vector<vector<size_t>> &targets() const
+        {
+            return attributeTargets;
+        }
 
         friend bool operator<(const Rule &lhs, const Rule &rhs)
         {

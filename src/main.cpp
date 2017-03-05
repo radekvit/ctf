@@ -1,8 +1,9 @@
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <ll_table.h>
 #include <translation.h>
 #include <translation_grammar.h>
+#include <ll_translation_control.h>
 
 using namespace bp;
 
@@ -16,13 +17,15 @@ int main()
     vector<Terminal> t{i, plus, ast, parl, parr};
     vector<Nonterminal> n{E, T, F, E_, T_};
     vector<Rule> r{
-        {E, {{T}, {E_}}},
-        {E_, {{plus}, {T}, {E_}}},
+        {
+            E, {{T}, {E_}},
+        },
+        {E_, {{plus}, {T}, {E_}}, {{T}, {plus}, {E_}}},
         {E_, {}},
         {T, {{F}, {T_}}},
-        {T_, {{ast}, {F}, {T_}}},
+        {T_, {{ast}, {F}, {T_}}, {{F}, {ast}, {T_}}},
         {T_, {}},
-        {F, vector<Symbol>{{parl}, {E}, {parr}}},
+        {F, vector<Symbol>{{parl}, {E}, {parr}}, {E}},
         {F, vector<Symbol>{{i}}},
     };
     TranslationGrammar tg(t, n, r, {E});

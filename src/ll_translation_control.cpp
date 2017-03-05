@@ -1,3 +1,8 @@
+/**
+\file ll_translation_control.cpp
+\brief Implements methods for LLTranslationControl
+\author Radek Vít
+ */
 #include <translation_control.h>
 
 namespace bp {
@@ -17,7 +22,7 @@ void LLTranslationControl::set_grammar(const TranslationGrammar &tg)
 
 void LLTranslationControl::run()
 {
-    //TODO: set output attributes from inputString_
+    // TODO: set output attributes from inputString_
     using Type = Symbol::Type;
 
     if (!lexicalAnalyzer_)
@@ -30,6 +35,7 @@ void LLTranslationControl::run()
     output_.clear();
     inputString_.clear();
     vector<const Rule *> rules;
+    tstack<vector<tstack<Symbol>::iterator>> attributeTargets;
 
     Terminal token = next_token(inputString_);
 
@@ -49,6 +55,9 @@ void LLTranslationControl::run()
             break;
         case Type::TERMINAL:
             if (top.terminal == token) {
+                for (auto it : attributeTargets.pop()) {
+                    it->terminal.attribute() += token.attribute();
+                }
                 input_.pop();
                 token = next_token(inputString_);
             } else {
@@ -60,7 +69,9 @@ void LLTranslationControl::run()
             if (ruleIndex < translationGrammar_->rules().size()) {
                 auto &rule = translationGrammar_->rules()[ruleIndex];
                 input_.replace(input_.begin(), rule.input());
-                output_.replace(top, rule.output());
+                auto obegin = output_.replace(top, rule.output());
+                create_attibute_targets(obegin, rule.targets(),
+                                        attributeTargets);
                 rules.push_back(&(rule));
             } else {
                 throw TranslationControlException("No rule can be applied.");
@@ -69,6 +80,22 @@ void LLTranslationControl::run()
         default:
             break;
         }
+    }
+}
+
+void LLTranslationControl::create_attibute_targets(
+    tstack<Symbol>::iterator obegin, const vector<vector<size_t>> &targets,
+    tstack<vector<tstack<Symbol>::iterator>> &attributeTargets)
+{
+    for (auto &target : targets) {
+        vector<tstack<Symbol>::iterator> iterators;
+        for (auto &i : target) {
+            auto oit = obegin;
+            for (size_t x = 0; x < i; ++x)
+                ++oit;
+            iterators.push_back(oit);
+        }
+        attributeTargets.push(iterators);
     }
 }
 
@@ -176,7 +203,7 @@ void LLTranslationControl::create_follow()
             /* first set of all symbols to the right of the current symbol */
             vector<Terminal> compoundFirst;
             /* track symbols from back */
-            for (auto &s: reverse(r.input())) {
+            for (auto &s : reverse(r.input())) {
                 // index of nonterminal in input string, only valid with
                 // nonterminal symbol
                 size_t ti = 0;
@@ -187,7 +214,7 @@ void LLTranslationControl::create_follow()
                         changed = true;
                     if (compoundEmpty && modify_set(follow_[ti], follow_[i]))
                         changed = true;
-                    break;                        
+                    break;
                 default:
                     break;
                 }
@@ -224,7 +251,7 @@ void LLTranslationControl::create_predict()
         vector<Terminal> rfollow =
             follow_[tg.nonterminal_index(r.nonterminal())];
         bool compoundEmpty = true;
-        for (auto &s: reverse(r.input())) {
+        for (auto &s : reverse(r.input())) {
             size_t i;
             switch (s.type) {
             case Symbol::Type::TERMINAL:
@@ -250,4 +277,7 @@ void LLTranslationControl::create_predict()
         }
     }
 }
-}
+
+} // namespace bp
+
+/*** End of file ll_translation_control.cpp ***/

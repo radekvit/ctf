@@ -1,3 +1,8 @@
+/**
+\file base.h
+\brief Defines base formal language types used throughout this project.
+\author Radek Vít
+*/
 #ifndef XVITRA00_BASE_H
 #define XVITRA00_BASE_H
 
@@ -7,6 +12,9 @@
 
 namespace bp {
 
+/**
+\brief Base exception class for project specific exceptions.
+*/
 class TranslationException : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
@@ -15,7 +23,7 @@ class TranslationException : public std::runtime_error {
 \brief Terminal representation with name and optional attribute.
 
 Empty name denotes EOF terminal.
- */
+*/
 class Terminal {
 protected:
     string name_;
@@ -48,6 +56,9 @@ public:
     }
 };
 
+/**
+\brief Nonterminal representation with name.
+*/
 class Nonterminal {
 protected:
     string name_;
@@ -69,6 +80,9 @@ public:
     }
 };
 
+/**
+\brief Symbol, may represent a Terminal, Nonterminal or end of input.
+*/
 struct Symbol {
     enum class Type {
         TERMINAL,
@@ -129,6 +143,7 @@ struct Symbol {
         return !(lhs == rhs);
     }
 };
-}
+} //namespace bp
 
 #endif
+/*** End of file base.h ***/

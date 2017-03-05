@@ -1,3 +1,8 @@
+/**
+\file ll_table.h
+\brief Defines class LLTable and its methods.
+\author Radek Vít
+*/
 #ifndef XVITRA00_LL_H
 #define XVITRA00_LL_H
 
@@ -7,22 +12,43 @@
 #include <translation_grammar.h>
 #include <utility>
 
-#include <iostream>//TEMP
-
 namespace bp {
-
+/**
+\brief Class containing rule indices to be used in a LL controlled translation.
+*/
 class LLTable {
 public:
+    /**
+    \brief Type of the cell.
+    */
     using cell = size_t;
+    /**
+    \brief Row type.
+    */
     using row = vector<cell>;
 
 protected:
+    /**
+    \brief Table storing rule indices.
+    */
     vector<row> table_;
+    /**
+    \brief Mapping nonterminals to indices to table_.
+    */
     map<Nonterminal, size_t> nonterminalMap;
+    /**
+    \brief Mapping terminals to indices to table_ rows.
+    */
     map<Terminal, size_t> terminalMap;
 
 public:
+    /**
+    \brief Constructs an empty LL table.
+    */
     LLTable() = default;
+    /**
+    \brief Constructs a LLtable from a translation grammar and a predict set.
+    */
     LLTable(const TranslationGrammar &tg,
             const vector<vector<Terminal>> &predict)
         : table_(tg.nonterminals().size(),
@@ -39,7 +65,8 @@ public:
         for (size_t i = 0; i < tg.terminals().size(); ++i) {
             terminalMap.insert(std::make_pair(tg.terminals()[i], i));
         }
-        terminalMap.insert(std::make_pair(Terminal::EOI(), tg.terminals().size()));
+        terminalMap.insert(
+            std::make_pair(Terminal::EOI(), tg.terminals().size()));
         /* fill table */
         for (size_t i = 0; i < tg.rules().size(); ++i) {
             auto &terminals = predict[i];
@@ -52,39 +79,16 @@ public:
                 table_[ni][terminalMap.at(t)] = i;
             }
         }
-#if 0
-        //TEMP
-        using std::cout;
-        cout << "\t";
-        for(auto &t: tg.terminals())
-            cout << t.name() << "\t";
-        cout << "\n";
-        for(size_t i = 0; i < tg.nonterminals().size(); ++i)
-        {
-            auto &nt = tg.nonterminals()[i];
-            cout << nt.name() << "\t";
-            for(size_t i2 = 0; i2 < tg.terminals().size() + 1; ++i2) {
-                auto &t = tg.terminals()[i2];
-                auto & rule = tg.rules()[table_[i][i2]];
-                if(table_[i][i2] < tg.rules().size()) {
-                    cout << rule.nonterminal().name() << "-";
-                    for(auto &s: rule.input()) {
-                        cout << s.terminal.name() << s.nonterminal.name();
-                    }
-                }
-                cout << "\t";
-                cout << std::flush;
-            }
-            cout << "\n";
-        }
-#endif
     }
-
+    /**
+    \brief Returns an index of the rule to be used when t is the current token and nt is at the top of input stack. If no rule is applicable, returns tg.rules().size().
+    */
     size_t rule_index(const Nonterminal &nt, const Terminal &t)
     {
         return table_[nonterminalMap.at(nt)][terminalMap.at(t)];
     }
 };
-}
+} //namespace bp
 
 #endif
+/*** End of file ll_table.h ***/
