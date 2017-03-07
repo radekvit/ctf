@@ -3,7 +3,7 @@
 \brief Implements methods for LLTranslationControl
 \author Radek Vít
  */
-#include <translation_control.h>
+#include <ll_translation_control.h>
 
 namespace bp {
 

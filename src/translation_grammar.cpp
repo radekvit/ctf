@@ -30,9 +30,9 @@ TranslationGrammar::TranslationGrammar(const vector<Terminal> &_terminals,
     : terminals_(_terminals), nonterminals_(_nonterminals), rules_(_rules),
       starting_symbol_(starting_symbol)
 {
-    sort(terminals_.begin(), terminals_.end());
-    sort(nonterminals_.begin(), nonterminals_.end());
-    sort(rules_.begin(), rules_.end());
+    make_set(terminals_);
+    make_set(nonterminals_);
+    make_set(rules_);
     if (starting_symbol_.type != Symbol::Type::NONTERMINAL)
         throw std::invalid_argument("Starting symbol must be a nonterminal");
     for (auto &r : rules_) {

@@ -139,8 +139,8 @@ public:
     string. The first element in the string will be closest to top of the stack.
     If the iterator equals tstack::end(), this does nothing.
     */
-    template <template <class T> class TS>
-    iterator replace(iterator it, const TS<T> &string)
+    template <class TS>
+    iterator replace(iterator it, const TS &string)
     {
         if (it == list_.end())
             return it;
@@ -155,8 +155,8 @@ public:
     elements. The first element in the string will be closest to top of the
     stack. If no such element is found, this does nothing.
     */
-    template <template <class T> class TS>
-    iterator replace(const T &target, const TS<T> &string,
+    template <class TS>
+    iterator replace(const T &target, const TS &string,
                      std::function<bool(const T &, const T &)> searchOperator =
                          [](auto lhs, auto rhs) { return lhs == rhs; })
     {
@@ -247,19 +247,31 @@ ALGORITHMS
 -*/
 
 using std::sort;
+using std::unique;
 
 /*-
 FUNCTIONS
 -*/
 
 /**
-\brief Returns true if element e is contained in container v.
+\brief Makes contents of a container a set.
 */
-template <class T, template <class T> class CT>
-bool is_in(const CT<T> &v, const T &e)
+template <class T>
+void make_set(T &container) {
+    // sort the contents
+    sort(container.begin(), container.end());
+    //remove duplicates
+    container.erase(unique(container.begin(), container.end()), container.end());
+}
+
+/**
+\brief Returns true if element e is contained in sorted container c.
+*/
+template <class T, class CT>
+bool is_in(const CT &c, const T &e)
 {
-    auto it = std::lower_bound(v.begin(), v.end(), e);
-    return it != v.end() && it->name() == e.name();
+    auto it = std::lower_bound(c.begin(), c.end(), e);
+    return it != c.end() && it->name() == e.name();
 }
 
 /**
@@ -276,7 +288,7 @@ template <class T> T set_union(const T &lhs, const T &rhs)
 /**
 \brief Returns true if the set union between the two containers changed the target container.
 */
-template <class T, template <class T> class CT> bool modify_set(CT<T> &target, const CT<T> &addition)
+template <class CT> bool modify_set(CT &target, const CT &addition)
 {
     auto before = target.size();
     target = set_union(target, addition);
