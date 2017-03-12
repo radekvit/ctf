@@ -1,61 +1,68 @@
-#include <algorithm>
+/**
+\file translation_grammar.cpp
+\brief Implements TranslationGrammar and its subclasses' methods.
+\author Radek Vít
+*/
 #include <ll_table.h>
-#include <stdexcept>
 #include <translation_grammar.h>
+#include <algorithm>
+#include <stdexcept>
 namespace ctf {
 
+/**
+\brief Empty string.
+*/
 const vector<Symbol> TranslationGrammar::EPSILON_STRING = vector<Symbol>();
 
-void TranslationGrammar::Rule::check_nonterminals()
-{
-    vector<Nonterminal> inputNonterminals;
-    vector<Nonterminal> outputNonterminals;
-    for (auto &s : input_) {
-        if (s.type == Symbol::Type::NONTERMINAL)
-            inputNonterminals.push_back(s.nonterminal);
-    }
-    for (auto &s : output_) {
-        if (s.type == Symbol::Type::NONTERMINAL)
-            outputNonterminals.push_back(s.nonterminal);
-    }
-    if (inputNonterminals != outputNonterminals)
-        throw std::invalid_argument(
-            "Input and output nonterminals must match.");
+void TranslationGrammar::Rule::check_nonterminals() {
+  vector<Nonterminal> inputNonterminals;
+  vector<Nonterminal> outputNonterminals;
+  for (auto &s : input_) {
+    if (s.type == Symbol::Type::NONTERMINAL)
+      inputNonterminals.push_back(s.nonterminal);
+  }
+  for (auto &s : output_) {
+    if (s.type == Symbol::Type::NONTERMINAL)
+      outputNonterminals.push_back(s.nonterminal);
+  }
+  if (inputNonterminals != outputNonterminals)
+    throw std::invalid_argument("Input and output nonterminals must match.");
 }
 
 TranslationGrammar::TranslationGrammar(const vector<Terminal> &_terminals,
                                        const vector<Nonterminal> &_nonterminals,
                                        const vector<Rule> &_rules,
                                        const Symbol &starting_symbol)
-    : terminals_(_terminals), nonterminals_(_nonterminals), rules_(_rules),
-      starting_symbol_(starting_symbol)
-{
-    make_set(terminals_);
-    make_set(nonterminals_);
-    make_set(rules_);
-    if (starting_symbol_.type != Symbol::Type::NONTERMINAL)
-        throw std::invalid_argument("Starting symbol must be a nonterminal");
-    for (auto &r : rules_) {
-        if (!is_in(nonterminals_, r.nonterminal()))
-            throw std::invalid_argument("Rule with nonterminal " +
-                                        r.nonterminal().name() +
-                                        ", no such nonterminal.");
-    }
+    : terminals_(_terminals),
+      nonterminals_(_nonterminals),
+      rules_(_rules),
+      starting_symbol_(starting_symbol) {
+  make_set(terminals_);
+  make_set(nonterminals_);
+  make_set(rules_);
+  if (starting_symbol_.type != Symbol::Type::NONTERMINAL)
+    throw std::invalid_argument("Starting symbol must be a nonterminal");
+  for (auto &r : rules_) {
+    if (!is_in(nonterminals_, r.nonterminal()))
+      throw std::invalid_argument("Rule with nonterminal " +
+                                  r.nonterminal().name() +
+                                  ", no such nonterminal.");
+  }
 }
 
-size_t TranslationGrammar::nonterminal_index(const Nonterminal &nt) const
-{
-    return std::lower_bound(nonterminals_.begin(), nonterminals_.end(), nt) -
-           nonterminals_.begin();
+size_t TranslationGrammar::nonterminal_index(const Nonterminal &nt) const {
+  return std::lower_bound(nonterminals_.begin(), nonterminals_.end(), nt) -
+         nonterminals_.begin();
 }
 
-size_t TranslationGrammar::terminal_index(const Terminal &t) const
-{
-    return std::lower_bound(terminals_.begin(), terminals_.end(), t) -
-           terminals_.begin();
+size_t TranslationGrammar::terminal_index(const Terminal &t) const {
+  return std::lower_bound(terminals_.begin(), terminals_.end(), t) -
+         terminals_.begin();
 }
 
-/*
+#if 0
+//this transforms Translation Grammar to LL grammar if possible; currently not used
+
 Nonterminal create_new_nonterminal(const vector<Nonterminal> &nonterminals,
                                    const string &base, const char suffix)
 {
@@ -155,5 +162,5 @@ TranslationGrammar TranslationGrammar::make_LL(const TranslationGrammar &tg)
     // left recursion removal
     return TranslationGrammar::remove_left_recursion(factorized);
 }
-*/
+#endif
 }

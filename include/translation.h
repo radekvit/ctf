@@ -21,36 +21,36 @@ namespace ctf {
 and outputs.
 */
 class Translation {
-protected:
-    /**
-    \brief Reference to LexicalAnalyzer to be used.
-    */
-    LexicalAnalyzer &lexicalAnalyzer_;
-    /**
-    \brief Reference to TranslationControl to be used.
-    */
-    TranslationControl &translationControl_;
-    /**
-    \brief Translation grammar that defines accepted language and output
-    language.
-    */
-    TranslationGrammar translationGrammar_;
-    /**
-    \brief Reference to OutputGenerator to be used.
-    */
-    OutputGenerator &outputGenerator_;
+ protected:
+  /**
+  \brief Reference to LexicalAnalyzer to be used.
+  */
+  LexicalAnalyzer &lexicalAnalyzer_;
+  /**
+  \brief Reference to TranslationControl to be used.
+  */
+  TranslationControl &translationControl_;
+  /**
+  \brief Translation grammar that defines accepted language and output
+  language.
+  */
+  TranslationGrammar translationGrammar_;
+  /**
+  \brief Reference to OutputGenerator to be used.
+  */
+  OutputGenerator &outputGenerator_;
 
-public:
-    Translation(LexicalAnalyzer &la, TranslationControl &tc,
-                TranslationGrammar &tg, OutputGenerator &og);
-    ~Translation() = default;
+ public:
+  Translation(LexicalAnalyzer &la, TranslationControl &tc,
+              TranslationGrammar &tg, OutputGenerator &og);
+  ~Translation() = default;
 
-    /**
-    \brief Translates input from istream and outputs the translation to ostream.
-    */
-    void run(std::istream &input, std::ostream &output);
+  /**
+  \brief Translates input from istream and outputs the translation to ostream.
+  */
+  void run(std::istream &input, std::ostream &output);
 };
-} // namespace ctf
+}  // namespace ctf
 
 #endif
 /*** End of file translation.h ***/
