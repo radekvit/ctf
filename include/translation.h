@@ -3,8 +3,8 @@
 \brief Defines class Translation and its methods.
 \author Radek Vít
 */
-#ifndef XVITRA00_TRANSLATION
-#define XVITRA00_TRANSLATION
+#ifndef CTF_TRANSLATION
+#define CTF_TRANSLATION
 
 #include <istream>
 #include <ostream>
@@ -15,9 +15,10 @@
 #include <translation_control.h>
 #include <translation_grammar.h>
 
-namespace bp {
+namespace ctf {
 /**
-\brief Defines a translation. Can be used multiple times for different inputs and outputs.
+\brief Defines a translation. Can be used multiple times for different inputs
+and outputs.
 */
 class Translation {
 protected:
@@ -30,7 +31,8 @@ protected:
     */
     TranslationControl &translationControl_;
     /**
-    \brief Translation grammar that defines accepted language and output language.
+    \brief Translation grammar that defines accepted language and output
+    language.
     */
     TranslationGrammar translationGrammar_;
     /**
@@ -48,7 +50,7 @@ public:
     */
     void run(std::istream &input, std::ostream &output);
 };
-} //namespace bp
+} // namespace ctf
 
 #endif
 /*** End of file translation.h ***/

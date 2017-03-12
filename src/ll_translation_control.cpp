@@ -5,7 +5,7 @@
  */
 #include <ll_translation_control.h>
 
-namespace bp {
+namespace ctf {
 
 LLTranslationControl::LLTranslationControl(LexicalAnalyzer &la,
                                            TranslationGrammar &tg)
@@ -278,6 +278,6 @@ void LLTranslationControl::create_predict()
     }
 }
 
-} // namespace bp
+} // namespace ctf
 
 /*** End of file ll_translation_control.cpp ***/

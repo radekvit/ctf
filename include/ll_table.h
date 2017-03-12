@@ -3,8 +3,8 @@
 \brief Defines class LLTable and its methods.
 \author Radek Vít
 */
-#ifndef XVITRA00_LL_H
-#define XVITRA00_LL_H
+#ifndef CTF_LL_H
+#define CTF_LL_H
 
 #include <base.h>
 #include <generic_types.h>
@@ -12,7 +12,7 @@
 #include <translation_grammar.h>
 #include <utility>
 
-namespace bp {
+namespace ctf {
 /**
 \brief Class containing rule indices to be used in a LL controlled translation.
 */
@@ -81,14 +81,16 @@ public:
         }
     }
     /**
-    \brief Returns an index of the rule to be used when t is the current token and nt is at the top of input stack. If no rule is applicable, returns tg.rules().size().
+    \brief Returns an index of the rule to be used when t is the current token
+    and nt is at the top of input stack. If no rule is applicable, returns
+    tg.rules().size().
     */
     size_t rule_index(const Nonterminal &nt, const Terminal &t)
     {
         return table_[nonterminalMap.at(nt)][terminalMap.at(t)];
     }
 };
-} //namespace bp
+} // namespace ctf
 
 #endif
 /*** End of file ll_table.h ***/

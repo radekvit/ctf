@@ -1,11 +1,11 @@
 #include <fstream>
 #include <iostream>
 #include <ll_table.h>
+#include <ll_translation_control.h>
 #include <translation.h>
 #include <translation_grammar.h>
-#include <ll_translation_control.h>
 
-using namespace bp;
+using namespace ctf;
 
 using Rule = TranslationGrammar::Rule;
 

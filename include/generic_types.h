@@ -4,8 +4,8 @@
 this project.
 \author Radek Vít
  */
-#ifndef XVITRA00_GT_H
-#define XVITRA00_GT_H
+#ifndef CTF_GT_H
+#define CTF_GT_H
 
 #include <algorithm>
 #include <functional>
@@ -16,7 +16,7 @@ this project.
 #include <string>
 #include <vector>
 
-namespace bp {
+namespace ctf {
 
 /*-
 TYPES
@@ -139,8 +139,7 @@ public:
     string. The first element in the string will be closest to top of the stack.
     If the iterator equals tstack::end(), this does nothing.
     */
-    template <class TS>
-    iterator replace(iterator it, const TS &string)
+    template <class TS> iterator replace(iterator it, const TS &string)
     {
         if (it == list_.end())
             return it;
@@ -172,7 +171,8 @@ public:
     */
     iterator begin() { return list_.begin(); }
     /**
-    \brief Returns an iterator to the element following the furthest element from the top.
+    \brief Returns an iterator to the element following the furthest element
+    from the top.
     */
     iterator end() { return list_.end(); }
     /**
@@ -180,7 +180,8 @@ public:
     */
     const_iterator begin() const { return list_.begin(); }
     /**
-    \brief Returns a constant iterator to the element following the furthest element from the top.
+    \brief Returns a constant iterator to the element following the furthest
+    element from the top.
     */
     const_iterator end() const { return list_.end(); }
     /**
@@ -188,7 +189,8 @@ public:
     */
     const_iterator cbegin() const { return list_.cbegin(); }
     /**
-    \brief Returns a constant iterator to the element following the furthest element from the top.
+    \brief Returns a constant iterator to the element following the furthest
+    element from the top.
     */
     const_iterator cend() const { return list_.cend(); }
     /**
@@ -200,19 +202,23 @@ public:
     */
     reverse_iterator rend() { return list_.rend(); }
     /**
-    \brief Returns a constant reverse iterator to the furthest element from the top.
+    \brief Returns a constant reverse iterator to the furthest element from the
+    top.
     */
     const_reverse_iterator rbegin() const { return list_.rbegin(); }
     /**
-    \brief Returns a constant reverse iterator to the element before the top element.
+    \brief Returns a constant reverse iterator to the element before the top
+    element.
     */
     const_reverse_iterator rend() const { return list_.rend(); }
     /**
-    \brief Returns a constant reverse iterator to the furthest element from the top.
+    \brief Returns a constant reverse iterator to the furthest element from the
+    top.
     */
     const_reverse_iterator crbegin() const { return list_.rbegin(); }
     /**
-    \brief Returns a constant reverse iterator to the element before the top element.
+    \brief Returns a constant reverse iterator to the element before the top
+    element.
     */
     const_reverse_iterator crend() const { return list_.rend(); }
 
@@ -256,19 +262,19 @@ FUNCTIONS
 /**
 \brief Makes contents of a container a set.
 */
-template <class T>
-void make_set(T &container) {
+template <class T> void make_set(T &container)
+{
     // sort the contents
     sort(container.begin(), container.end());
-    //remove duplicates
-    container.erase(unique(container.begin(), container.end()), container.end());
+    // remove duplicates
+    container.erase(unique(container.begin(), container.end()),
+                    container.end());
 }
 
 /**
 \brief Returns true if element e is contained in sorted container c.
 */
-template <class T, class CT>
-bool is_in(const CT &c, const T &e)
+template <class T, class CT> bool is_in(const CT &c, const T &e)
 {
     auto it = std::lower_bound(c.begin(), c.end(), e);
     return it != c.end() && it->name() == e.name();
@@ -286,7 +292,8 @@ template <class T> T set_union(const T &lhs, const T &rhs)
 }
 
 /**
-\brief Returns true if the set union between the two containers changed the target container.
+\brief Returns true if the set union between the two containers changed the
+target container.
 */
 template <class CT> bool modify_set(CT &target, const CT &addition)
 {
@@ -349,6 +356,6 @@ OT<T> transform(const IT<T> &it)
     return OT<T>{it.begin(), it.end()};
 }
 
-} //namespace bp
+} // namespace ctf
 #endif
 /*** Enf of file generic_types.h ***/

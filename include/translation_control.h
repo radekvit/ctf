@@ -3,15 +3,15 @@
 \brief Defines class TranslationControl and its methods.
 \author Radek Vít
 */
-#ifndef XVITRA00_TRANSLATION_CONTROL
-#define XVITRA00_TRANSLATION_CONTROL
+#ifndef CTF_TRANSLATION_CONTROL
+#define CTF_TRANSLATION_CONTROL
 
 #include <base.h>
 #include <lexical_analyzer.h>
 #include <ll_table.h>
 #include <translation_grammar.h>
 
-namespace bp {
+namespace ctf {
 
 /**
 \brief Exception class for TranslationControl specific exceptions.
@@ -62,7 +62,8 @@ public:
     */
     virtual void run() = 0;
     /**
-    \brief Gets token from lexicalAnalyzer_ and stores it in a given vector. Returns this terminal.
+    \brief Gets token from lexicalAnalyzer_ and stores it in a given vector.
+    Returns this terminal.
     */
     Token next_token(vector<Terminal> &string)
     {
@@ -74,6 +75,6 @@ public:
     */
     const tstack<Symbol> &output() const { return output_; }
 };
-} //namespace bp
+} // namespace ctf
 #endif
 /*** End of file translation_control.h ***/

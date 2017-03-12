@@ -1,6 +1,6 @@
 #include <translation.h>
 
-namespace bp {
+namespace ctf {
 
 Translation::Translation(LexicalAnalyzer &la, TranslationControl &tc,
                          TranslationGrammar &tg, OutputGenerator &og)

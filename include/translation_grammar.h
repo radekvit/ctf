@@ -1,5 +1,5 @@
-#ifndef XVITRA00_TG_H
-#define XVITRA00_TG_H
+#ifndef CTF_TG_H
+#define CTF_TG_H
 
 #include <base.h>
 #include <functional>
@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace bp {
+namespace ctf {
 class LLTable;
 
 struct TranslationGrammar {

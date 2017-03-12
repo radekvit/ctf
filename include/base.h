@@ -3,14 +3,14 @@
 \brief Defines base formal language types used throughout this project.
 \author Radek Vít
 */
-#ifndef XVITRA00_BASE_H
-#define XVITRA00_BASE_H
+#ifndef CTF_BASE_H
+#define CTF_BASE_H
 
 #include <generic_types.h>
 #include <ostream>
 #include <stdexcept>
 
-namespace bp {
+namespace ctf {
 
 /**
 \brief Base exception class for project specific exceptions.
@@ -143,7 +143,7 @@ struct Symbol {
         return !(lhs == rhs);
     }
 };
-} //namespace bp
+} // namespace ctf
 
 #endif
 /*** End of file base.h ***/

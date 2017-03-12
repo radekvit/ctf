@@ -3,20 +3,35 @@
 \brief Defines class LexicalAnalyzer used to supply tokens from input stream.
 \author Radek Vít
 */
-#ifndef XVITRA00_LEXICAL_ANALYZER
-#define XVITRA00_LEXICAL_ANALYZER
+#ifndef CTF_LEXICAL_ANALYZER
+#define CTF_LEXICAL_ANALYZER
 
 #include <base.h>
 #include <cctype>
 #include <functional>
 #include <istream>
 
-namespace bp {
+namespace ctf {
 
 /**
 \brief Alias for Terminal. Token and Terminal are interchangable.
 */
 using Token = Terminal;
+
+/**
+\brief Default attribute setter.
+*/
+static Token default_token_attributes(std::istream &is)
+{
+    char c;
+read:
+    if (is.get(c)) {
+        if (std::isspace(static_cast<unsigned char>(c)))
+            goto read;
+        return Token{{c}};
+    } else
+        return Token::EOI();
+}
 
 /**
 \brief Extracts tokens from input stream.
@@ -33,45 +48,31 @@ public:
 
 private:
     /**
-    \brief Pointer to the input stream that tokenFunction takes input from. May be changed between tokenFunction calls.
+    \brief Pointer to the input stream that tokenFunction takes input from. May
+    be changed between tokenFunction calls.
     */
     std::istream *is;
     /**
-    \brief A function, lambda or callable object used to extract tokens from an input stream.
+    \brief A function, lambda or callable object used to extract tokens from an
+    input stream.
     */
     token_function tokenFunction;
 
 public:
     /**
-    \brief Constructs LexicalAnalyzer without a given input stream. If specified, f determines the tokenFunction.
+    \brief Constructs LexicalAnalyzer without a given input stream. If
+    specified, f determines the tokenFunction.
     */
-    LexicalAnalyzer(token_function f = [](std::istream &is) -> Token {
-        char c;
-    read:
-        if (is.get(c)) {
-            if (std::isspace(static_cast<unsigned char>(c)))
-                goto read;
-            return Token{{c}};
-        } else
-            return Token::EOI();
-    })
+    LexicalAnalyzer(token_function f = &default_token_attributes)
         : is(nullptr), tokenFunction(f)
     {
     }
     /**
-    \brief Constructs LexicalAnalyzer with a given istream. If specified, f determines the tokenFunction.
+    \brief Constructs LexicalAnalyzer with a given istream. If specified, f
+    determines the tokenFunction.
     */
     LexicalAnalyzer(std::istream &_i,
-                    token_function f = [](std::istream &is) -> Token {
-                        char c;
-                    read:
-                        if (is.get(c)) {
-                            if (std::isspace(static_cast<unsigned char>(c)))
-                                goto read;
-                            return Token{{c}};
-                        } else
-                            return Token::EOI();
-                    })
+                    token_function f = &default_token_attributes)
         : is(&_i), tokenFunction(f)
     {
     }
@@ -85,11 +86,12 @@ public:
     */
     void set_input(std::istream &s) { is = &s; }
     /**
-    \brief Uses tokenFunction to get a Token from input stream. If LexicalAnalyzer::stream_set() is false, this results in undefined behavior.
+    \brief Uses tokenFunction to get a Token from input stream. If
+    LexicalAnalyzer::stream_set() is false, this results in undefined behavior.
     */
     Token get_token() { return tokenFunction(*is); };
 };
-} //namespace bp
+} // namespace ctf
 
 #endif
 /*** End of file lexical_analyzer.h ***/

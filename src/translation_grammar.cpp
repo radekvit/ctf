@@ -2,7 +2,7 @@
 #include <ll_table.h>
 #include <stdexcept>
 #include <translation_grammar.h>
-namespace bp {
+namespace ctf {
 
 const vector<Symbol> TranslationGrammar::EPSILON_STRING = vector<Symbol>();
 
