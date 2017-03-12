@@ -66,8 +66,7 @@ struct TranslationGrammar {
     \brief Constructs a rule with implicit attribute targets.
     */
     Rule(const Nonterminal &_nonterminal, const vector<Symbol> &_input,
-         const vector<Symbol> &_output
-         )
+         const vector<Symbol> &_output)
         : nonterminal_(_nonterminal),
           input_(_input),
           output_(_output),
@@ -86,7 +85,7 @@ struct TranslationGrammar {
           output_(_output),
           attributeTargets(_attributeTargets) {
       check_nonterminals();
-      //TODO better targets checks
+      // TODO better targets checks
       if (attributeTargets.size() != count_input_terminals())
         throw std::invalid_argument(
             "Invalid attributeTargets when "
@@ -94,7 +93,8 @@ struct TranslationGrammar {
             "TranslationGrammar::Rule.");
     }
     /**
-    \brief Constructs a rule with same input and output. Attribute targets are implicit.
+    \brief Constructs a rule with same input and output. Attribute targets are
+    implicit.
     */
     Rule(const Nonterminal &_nonterminal, const vector<Symbol> &_both)
         : Rule(_nonterminal, _both, _both) {}
@@ -147,7 +147,7 @@ struct TranslationGrammar {
   static const vector<Symbol> EPSILON_STRING;
 
   void swap_sides() {
-    //TODO swap attribute targets
+    // TODO swap attribute targets
     for (auto &r : rules_) {
       r.swap_sides();
     }
@@ -165,6 +165,6 @@ struct TranslationGrammar {
   size_t nonterminal_index(const Nonterminal &nt) const;
   size_t terminal_index(const Terminal &t) const;
 };
-} //namespace ctf
+}  // namespace ctf
 #endif
 /*** End of file translation_grammar.h ***/

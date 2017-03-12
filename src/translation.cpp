@@ -21,5 +21,5 @@ void Translation::run(std::istream &input, std::ostream &output) {
     outputGenerator_.get_token(t.terminal);
   }
 }
-} // namespace ctf
-/*** End of file translation.cpp ***/
+}  // namespace ctf
+   /*** End of file translation.cpp ***/
