@@ -10,7 +10,8 @@
 namespace ctf {
 class LLTable;
 
-struct TranslationGrammar {
+class TranslationGrammar {
+ public:
   class Rule {
    protected:
     Nonterminal nonterminal_;
@@ -139,6 +140,9 @@ struct TranslationGrammar {
   \brief Constructs empty TranslationGrammar.
   */
   TranslationGrammar();
+  /**
+  \brief Constructs a TranslationGrammar
+  */
   TranslationGrammar(const vector<Terminal> &terminals,
                      const vector<Nonterminal> &nonterminals,
                      const vector<Rule> &rules, const Symbol &starting_symbol);
@@ -146,6 +150,9 @@ struct TranslationGrammar {
 
   static const vector<Symbol> EPSILON_STRING;
 
+  /**
+  \brief Swaps input and output and inverses attribute targets.
+  */
   void swap_sides() {
     // TODO swap attribute targets
     for (auto &r : rules_) {
@@ -162,7 +169,13 @@ struct TranslationGrammar {
   Symbol &starting_symbol() { return starting_symbol_; }
   const Symbol &starting_symbol() const { return starting_symbol_; }
 
+  /**
+  \brief Returns a nonterminal's index.
+  */
   size_t nonterminal_index(const Nonterminal &nt) const;
+  /**
+  \brief Returns a terminal's index.
+  */
   size_t terminal_index(const Terminal &t) const;
 };
 }  // namespace ctf

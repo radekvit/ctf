@@ -8,7 +8,7 @@ $(shell mkdir -p $(OBJ))
 HEADERS=$(INCLUDE)/generic_types.h $(INCLUDE)/ll_table.h \
 $(INCLUDE)/translation_grammar.h
 OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
-OBJFILES += main.o
+OBJFILES += $(OBJ)/main.o
 
 .PHONY: all format clean debug build test
 

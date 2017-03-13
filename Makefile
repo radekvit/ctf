@@ -9,7 +9,7 @@ HEADERS=$(INCLUDE)/generic_types.h $(INCLUDE)/ll_table.h \
 $(INCLUDE)/translation_grammar.h
 OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
 
-.PHONY: all format clean debug build test pack
+.PHONY: all format clean debug build test pack doc
 
 all: deploy
 
@@ -28,7 +28,7 @@ $(OBJ)/%.o: $(SRC)/%.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	-rm -f $(OBJFILES) $(APPNAME)
+	-rm -rf $(OBJFILES) $(APPNAME) doc/html
 
 format:
 	clang-format -style=file -i $(SRC)/*.cpp $(INCLUDE)/*.h
@@ -39,3 +39,6 @@ test:
 pack: all
 pack:
 	zip ctf.zip include/*.h $(APPNAME)
+
+doc:
+	make -C doc

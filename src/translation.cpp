@@ -1,3 +1,8 @@
+/**
+\file translation.cpp
+\brief Implements methods of class Translation.
+\author Radek Vít
+*/
 #include <translation.h>
 
 namespace ctf {
