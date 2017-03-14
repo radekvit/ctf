@@ -16,7 +16,7 @@ namespace ctf {
 /**
 \brief Exception class for TranslationControl specific exceptions.
 */
-class TranslationControlException : public TranslationException {
+class SyntacticError : public TranslationException {
   using TranslationException::TranslationException;
 };
 

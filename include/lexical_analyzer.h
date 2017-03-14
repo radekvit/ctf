@@ -13,6 +13,11 @@
 
 namespace ctf {
 
+class LexicalError : public TranslationException {
+ public:
+  using TranslationException::TranslationException;
+};
+
 /**
 \brief Alias for Terminal. Token and Terminal are interchangable.
 */

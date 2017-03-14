@@ -10,6 +10,11 @@ and outputs it into a stream.
 #include <ostream>
 
 namespace ctf {
+
+class SemanticError : public TranslationException {
+ public:
+  using TranslationException::TranslationException;
+};
 /**
 Outputs tokens to output stream.
 */
