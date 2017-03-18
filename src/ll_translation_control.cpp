@@ -36,6 +36,7 @@ void LLTranslationControl::run() {
   Terminal token = next_token(inputString_);
 
   input_.push(Symbol::EOI());
+  output_.push(Symbol::EOI());
   input_.push(translationGrammar_->starting_symbol());
   output_.push(translationGrammar_->starting_symbol());
   while (1) {

@@ -50,6 +50,14 @@ class Terminal {
   friend bool operator==(const Terminal &lhs, const Terminal &rhs) {
     return lhs.name() == rhs.name();
   }
+
+  friend bool operator!=(const Terminal &lhs, const Terminal &rhs) {
+    return !(lhs == rhs);
+  }
+
+  friend bool operator>(const Terminal &lhs, const Terminal &rhs) {
+    return rhs < lhs;
+  }
 };
 
 /**

@@ -11,6 +11,10 @@ and outputs it into a stream.
 
 namespace ctf {
 
+static void default_output(std::ostream &os, const Terminal &t) {
+  if (t != Terminal::EOI()) os << t.name() << "." << t.attribute() << "\n";
+}
+
 class SemanticError : public TranslationException {
  public:
   using TranslationException::TranslationException;
@@ -40,19 +44,12 @@ class OutputGenerator {
   /**
   \brief Constructs OutputGenerator without an output stream.
   */
-  OutputGenerator(output_function f =
-                      [](std::ostream &os, const Terminal &t) {
-                        os << t.name() << "." << t.attribute() << "\n";
-                      })
+  OutputGenerator(output_function f = default_output)
       : os(nullptr), outputFunction(f) {}
   /**
   \brief Constructs OutputGenerator with an output stream.
   */
-  OutputGenerator(std::ostream &_o,
-                  output_function f =
-                      [](std::ostream &os, const Terminal &t) {
-                        os << t.name() << "." << t.attribute() << "\n";
-                      })
+  OutputGenerator(std::ostream &_o, output_function f = default_output)
       : os(&_o), outputFunction(f) {}
 
   /**
