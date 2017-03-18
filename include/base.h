@@ -38,8 +38,11 @@ class Symbol {
 
  public:
   Symbol(Type type, const string &name = "", const string &atr = "")
-      : type_(type), name_(name), attribute_(atr) {}
-  Symbol(const string &name = "", const string &atr = "")
+      : type_(type), name_(name), attribute_(atr) {
+        if (type != Symbol::Type::EOI && name == "")
+          throw std::invalid_argument("Empty name when constructing non-EOI Symbol.");
+      }
+  Symbol(const string &name, const string &atr = "")
       : Symbol(Type::UNKNOWN, name, atr) {}
   ~Symbol() = default;
 
