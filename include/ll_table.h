@@ -35,11 +35,11 @@ class LLTable {
   /**
   \brief Mapping nonterminals to indices to table_.
   */
-  map<Nonterminal, size_t> nonterminalMap;
+  map<Symbol, size_t> nonterminalMap;
   /**
   \brief Mapping terminals to indices to table_ rows.
   */
-  map<Terminal, size_t> terminalMap;
+  map<Symbol, size_t> terminalMap;
 
  public:
   /**
@@ -49,7 +49,7 @@ class LLTable {
   /**
   \brief Constructs a LLtable from a translation grammar and a predict set.
   */
-  LLTable(const TranslationGrammar &tg, const vector<vector<Terminal>> &predict)
+  LLTable(const TranslationGrammar &tg, const vector<vector<Symbol>> &predict)
       : table_(tg.nonterminals().size(),
                vector<size_t>(tg.terminals().size() + 1, tg.rules().size())) {
     if (predict.size() != tg.rules().size())
@@ -63,7 +63,7 @@ class LLTable {
     for (size_t i = 0; i < tg.terminals().size(); ++i) {
       terminalMap.insert(std::make_pair(tg.terminals()[i], i));
     }
-    terminalMap.insert(std::make_pair(Terminal::EOI(), tg.terminals().size()));
+    terminalMap.insert(std::make_pair(Symbol::EOI(), tg.terminals().size()));
     /* fill table */
     for (size_t i = 0; i < tg.rules().size(); ++i) {
       auto &terminals = predict[i];
@@ -83,7 +83,7 @@ class LLTable {
   and nt is at the top of input stack. If no rule is applicable, returns
   tg.rules().size().
   */
-  size_t rule_index(const Nonterminal &nt, const Terminal &t) {
+  size_t rule_index(const Symbol &nt, const Symbol &t) {
     return table_[nonterminalMap.at(nt)][terminalMap.at(t)];
   }
 };

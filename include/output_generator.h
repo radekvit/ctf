@@ -11,8 +11,8 @@ and outputs it into a stream.
 
 namespace ctf {
 
-static void default_output(std::ostream &os, const Terminal &t) {
-  if (t != Terminal::EOI()) os << t.name() << "." << t.attribute() << "\n";
+static void default_output(std::ostream &os, const Symbol &t) {
+  if (t != Symbol::EOI()) os << t.name() << "." << t.attribute() << "\n";
 }
 
 class SemanticError : public TranslationException {
@@ -27,7 +27,7 @@ class OutputGenerator {
   /**
   \brief Alias for std::function.
   */
-  using output_function = std::function<void(std::ostream &, const Terminal &)>;
+  using output_function = std::function<void(std::ostream &, const Symbol &)>;
 
  private:
   /**
@@ -64,7 +64,7 @@ class OutputGenerator {
   \brief Outputs a token to the given stream. If OutputGenerator::stream_set()
   is false, this results in undefined behavior.
   */
-  void get_token(const Terminal &t) { outputFunction(*os, t); }
+  void get_token(const Symbol &t) { outputFunction(*os, t); }
 };
 }  // namespace ctf
 

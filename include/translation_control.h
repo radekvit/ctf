@@ -64,7 +64,7 @@ class TranslationControl {
   \brief Gets token from lexicalAnalyzer_ and stores it in a given vector.
   Returns this terminal.
   */
-  Token next_token(vector<Terminal> &string) {
+  Token next_token(vector<Symbol> &string) {
     string.push_back(lexicalAnalyzer_->get_token());
     return string.back();
   }

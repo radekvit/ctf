@@ -6,15 +6,15 @@
 #include <iostream>
 
 using namespace ctf;
-
 using Rule = TranslationGrammar::Rule;
+using Type = Symbol::Type;
 
 int main() {
   LexicalAnalyzer dla;
-  Terminal i("i"), plus("+"), ast("*"), parl("("), parr(")");
-  Nonterminal E("E"), E_("E'"), T("T"), T_("T'"), F("F");
-  vector<Terminal> t{i, plus, ast, parl, parr};
-  vector<Nonterminal> n{E, T, F, E_, T_};
+  Symbol i(Type::TERMINAL, "i"), plus(Type::TERMINAL, "+"), ast(Type::TERMINAL, "*"), parl(Type::TERMINAL, "("), parr(Type::TERMINAL, ")");
+  Symbol E(Type::NONTERMINAL, "E"), E_(Type::NONTERMINAL, "E'"), T(Type::NONTERMINAL, "T"), T_(Type::NONTERMINAL, "T'"), F(Type::NONTERMINAL, "F");
+  vector<Symbol> terminals{i, plus, ast, parl, parr};
+  vector<Symbol> nonterminals{E, T, F, E_, T_};
   vector<Rule> r{
       {
           E, {{T}, {E_}},
@@ -27,7 +27,7 @@ int main() {
       {F, vector<Symbol>{{parl}, {E}, {parr}}, {E}},
       {F, vector<Symbol>{{i}}},
   };
-  TranslationGrammar tg(t, n, r, {E});
+  TranslationGrammar tg(r, E);
 
   LLTranslationControl tc(dla, tg);
 

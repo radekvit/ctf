@@ -14,7 +14,7 @@ class TranslationGrammar {
  public:
   class Rule {
    protected:
-    Nonterminal nonterminal_;
+    Symbol nonterminal_;
 
     vector<Symbol> input_;
     vector<Symbol> output_;
@@ -35,7 +35,7 @@ class TranslationGrammar {
     size_t count_input_terminals() const {
       size_t count = 0;
       for (auto &s : input_) {
-        if (s.type == Symbol::Type::TERMINAL) count++;
+        if (s.type() == Symbol::Type::TERMINAL) count++;
       }
       return count;
     }
@@ -46,16 +46,16 @@ class TranslationGrammar {
       attributeTargets =
           vector<vector<size_t>>(count_input_terminals(), vector<size_t>());
       auto oit = output_.begin();
-      while (oit != output_.end() && oit->type != Symbol::Type::TERMINAL) {
+      while (oit != output_.end() && oit->type() != Symbol::Type::TERMINAL) {
         ++oit;
       }
       if (oit == output_.end()) return;
       int i = 0;
       for (auto it = input_.begin(); it < input_.end(); ++it) {
-        if (it->type != Symbol::Type::TERMINAL) continue;
+        if (it->type() != Symbol::Type::TERMINAL) continue;
         attributeTargets[i].push_back(oit - output_.begin());
         ++i;
-        while (oit != output_.end() && oit->type != Symbol::Type::TERMINAL) {
+        while (oit != output_.end() && oit->type() != Symbol::Type::TERMINAL) {
           ++oit;
         }
         if (oit == output_.end()) return;
@@ -66,7 +66,7 @@ class TranslationGrammar {
     /**
     \brief Constructs a rule with implicit attribute targets.
     */
-    Rule(const Nonterminal &_nonterminal, const vector<Symbol> &_input,
+    Rule(const Symbol &_nonterminal, const vector<Symbol> &_input,
          const vector<Symbol> &_output)
         : nonterminal_(_nonterminal),
           input_(_input),
@@ -78,7 +78,7 @@ class TranslationGrammar {
     /**
     \brief Constructs a rule.
     */
-    Rule(const Nonterminal &_nonterminal, const vector<Symbol> &_input,
+    Rule(const Symbol &_nonterminal, const vector<Symbol> &_input,
          const vector<Symbol> &_output,
          const vector<vector<size_t>> &_attributeTargets)
         : nonterminal_(_nonterminal),
@@ -97,13 +97,13 @@ class TranslationGrammar {
     \brief Constructs a rule with same input and output. Attribute targets are
     implicit.
     */
-    Rule(const Nonterminal &_nonterminal, const vector<Symbol> &_both)
+    Rule(const Symbol &_nonterminal, const vector<Symbol> &_both)
         : Rule(_nonterminal, _both, _both) {}
     ~Rule() = default;
     void swap_sides() { std::swap(input_, output_); }
 
-    Nonterminal &nonterminal() { return nonterminal_; }
-    const Nonterminal &nonterminal() const { return nonterminal_; }
+    Symbol &nonterminal() { return nonterminal_; }
+    const Symbol &nonterminal() const { return nonterminal_; }
     vector<Symbol> &input() { return input_; }
     const vector<Symbol> &input() const { return input_; }
     vector<Symbol> &output() { return output_; }
@@ -130,8 +130,8 @@ class TranslationGrammar {
   };
 
  protected:
-  vector<Terminal> terminals_;
-  vector<Nonterminal> nonterminals_;
+  vector<Symbol> terminals_;
+  vector<Symbol> nonterminals_;
   vector<Rule> rules_;
   Symbol starting_symbol_;
 
@@ -141,29 +141,24 @@ class TranslationGrammar {
   */
   TranslationGrammar();
   /**
+  \brief Constructs a TranslationGrammar, takes terminals and nonterminals from
+  rules and starting symbol.
+  */
+  TranslationGrammar(const vector<Rule> &rules, const Symbol &starting_symbol);
+  /**
   \brief Constructs a TranslationGrammar
   */
-  TranslationGrammar(const vector<Terminal> &terminals,
-                     const vector<Nonterminal> &nonterminals,
+  TranslationGrammar(const vector<Symbol> &terminals,
+                     const vector<Symbol> &nonterminals,
                      const vector<Rule> &rules, const Symbol &starting_symbol);
   ~TranslationGrammar() = default;
 
   static const vector<Symbol> EPSILON_STRING;
 
-  /**
-  \brief Swaps input and output and inverses attribute targets.
-  */
-  void swap_sides() {
-    // TODO swap attribute targets
-    for (auto &r : rules_) {
-      r.swap_sides();
-    }
-  }
-
-  vector<Terminal> &terminals() { return terminals_; }
-  const vector<Terminal> &terminals() const { return terminals_; }
-  vector<Nonterminal> &nonterminals() { return nonterminals_; }
-  const vector<Nonterminal> &nonterminals() const { return nonterminals_; }
+  vector<Symbol> &terminals() { return terminals_; }
+  const vector<Symbol> &terminals() const { return terminals_; }
+  vector<Symbol> &nonterminals() { return nonterminals_; }
+  const vector<Symbol> &nonterminals() const { return nonterminals_; }
   vector<Rule> &rules() { return rules_; }
   const vector<Rule> &rules() const { return rules_; }
   Symbol &starting_symbol() { return starting_symbol_; }
@@ -172,11 +167,11 @@ class TranslationGrammar {
   /**
   \brief Returns a nonterminal's index.
   */
-  size_t nonterminal_index(const Nonterminal &nt) const;
+  size_t nonterminal_index(const Symbol &nt) const;
   /**
   \brief Returns a terminal's index.
   */
-  size_t terminal_index(const Terminal &t) const;
+  size_t terminal_index(const Symbol &t) const;
 };
 }  // namespace ctf
 #endif

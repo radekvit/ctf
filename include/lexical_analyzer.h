@@ -19,9 +19,9 @@ class LexicalError : public TranslationException {
 };
 
 /**
-\brief Alias for Terminal. Token and Terminal are interchangable.
+\brief Alias for Symbol. Token and Symbol are interchangable.
 */
-using Token = Terminal;
+using Token = Symbol;
 
 /**
 \brief Default attribute setter.
@@ -37,7 +37,8 @@ read:
 }
 
 /**
-\brief Extracts tokens from input stream.
+\brief Extracts tokens from input stream. Tokens can be Symbols of any type,
+type is to be ignored.
 
 Lexical errors are created by creating a token with an unused name. Then,
 attribute should be used as an error message.

@@ -33,7 +33,7 @@ void LLTranslationControl::run() {
   vector<const Rule *> rules;
   tstack<vector<tstack<Symbol>::iterator>> attributeTargets;
 
-  Terminal token = next_token(inputString_);
+  Symbol token = next_token(inputString_);
 
   input_.push(Symbol::EOI());
   output_.push(Symbol::EOI());
@@ -42,7 +42,7 @@ void LLTranslationControl::run() {
   while (1) {
     Symbol &top = input_.top();
     size_t ruleIndex;
-    switch (top.type) {
+    switch (top.type()) {
       case Type::EOI:
         if (token.name() == "")
           return;
@@ -50,9 +50,9 @@ void LLTranslationControl::run() {
           throw SyntacticError("Unexpected token after derivation is done.");
         break;
       case Type::TERMINAL:
-        if (top.terminal == token) {
+        if (top == token) {
           for (auto it : attributeTargets.pop()) {
-            it->terminal.attribute() += token.attribute();
+            it->attribute() += token.attribute();
           }
           input_.pop();
           token = next_token(inputString_);
@@ -61,7 +61,7 @@ void LLTranslationControl::run() {
         }
         break;
       case Type::NONTERMINAL:
-        ruleIndex = llTable_.rule_index(top.nonterminal, token);
+        ruleIndex = llTable_.rule_index(top, token);
         if (ruleIndex < translationGrammar_->rules().size()) {
           auto &rule = translationGrammar_->rules()[ruleIndex];
           input_.replace(input_.begin(), rule.input());
@@ -117,12 +117,12 @@ void LLTranslationControl::create_empty() {
     for (auto &r : tg.rules()) {
       bool isempty = true;
       for (auto &s : r.input()) {
-        switch (s.type) {
+        switch (s.type()) {
           case Symbol::Type::TERMINAL:
             isempty = false;
             break;
           case Symbol::Type::NONTERMINAL:
-            if (empty_[tg.nonterminal_index(s.nonterminal)] == false) {
+            if (empty_[tg.nonterminal_index(s)] == false) {
               isempty = false;
             }
             break;
@@ -142,7 +142,7 @@ void LLTranslationControl::create_empty() {
 
 void LLTranslationControl::create_first() {
   const TranslationGrammar &tg = *translationGrammar_;
-  first_ = {tg.nonterminals().size(), vector<Terminal>{}};
+  first_ = {tg.nonterminals().size(), vector<Symbol>{}};
 
   bool changed = false;
   do {
@@ -153,15 +153,14 @@ void LLTranslationControl::create_first() {
       for (auto &symbol : r.input()) {
         if (!empty) break;
         size_t nonterm_i;
-        switch (symbol.type) {
+        switch (symbol.type()) {
           case Symbol::Type::NONTERMINAL:
-            nonterm_i = tg.nonterminal_index(symbol.nonterminal);
+            nonterm_i = tg.nonterminal_index(symbol);
             if (modify_set(first_[i], first_[nonterm_i])) changed = true;
             empty = empty_[nonterm_i];
             break;
           case Symbol::Type::TERMINAL:
-            if (modify_set(first_[i], vector<Terminal>({symbol.terminal})))
-              changed = true;
+            if (modify_set(first_[i], vector<Symbol>({symbol}))) changed = true;
             empty = false;
             break;
           default:
@@ -174,9 +173,8 @@ void LLTranslationControl::create_first() {
 
 void LLTranslationControl::create_follow() {
   const TranslationGrammar &tg = *translationGrammar_;
-  follow_ = {tg.nonterminals().size(), vector<Terminal>{}};
-  follow_[tg.nonterminal_index(tg.starting_symbol().nonterminal)].push_back(
-      Terminal::EOI());
+  follow_ = {tg.nonterminals().size(), vector<Symbol>{}};
+  follow_[tg.nonterminal_index(tg.starting_symbol())].push_back(Symbol::EOI());
 
   bool changed = false;
   do {
@@ -187,15 +185,15 @@ void LLTranslationControl::create_follow() {
       /* empty set of all symbols to the right of the current one */
       bool compoundEmpty = true;
       /* first set of all symbols to the right of the current symbol */
-      vector<Terminal> compoundFirst;
+      vector<Symbol> compoundFirst;
       /* track symbols from back */
       for (auto &s : reverse(r.input())) {
         // index of nonterminal in input string, only valid with
         // nonterminal symbol
         size_t ti = 0;
-        switch (s.type) {
+        switch (s.type()) {
           case Symbol::Type::NONTERMINAL:
-            ti = tg.nonterminal_index(s.nonterminal);
+            ti = tg.nonterminal_index(s);
             if (modify_set(follow_[ti], compoundFirst)) changed = true;
             if (compoundEmpty && modify_set(follow_[ti], follow_[i]))
               changed = true;
@@ -204,15 +202,15 @@ void LLTranslationControl::create_follow() {
             break;
         }
         /* if empty = false */
-        if (s.type != Symbol::Type::NONTERMINAL ||
-            !empty_[tg.nonterminal_index(s.nonterminal)]) {
+        if (s.type() != Symbol::Type::NONTERMINAL ||
+            !empty_[tg.nonterminal_index(s)]) {
           compoundEmpty = false;
-          switch (s.type) {
+          switch (s.type()) {
             case Symbol::Type::NONTERMINAL:
               compoundFirst = first_[ti];
               break;
             case Symbol::Type::TERMINAL:
-              compoundFirst = {s.terminal};
+              compoundFirst = {s};
               break;
             default:
               break;
@@ -231,18 +229,18 @@ void LLTranslationControl::create_predict() {
   predict_.clear();
   const TranslationGrammar &tg = *translationGrammar_;
   for (auto &r : tg.rules()) {
-    vector<Terminal> compoundFirst;
-    vector<Terminal> rfollow = follow_[tg.nonterminal_index(r.nonterminal())];
+    vector<Symbol> compoundFirst;
+    vector<Symbol> rfollow = follow_[tg.nonterminal_index(r.nonterminal())];
     bool compoundEmpty = true;
     for (auto &s : reverse(r.input())) {
       size_t i;
-      switch (s.type) {
+      switch (s.type()) {
         case Symbol::Type::TERMINAL:
           compoundEmpty = false;
-          compoundFirst = vector<Terminal>({s.terminal});
+          compoundFirst = vector<Symbol>({s});
           break;
         case Symbol::Type::NONTERMINAL:
-          i = tg.nonterminal_index(s.nonterminal);
+          i = tg.nonterminal_index(s);
           if (!empty_[i]) {
             compoundEmpty = false;
             compoundFirst = first_[i];

@@ -20,119 +20,60 @@ class TranslationException : public std::runtime_error {
 };
 
 /**
-\brief Terminal representation with name and optional attribute.
-
-Empty name denotes EOF terminal.
+\brief Symbol, may represent a Terminal, Nonterminal or end of input.
 */
-class Terminal {
+class Symbol {
+ public:
+  enum class Type {
+    TERMINAL,
+    NONTERMINAL,
+    EOI,
+    UNKNOWN,
+  };
+
  protected:
+  Type type_;
   string name_;
   string attribute_;
 
  public:
-  /**
-  \brief Default constructor with empty name and attributes.
-  */
-  Terminal(const string &name = "", const string &atr = "")
-      : name_(name), attribute_(atr) {}
+  Symbol(Type type, const string &name = "", const string &atr = "")
+      : type_(type), name_(name), attribute_(atr) {}
+  Symbol(const string &name = "", const string &atr = "")
+      : Symbol(Type::UNKNOWN, name, atr) {}
+  ~Symbol() = default;
 
-  static Terminal EOI() { return Terminal(); }
+  static Symbol EOI() { return Symbol(Type::EOI); }
 
   string &name() { return name_; }
   const string &name() const { return name_; }
   string &attribute() { return attribute_; }
   const string &attribute() const { return attribute_; }
-
-  friend bool operator<(const Terminal &lhs, const Terminal &rhs) {
-    return lhs.name() < rhs.name();
-  }
-
-  friend bool operator==(const Terminal &lhs, const Terminal &rhs) {
-    return lhs.name() == rhs.name();
-  }
-
-  friend bool operator!=(const Terminal &lhs, const Terminal &rhs) {
-    return !(lhs == rhs);
-  }
-
-  friend bool operator>(const Terminal &lhs, const Terminal &rhs) {
-    return rhs < lhs;
-  }
-};
-
-/**
-\brief Nonterminal representation with name.
-*/
-class Nonterminal {
- protected:
-  string name_;
-
- public:
-  Nonterminal(const string &name = "") : name_(name) {}
-
-  string &name() { return name_; }
-  const string &name() const { return name_; }
-
-  friend bool operator<(const Nonterminal &lhs, const Nonterminal &rhs) {
-    return lhs.name() < rhs.name();
-  }
-
-  friend bool operator==(const Nonterminal &lhs, const Nonterminal &rhs) {
-    return lhs.name() == rhs.name();
-  }
-};
-
-/**
-\brief Symbol, may represent a Terminal, Nonterminal or end of input.
-*/
-struct Symbol {
-  enum class Type {
-    TERMINAL,
-    NONTERMINAL,
-    EOI,
-  } type;
-
-  Terminal terminal;
-  Nonterminal nonterminal;
-  Symbol() : type(Type::EOI){};
-  Symbol(Type _type) : type(_type) {}
-  Symbol(Terminal _terminal) : type(Type::TERMINAL), terminal(_terminal) {
-    if (terminal.name() == "") type = Type::EOI;
-  }
-  Symbol(Nonterminal _nonterminal)
-      : type(Type::NONTERMINAL), nonterminal(_nonterminal) {}
-  ~Symbol() = default;
-
-  static Symbol EOI() {  // end of input
-    return Symbol(Terminal::EOI());
-  }
+  Type &type() { return type_; }
+  const Type &type() const { return type_; }
 
   friend bool operator<(const Symbol &lhs, const Symbol &rhs) {
-    if (lhs.type != rhs.type) return false;
-    switch (lhs.type) {
-      case Symbol::Type::TERMINAL:
-        return lhs.terminal < rhs.terminal;
-      case Symbol::Type::NONTERMINAL:
-        return lhs.nonterminal < rhs.nonterminal;
-      default:
-        return false;
-    }
+    return lhs.name_ < rhs.name_;
   }
 
   friend bool operator==(const Symbol &lhs, const Symbol &rhs) {
-    if (lhs.type != rhs.type) return false;
-    switch (lhs.type) {
-      case Symbol::Type::TERMINAL:
-        return lhs.terminal == rhs.terminal;
-      case Symbol::Type::NONTERMINAL:
-        return lhs.nonterminal == rhs.nonterminal;
-      default:
-        return true;
-    }
+    return lhs.name_ == rhs.name_;
   }
 
   friend bool operator!=(const Symbol &lhs, const Symbol &rhs) {
     return !(lhs == rhs);
+  }
+
+  friend bool operator>(const Symbol &lhs, const Symbol &rhs) {
+    return rhs < lhs;
+  }
+
+  friend bool operator<=(const Symbol &lhs, const Symbol &rhs) {
+    return lhs < rhs || lhs == rhs;
+  }
+
+  friend bool operator>=(const Symbol &lhs, const Symbol &rhs) {
+    return lhs > rhs || lhs == rhs;
   }
 };
 }  // namespace ctf

@@ -22,15 +22,15 @@ class LLTranslationControl : public TranslationControl {
   /**
   \brief First set for each nonterminal.
   */
-  vector<vector<Terminal>> first_;
+  vector<vector<Symbol>> first_;
   /**
   \brief Follow set for each nonterminal.
   */
-  vector<vector<Terminal>> follow_;
+  vector<vector<Symbol>> follow_;
   /**
   \brief Predict set for each nonterminal.
   */
-  vector<vector<Terminal>> predict_;
+  vector<vector<Symbol>> predict_;
 
   /**
   \brief LL table used to control the translation.
@@ -44,7 +44,7 @@ class LLTranslationControl : public TranslationControl {
   /**
   \brief String of terminals got by LexicalAnalyzer_.
   */
-  vector<Terminal> inputString_;
+  vector<Symbol> inputString_;
 
   /**
   Creates all sets and creates a new LL table.

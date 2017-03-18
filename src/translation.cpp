@@ -23,7 +23,7 @@ void Translation::run(std::istream &input, std::ostream &output) {
   translationControl_.run();
   auto &outputTokens = translationControl_.output();
   for (auto &t : outputTokens) {
-    outputGenerator_.get_token(t.terminal);
+    outputGenerator_.get_token(t);
   }
 }
 }  // namespace ctf
