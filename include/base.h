@@ -76,6 +76,10 @@ class Symbol {
     return lhs > rhs || lhs == rhs;
   }
 };
+
+inline Symbol Terminal(const string &name, const string &attribute = "") { return Symbol(Symbol::Type::TERMINAL, name, attribute); }
+inline Symbol Nonterminal(const string &name) { return Symbol(Symbol::Type::NONTERMINAL, name); }
+
 }  // namespace ctf
 
 #endif
