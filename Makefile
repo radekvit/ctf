@@ -1,4 +1,4 @@
-APPNAME=ctf.so
+APPNAME=libctf.so
 INCLUDE=include
 SRC=src
 CXXFLAGS += -std=c++14 -Wall -Wextra -pedantic -I. -I $(INCLUDE) -fpic
