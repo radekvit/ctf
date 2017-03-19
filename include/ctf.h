@@ -6,16 +6,7 @@
 
 #ifndef CTF_KEEP_NAMESPACE
 // Translation class
-using ctf::Translation;
-using ctf::TranslationControl;
-
-using ctf::TranslationGrammar;
-using ctf::LexicalAnalyzer;
-using ctf::OutputGenerator;
-
-using ctf::TranslationException;
-
-using ctf::LLTranslationControl;
+using namespace ctf;
 
 #endif  // endif CTF_KEEP_NAMESPACE
 
