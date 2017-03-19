@@ -5,8 +5,7 @@ CXXFLAGS += -std=c++14 -Wall -Wextra -pedantic -I. -I $(INCLUDE) -fpic
 OBJ=obj
 $(shell mkdir -p $(OBJ))
 
-HEADERS=$(INCLUDE)/generic_types.h $(INCLUDE)/ll_table.h \
-$(INCLUDE)/translation_grammar.h
+HEADERS=$(wildcard $(INCLUDE)/*.h)
 OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
 
 .PHONY: all format clean debug build test pack doc
