@@ -10,7 +10,6 @@ this project.
 #include <algorithm>
 #include <functional>
 #include <list>
-#include <list>
 #include <map>
 #include <stack>
 #include <string>
@@ -110,7 +109,8 @@ class tstack {
                       [](auto lhs, auto rhs) { return lhs == rhs; }) {
     iterator it;
     for (it = list_.begin(); it != list_.end(); ++it) {
-      if (searchOperator(*it, target)) break;
+      if (searchOperator(*it, target))
+        break;
     }
     return it;
   }
@@ -125,7 +125,8 @@ class tstack {
           [](auto lhs, auto rhs) { return lhs == rhs; }) const {
     const_iterator it;
     for (it = list_.cbegin(); it != list_.cend(); ++it) {
-      if (searchOperator(*it, target)) break;
+      if (searchOperator(*it, target))
+        break;
     }
     return it;
   }
@@ -136,7 +137,8 @@ class tstack {
   */
   template <class TS>
   iterator replace(iterator it, const TS &string) {
-    if (it == list_.end()) return it;
+    if (it == list_.end())
+      return it;
     for (auto &t : string) {
       list_.insert(it, t);
     }

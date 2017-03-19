@@ -30,7 +30,8 @@ static Token default_token_attributes(std::istream &is) {
   char c;
 read:
   if (is.get(c)) {
-    if (std::isspace(static_cast<unsigned char>(c))) goto read;
+    if (std::isspace(static_cast<unsigned char>(c)))
+      goto read;
     return Token{{c}};
   } else
     return Token::EOI();

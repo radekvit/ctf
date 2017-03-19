@@ -12,7 +12,8 @@ and outputs it into a stream.
 namespace ctf {
 
 static void default_output(std::ostream &os, const Symbol &t) {
-  if (t != Symbol::EOI()) os << t.name() << "." << t.attribute() << "\n";
+  if (t != Symbol::EOI())
+    os << t.name() << "." << t.attribute() << "\n";
 }
 
 class SemanticError : public TranslationException {

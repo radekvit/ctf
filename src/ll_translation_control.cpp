@@ -85,7 +85,8 @@ void LLTranslationControl::create_attibute_targets(
     vector<tstack<Symbol>::iterator> iterators;
     for (auto &i : target) {
       auto oit = obegin;
-      for (size_t x = 0; x < i; ++x) ++oit;
+      for (size_t x = 0; x < i; ++x)
+        ++oit;
       iterators.push_back(oit);
     }
     attributeTargets.push(iterators);
@@ -151,16 +152,19 @@ void LLTranslationControl::create_first() {
       size_t i = tg.nonterminal_index(r.nonterminal());
       bool empty = true;
       for (auto &symbol : r.input()) {
-        if (!empty) break;
+        if (!empty)
+          break;
         size_t nonterm_i;
         switch (symbol.type()) {
           case Symbol::Type::NONTERMINAL:
             nonterm_i = tg.nonterminal_index(symbol);
-            if (modify_set(first_[i], first_[nonterm_i])) changed = true;
+            if (modify_set(first_[i], first_[nonterm_i]))
+              changed = true;
             empty = empty_[nonterm_i];
             break;
           case Symbol::Type::TERMINAL:
-            if (modify_set(first_[i], vector<Symbol>({symbol}))) changed = true;
+            if (modify_set(first_[i], vector<Symbol>({symbol})))
+              changed = true;
             empty = false;
             break;
           default:
@@ -194,7 +198,8 @@ void LLTranslationControl::create_follow() {
         switch (s.type()) {
           case Symbol::Type::NONTERMINAL:
             ti = tg.nonterminal_index(s);
-            if (modify_set(follow_[ti], compoundFirst)) changed = true;
+            if (modify_set(follow_[ti], compoundFirst))
+              changed = true;
             if (compoundEmpty && modify_set(follow_[ti], follow_[i]))
               changed = true;
             break;

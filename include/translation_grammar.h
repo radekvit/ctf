@@ -35,7 +35,8 @@ class TranslationGrammar {
     size_t count_input_terminals() const {
       size_t count = 0;
       for (auto &s : input_) {
-        if (s.type() == Symbol::Type::TERMINAL) count++;
+        if (s.type() == Symbol::Type::TERMINAL)
+          count++;
       }
       return count;
     }
@@ -49,16 +50,19 @@ class TranslationGrammar {
       while (oit != output_.end() && oit->type() != Symbol::Type::TERMINAL) {
         ++oit;
       }
-      if (oit == output_.end()) return;
+      if (oit == output_.end())
+        return;
       int i = 0;
       for (auto it = input_.begin(); it < input_.end(); ++it) {
-        if (it->type() != Symbol::Type::TERMINAL) continue;
+        if (it->type() != Symbol::Type::TERMINAL)
+          continue;
         attributeTargets[i].push_back(oit - output_.begin());
         ++i;
         while (oit != output_.end() && oit->type() != Symbol::Type::TERMINAL) {
           ++oit;
         }
-        if (oit == output_.end()) return;
+        if (oit == output_.end())
+          return;
       }
     }
 
