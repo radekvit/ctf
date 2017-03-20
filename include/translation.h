@@ -42,7 +42,7 @@ class Translation {
 
  public:
   Translation(LexicalAnalyzer &la, TranslationControl &tc,
-              TranslationGrammar &tg, OutputGenerator &og);
+              const TranslationGrammar &tg, OutputGenerator &og);
   ~Translation() = default;
 
   /**
