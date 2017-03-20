@@ -87,10 +87,10 @@ inline Symbol Terminal(const string &name, const string &attribute = "") {
 inline Symbol Nonterminal(const string &name) {
   return Symbol(Symbol::Type::NONTERMINAL, name);
 }
-inline Symbol operator ""_t(const char *s) {
+inline Symbol operator ""_t(const char *s, size_t) {
   return Terminal({s});
 }
-inline Symbol operator ""_nt(const char *s) {
+inline Symbol operator ""_nt(const char *s, size_t) {
   return Nonterminal({s});
 }
 
