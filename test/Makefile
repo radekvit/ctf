@@ -40,4 +40,4 @@ format:
 test: all
 test:
 	./$(APPNAME) && diff expected out
-test: clean
+	make clean
