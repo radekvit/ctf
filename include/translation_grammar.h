@@ -90,12 +90,25 @@ class TranslationGrammar {
           output_(_output),
           attributeTargets(_attributeTargets) {
       check_nonterminals();
-      // TODO better targets checks
+
       if (attributeTargets.size() != count_input_terminals())
         throw std::invalid_argument(
             "Invalid attributeTargets when "
             "constructing class "
             "TranslationGrammar::Rule.");
+      for (auto &target : attributeTargets) {
+        if (target.size() >= output_.size())
+          throw std::invalid_argument(
+              "More assigned targets than nonterminals in output when "
+              "constructing class TranslationGrammar::Rule.");
+        for (auto i : target) {
+          if (i >= output_.size() ||
+              output_[i].type() != Symbol::Type::TERMINAL)
+            throw std::invalid_argument(
+                "Attribute target not an output terminal when constructing "
+                "class TranslationGrammar::Rule.");
+        }
+      }
     }
     /**
     \brief Constructs a rule with same input and output. Attribute targets are
