@@ -139,8 +139,10 @@ class tstack {
   iterator replace(iterator it, const TS &string) {
     if (it == list_.end())
       return it;
+    auto insert = it;
+    ++insert;
     for (auto &t : string) {
-      list_.insert(it, t);
+      list_.insert(insert, t);
     }
     list_.erase(it++);
     return it;

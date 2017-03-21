@@ -57,7 +57,7 @@ void LLTranslationControl::run() {
           input_.pop();
           token = next_token(inputString_);
         } else {
-          throw SyntacticError("Unexpected token.");
+          throw SyntacticError("Unexpected token " + token.name() + "." );
         }
         break;
       case Type::NONTERMINAL:
@@ -87,7 +87,8 @@ void LLTranslationControl::create_attibute_targets(
       auto oit = obegin;
       for (size_t x = 0; x < i; ++x)
         ++oit;
-      iterators.push_back(oit);
+      if(oit->type() == Symbol::Type::TERMINAL)
+        iterators.push_back(oit);
     }
     attributeTargets.push(iterators);
   }
