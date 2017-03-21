@@ -81,7 +81,7 @@ void LLTranslationControl::run() {
 void LLTranslationControl::create_attibute_targets(
     tstack<Symbol>::iterator obegin, const vector<vector<size_t>> &targets,
     tstack<vector<tstack<Symbol>::iterator>> &attributeTargets) {
-  for (auto &target : targets) {
+  for (auto &target : reverse(targets)) {
     vector<tstack<Symbol>::iterator> iterators;
     for (auto &i : target) {
       auto oit = obegin;
