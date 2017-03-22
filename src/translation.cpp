@@ -7,8 +7,8 @@
 
 namespace ctf {
 
-Translation::Translation(LexicalAnalyzer &la, TranslationControl &tc,
-                         const TranslationGrammar &tg, OutputGenerator &og)
+Translation::Translation(LexicalAnalyzer::token_function la, TranslationControl &tc,
+              const TranslationGrammar &tg, OutputGenerator::output_function og)
     : lexicalAnalyzer_(la),
       translationControl_(tc),
       translationGrammar_(tg),

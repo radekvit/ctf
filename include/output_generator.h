@@ -11,11 +11,6 @@ and outputs it into a stream.
 
 namespace ctf {
 
-static void default_output(std::ostream &os, const Symbol &t) {
-  if (t != Symbol::EOI())
-    os << t.name() << "." << t.attribute() << "\n";
-}
-
 class SemanticError : public TranslationException {
  public:
   using TranslationException::TranslationException;
@@ -45,12 +40,12 @@ class OutputGenerator {
   /**
   \brief Constructs OutputGenerator without an output stream.
   */
-  OutputGenerator(output_function f = default_output)
+  OutputGenerator(output_function f = OutputGenerator::default_output)
       : os(nullptr), outputFunction(f) {}
   /**
   \brief Constructs OutputGenerator with an output stream.
   */
-  OutputGenerator(std::ostream &_o, output_function f = default_output)
+  OutputGenerator(std::ostream &_o, output_function f = OutputGenerator::default_output)
       : os(&_o), outputFunction(f) {}
 
   /**
@@ -66,6 +61,11 @@ class OutputGenerator {
   is false, this results in undefined behavior.
   */
   void get_token(const Symbol &t) { outputFunction(*os, t); }
+
+  static void default_output(std::ostream &os, const Symbol &t) {
+  if (t != Symbol::EOI())
+    os << t.name() << "." << t.attribute() << "\n";
+}
 };
 }  // namespace ctf
 

@@ -8,12 +8,15 @@
 
 #include <istream>
 #include <ostream>
+#include <memory>
 
 #include <generic_types.h>
 #include <lexical_analyzer.h>
 #include <output_generator.h>
 #include <translation_control.h>
 #include <translation_grammar.h>
+
+#include <ll_translation_control.h>
 
 namespace ctf {
 /**
@@ -23,9 +26,9 @@ and outputs.
 class Translation {
  protected:
   /**
-  \brief Reference to LexicalAnalyzer to be used.
+  \brief Provides input terminals from istream.
   */
-  LexicalAnalyzer &lexicalAnalyzer_;
+  LexicalAnalyzer lexicalAnalyzer_;
   /**
   \brief Reference to TranslationControl to be used.
   */
@@ -36,19 +39,35 @@ class Translation {
   */
   TranslationGrammar translationGrammar_;
   /**
-  \brief Reference to OutputGenerator to be used.
+  \brief Outputs output terminals to ostream.
   */
-  OutputGenerator &outputGenerator_;
+  OutputGenerator outputGenerator_;
 
  public:
-  Translation(LexicalAnalyzer &la, TranslationControl &tc,
-              const TranslationGrammar &tg, OutputGenerator &og);
+  Translation(LexicalAnalyzer::token_function la, TranslationControl &tc,
+              const TranslationGrammar &tg, OutputGenerator::output_function og);
   ~Translation() = default;
 
   /**
   \brief Translates input from istream and outputs the translation to ostream.
   */
   void run(std::istream &input, std::ostream &output);
+
+  /**
+  \brief Factory method for creating TranslationControl variants.
+  */
+  static std::unique_ptr<TranslationControl> control(const string &name) {
+    const static map<string, std::function<std::unique_ptr<TranslationControl>()>> controls{
+      {"ll", []()->std::unique_ptr<TranslationControl>{return std::make_unique<LLTranslationControl>();}},
+    };
+    try {
+      return (controls.at(name))();
+    }
+    catch(std::out_of_range &e) {
+      return std::unique_ptr<TranslationControl>(nullptr);
+    }
+
+  }
 };
 }  // namespace ctf
 

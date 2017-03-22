@@ -29,15 +29,11 @@ int main() {
   };
   TranslationGrammar tg(r, E);
 
-  LLTranslationControl tc(dla, tg);
-
   std::ifstream in("in");
   std::ofstream out("out");
 
-  LexicalAnalyzer la{};
-  OutputGenerator og{};
-
-  Translation tranny{la, tc, tg, og};
+  auto tc = Translation::control("ll");
+  Translation tranny{LexicalAnalyzer::default_token_getter, *tc, tg, OutputGenerator::default_output};
   tranny.run(in, out);
 
   return 0;

@@ -24,20 +24,6 @@ class LexicalError : public TranslationException {
 using Token = Symbol;
 
 /**
-\brief Default attribute setter.
-*/
-static Token default_token_attributes(std::istream &is) {
-  char c;
-read:
-  if (is.get(c)) {
-    if (std::isspace(static_cast<unsigned char>(c)))
-      goto read;
-    return Token{{c}};
-  } else
-    return Token::EOI();
-}
-
-/**
 \brief Extracts tokens from input stream. Tokens can be Symbols of any type,
 type is to be ignored.
 
@@ -68,14 +54,14 @@ class LexicalAnalyzer {
   \brief Constructs LexicalAnalyzer without a given input stream. If
   specified, f determines the tokenFunction.
   */
-  LexicalAnalyzer(token_function f = &default_token_attributes)
+  LexicalAnalyzer(token_function f = LexicalAnalyzer::default_token_getter)
       : is(nullptr), tokenFunction(f) {}
   /**
   \brief Constructs LexicalAnalyzer with a given istream. If specified, f
   determines the tokenFunction.
   */
   LexicalAnalyzer(std::istream &_i,
-                  token_function f = &default_token_attributes)
+                  token_function f = LexicalAnalyzer::default_token_getter)
       : is(&_i), tokenFunction(f) {}
 
   /**
@@ -91,6 +77,20 @@ class LexicalAnalyzer {
   LexicalAnalyzer::stream_set() is false, this results in undefined behavior.
   */
   Token get_token() { return tokenFunction(*is); };
+
+  /**
+\brief Default token extractor. All characters that are not spaces become tokens.
+*/
+static Token default_token_getter(std::istream &is) {
+  char c;
+read:
+  if (is.get(c)) {
+    if (std::isspace(static_cast<unsigned char>(c)))
+      goto read;
+    return Token{{c}};
+  } else
+    return Token::EOI();
+}
 };
 }  // namespace ctf
 
