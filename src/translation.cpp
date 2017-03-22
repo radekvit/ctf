@@ -7,10 +7,23 @@
 
 namespace ctf {
 
-Translation::Translation(LexicalAnalyzer::token_function la, TranslationControl &tc,
-              const TranslationGrammar &tg, OutputGenerator::output_function og)
+Translation::Translation(LexicalAnalyzer::token_function la,
+                         TranslationControl &tc, const TranslationGrammar &tg,
+                         OutputGenerator::output_function og)
     : lexicalAnalyzer_(la),
       translationControl_(tc),
+      translationGrammar_(tg),
+      outputGenerator_(og) {
+  translationControl_.set_grammar(translationGrammar_);
+  translationControl_.set_lexical_analyzer(lexicalAnalyzer_);
+}
+
+Translation::Translation(LexicalAnalyzer::token_function la,
+                         const string &tcName, const TranslationGrammar &tg,
+                         OutputGenerator::output_function og)
+    : lexicalAnalyzer_(la),
+      control_(Translation::control(tcName)),
+      translationControl_(*control_),
       translationGrammar_(tg),
       outputGenerator_(og) {
   translationControl_.set_grammar(translationGrammar_);

@@ -45,7 +45,8 @@ class OutputGenerator {
   /**
   \brief Constructs OutputGenerator with an output stream.
   */
-  OutputGenerator(std::ostream &_o, output_function f = OutputGenerator::default_output)
+  OutputGenerator(std::ostream &_o,
+                  output_function f = OutputGenerator::default_output)
       : os(&_o), outputFunction(f) {}
 
   /**
@@ -63,9 +64,9 @@ class OutputGenerator {
   void get_token(const Symbol &t) { outputFunction(*os, t); }
 
   static void default_output(std::ostream &os, const Symbol &t) {
-  if (t != Symbol::EOI())
-    os << t.name() << "." << t.attribute() << "\n";
-}
+    if (t != Symbol::EOI())
+      os << t.name() << "." << t.attribute() << "\n";
+  }
 };
 }  // namespace ctf
 

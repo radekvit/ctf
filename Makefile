@@ -20,6 +20,9 @@ debug: build
 deploy: CXXFLAGS+=-O3 -DNDEBUG
 deploy: build
 
+install: all
+	sudo cp $(APPNAME) /usr/lib
+
 $(APPNAME): $(OBJFILES)
 	$(CXX) -shared $(CXXFLAGS) $(LDLIBS) $^ -o $@
 

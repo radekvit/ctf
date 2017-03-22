@@ -7,8 +7,8 @@
 #define CTF_TRANSLATION
 
 #include <istream>
-#include <ostream>
 #include <memory>
+#include <ostream>
 
 #include <generic_types.h>
 #include <lexical_analyzer.h>
@@ -30,6 +30,10 @@ class Translation {
   */
   LexicalAnalyzer lexicalAnalyzer_;
   /**
+  \brief Holds standard control when generated with Translation::control().
+  */
+  std::unique_ptr<TranslationControl> control_ = nullptr;
+  /**
   \brief Reference to TranslationControl to be used.
   */
   TranslationControl &translationControl_;
@@ -45,7 +49,11 @@ class Translation {
 
  public:
   Translation(LexicalAnalyzer::token_function la, TranslationControl &tc,
-              const TranslationGrammar &tg, OutputGenerator::output_function og);
+              const TranslationGrammar &tg,
+              OutputGenerator::output_function og);
+  Translation(LexicalAnalyzer::token_function la, const string &tcName,
+              const TranslationGrammar &tg,
+              OutputGenerator::output_function og);
   ~Translation() = default;
 
   /**
@@ -57,16 +65,20 @@ class Translation {
   \brief Factory method for creating TranslationControl variants.
   */
   static std::unique_ptr<TranslationControl> control(const string &name) {
-    const static map<string, std::function<std::unique_ptr<TranslationControl>()>> controls{
-      {"ll", []()->std::unique_ptr<TranslationControl>{return std::make_unique<LLTranslationControl>();}},
-    };
+    const static map<string,
+                     std::function<std::unique_ptr<TranslationControl>()>>
+        controls{
+            {"ll",
+             []() -> std::unique_ptr<TranslationControl> {
+               return std::make_unique<LLTranslationControl>();
+             }},
+        };
+    // TODO do without try catch
     try {
       return (controls.at(name))();
-    }
-    catch(std::out_of_range &e) {
+    } catch (std::out_of_range &e) {
       return std::unique_ptr<TranslationControl>(nullptr);
     }
-
   }
 };
 }  // namespace ctf

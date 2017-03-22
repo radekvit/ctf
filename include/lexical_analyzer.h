@@ -79,18 +79,19 @@ class LexicalAnalyzer {
   Token get_token() { return tokenFunction(*is); };
 
   /**
-\brief Default token extractor. All characters that are not spaces become tokens.
+\brief Default token extractor. All characters that are not spaces become
+tokens.
 */
-static Token default_token_getter(std::istream &is) {
-  char c;
-read:
-  if (is.get(c)) {
-    if (std::isspace(static_cast<unsigned char>(c)))
-      goto read;
-    return Token{{c}};
-  } else
-    return Token::EOI();
-}
+  static Token default_token_getter(std::istream &is) {
+    char c;
+  read:
+    if (is.get(c)) {
+      if (std::isspace(static_cast<unsigned char>(c)))
+        goto read;
+      return Token{{c}};
+    } else
+      return Token::EOI();
+  }
 };
 }  // namespace ctf
 
