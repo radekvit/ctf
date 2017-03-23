@@ -24,6 +24,11 @@ class SyntacticError : public TranslationException {
 \brief Abstract class for syntax driven translation control.
 */
 class TranslationControl {
+ public:
+  /**
+  \brief Error message getter function.
+  */
+  using error_function = std::function<string (const Symbol &nonterminal, const Symbol &terminal)>;
  protected:
   /**
   \brief Alias for TranslationGrammar::Rule
@@ -42,6 +47,13 @@ class TranslationControl {
   \brief Tstack of output symbols.
   */
   tstack<Symbol> output_;
+  /**
+  \brief Syntax error message function.
+
+  Default function is writing nonterminal's and token's names.
+  */
+  error_function syntaxErrorMessage_ = [](auto nt, auto t){
+    return "Nonterminal " + nt.name() + ", token " + t.name();};
 
  public:
   virtual ~TranslationControl() = default;
@@ -49,13 +61,19 @@ class TranslationControl {
   /**
   \brief Sets lexical analyzer.
   */
-  void set_lexical_analyzer(LexicalAnalyzer &la) { lexicalAnalyzer_ = &la; }
+  void set_lexical_analyzer(LexicalAnalyzer &la) {
+    lexicalAnalyzer_ = &la; }
   /**
   \brief Sets translation grammar.
   */
   virtual void set_grammar(const TranslationGrammar &tg) {
     translationGrammar_ = &tg;
   }
+  /**
+  \brief Sets syntaxErrorMessage_.
+  */
+  void set_syntax_error_message(error_function f) {
+    syntaxErrorMessage_ = f; }
   /**
   \brief Runs translation.
   */
@@ -71,7 +89,8 @@ class TranslationControl {
   /**
   \brief Returns a constant reference to output symbols.
   */
-  const tstack<Symbol> &output() const { return output_; }
+  const tstack<Symbol> &output() const {
+    return output_; }
 };
 }  // namespace ctf
 #endif

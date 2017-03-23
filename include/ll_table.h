@@ -35,11 +35,15 @@ class LLTable {
   /**
   \brief Mapping nonterminals to indices to table_.
   */
-  map<Symbol, size_t> nonterminalMap;
+  map<Symbol, size_t> nonterminalMap_;
   /**
   \brief Mapping terminals to indices to table_ rows.
   */
-  map<Symbol, size_t> terminalMap;
+  map<Symbol, size_t> terminalMap_;
+  /**
+  \brief Stores invalid rule index.
+  */
+  size_t invalidRuleIndex_;
 
  public:
   /**
@@ -51,30 +55,31 @@ class LLTable {
   */
   LLTable(const TranslationGrammar &tg, const vector<vector<Symbol>> &predict)
       : table_(tg.nonterminals().size(),
-               vector<size_t>(tg.terminals().size() + 1, tg.rules().size())) {
+               vector<size_t>(tg.terminals().size() + 1, tg.rules().size())),
+        invalidRuleIndex_(tg.rules().size()) {
     if (predict.size() != tg.rules().size())
       throw std::invalid_argument(
           "Mismatched predict and TranslationGrammar.rules "
           "sizes when constructing LLTable.");
     /* create index maps for terminals and nonterminals */
     for (size_t i = 0; i < tg.nonterminals().size(); ++i) {
-      nonterminalMap.insert(std::make_pair(tg.nonterminals()[i], i));
+      nonterminalMap_.insert(std::make_pair(tg.nonterminals()[i], i));
     }
     for (size_t i = 0; i < tg.terminals().size(); ++i) {
-      terminalMap.insert(std::make_pair(tg.terminals()[i], i));
+      terminalMap_.insert(std::make_pair(tg.terminals()[i], i));
     }
-    terminalMap.insert(std::make_pair(Symbol::EOI(), tg.terminals().size()));
+    terminalMap_.insert(std::make_pair(Symbol::EOI(), tg.terminals().size()));
     /* fill table */
     for (size_t i = 0; i < tg.rules().size(); ++i) {
       auto &terminals = predict[i];
-      size_t ni = nonterminalMap.at(tg.rules()[i].nonterminal());
+      size_t ni = nonterminalMap_.at(tg.rules()[i].nonterminal());
       for (auto &t : terminals) {
-        if (table_[ni][terminalMap.at(t)] != predict.size()) {
+        if (table_[ni][terminalMap_.at(t)] != predict.size()) {
           throw std::invalid_argument(
               "Constructing LLTable from a "
               "non-LL TranslationGrammar.");
         }
-        table_[ni][terminalMap.at(t)] = i;
+        table_[ni][terminalMap_.at(t)] = i;
       }
     }
   }
@@ -84,7 +89,13 @@ class LLTable {
   tg.rules().size().
   */
   size_t rule_index(const Symbol &nt, const Symbol &t) {
-    return table_[nonterminalMap.at(nt)][terminalMap.at(t)];
+    // iterator to nonterminal index
+    auto ntit = nonterminalMap_.find(nt);
+    // iterator to terminal index;
+    auto tit = terminalMap_.find(t);
+    if (ntit == nonterminalMap_.end() || tit == terminalMap_.end())
+      return invalidRuleIndex_;
+    return table_[ntit->second][tit->second];
   }
 };
 }  // namespace ctf

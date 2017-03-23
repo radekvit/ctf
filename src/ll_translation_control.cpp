@@ -44,7 +44,7 @@ void LLTranslationControl::run() {
     size_t ruleIndex;
     switch (top.type()) {
       case Type::EOI:
-        if (token.name() == "")
+        if (token.type() == Type::EOI)
           return;
         else
           throw SyntacticError("Unexpected token after derivation is done.");
@@ -69,7 +69,8 @@ void LLTranslationControl::run() {
           create_attibute_targets(obegin, rule.targets(), attributeTargets);
           rules.push_back(&(rule));
         } else {
-          throw SyntacticError("No rule can be applied.");
+          throw SyntacticError(
+              "Syntax error: " + syntaxErrorMessage_(top, token) + ".");
         }
         break;
       default:

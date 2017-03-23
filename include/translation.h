@@ -48,13 +48,41 @@ class Translation {
   OutputGenerator outputGenerator_;
 
  public:
+ /**
+ \brief Constructs Translation with given lexical analyzer, translation control, translation grammar and output generator.
+ */
   Translation(LexicalAnalyzer::token_function la, TranslationControl &tc,
               const TranslationGrammar &tg,
               OutputGenerator::output_function og);
+/**
+\brief Constructs Translation with given lexical analyzer, translation grammar and output generator. Translation control is constructed by name.
+*/
   Translation(LexicalAnalyzer::token_function la, const string &tcName,
               const TranslationGrammar &tg,
               OutputGenerator::output_function og);
-  ~Translation() = default;
+ /**
+ \brief Constructs Translation with given lexical analyzer, translation control, translation grammar and output generator. Custom error messages are given for syntax errors.
+ */ 
+  Translation(LexicalAnalyzer::token_function la, TranslationControl &tc,
+              const TranslationGrammar &tg,
+              OutputGenerator::output_function og,
+              TranslationControl::error_function syntaxErrors):
+              Translation(la,tc,tg,og)
+              {
+                translationControl_.set_syntax_error_message(syntaxErrors);
+              }
+/**
+\brief Constructs Translation with given lexical analyzer, translation grammar and output generator. Translation control is constructed by name. Custom error messages are given for syntax errors.
+*/
+  Translation(LexicalAnalyzer::token_function la, const string &tcName,
+              const TranslationGrammar &tg,
+              OutputGenerator::output_function og,
+              TranslationControl::error_function syntaxErrors):
+                            Translation(la,tcName,tg,og)
+              {
+                translationControl_.set_syntax_error_message(syntaxErrors);
+              }
+  ~Translation() {} //= default;
 
   /**
   \brief Translates input from istream and outputs the translation to ostream.
@@ -73,12 +101,11 @@ class Translation {
                return std::make_unique<LLTranslationControl>();
              }},
         };
-    // TODO do without try catch
-    try {
-      return (controls.at(name))();
-    } catch (std::out_of_range &e) {
-      return std::unique_ptr<TranslationControl>(nullptr);
-    }
+    auto it = controls.find(name);
+    if (it == controls.end())
+      throw std::invalid_argument("No translation control with name " + name + ".");
+    else
+      return (*it).second();
   }
 };
 }  // namespace ctf
