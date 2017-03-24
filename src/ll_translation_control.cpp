@@ -70,7 +70,7 @@ void LLTranslationControl::run() {
           rules.push_back(&(rule));
         } else {
           throw SyntacticError(
-              "Syntax error: " + syntaxErrorMessage_(top, token) + ".");
+              syntaxErrorMessage_(top, token) + ".");
         }
         break;
       default:

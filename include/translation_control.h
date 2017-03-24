@@ -53,7 +53,7 @@ class TranslationControl {
   Default function is writing nonterminal's and token's names.
   */
   error_function syntaxErrorMessage_ = [](auto nt, auto t){
-    return "Nonterminal " + nt.name() + ", token " + t.name();};
+    return "Nonterminal " + nt.name() + ", token " + t.name() + (t.attribute() == "" ? "" : "." + t.attribute());};
 
  public:
   virtual ~TranslationControl() = default;
