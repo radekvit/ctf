@@ -19,11 +19,11 @@ namespace ctf {
 class LLTable {
  public:
   /**
-  \brief Type of the cell.
+  \brief Type of the cells.
   */
   using cell = size_t;
   /**
-  \brief Row type.
+  \brief Type of the rows.
   */
   using row = vector<cell>;
 
@@ -52,6 +52,9 @@ class LLTable {
   LLTable() = default;
   /**
   \brief Constructs a LLtable from a translation grammar and a predict set.
+  \param[in] tg TranslationGrammar. Terminals and Nonterminals are mapped to
+  their indices. Rule indices are stored in LLTable.
+  \param[in] predict Predict set for table construction.
   */
   LLTable(const TranslationGrammar &tg, const vector<vector<Symbol>> &predict)
       : table_(tg.nonterminals().size(),
@@ -85,8 +88,12 @@ class LLTable {
   }
   /**
   \brief Returns an index of the rule to be used when t is the current token
-  and nt is at the top of input stack. If no rule is applicable, returns
-  tg.rules().size().
+  and nt is at the top of input stack.
+  \param[in] nt Nonterminal on the top of the stack.
+  \param[in] t Last read terminal.
+  \returns Index of the applicable rule.
+
+  If no rule is applicable, returns the index beyond the last rule.
   */
   size_t rule_index(const Symbol &nt, const Symbol &t) {
     // iterator to nonterminal index

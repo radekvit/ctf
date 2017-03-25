@@ -38,10 +38,6 @@ class LLTranslationControl : public TranslationControl {
   LLTable llTable_;
 
   /**
-  \brief Input tstack holding symbols.
-  */
-  tstack<Symbol> input_;
-  /**
   \brief String of terminals got by LexicalAnalyzer_.
   */
   vector<Symbol> inputString_;
@@ -69,23 +65,41 @@ class LLTranslationControl : public TranslationControl {
   void create_predict();
 
   /**
-  \brief Creates iterator attribute targets for incoming terminals.
+  \brief Creates iterator attribute actions for incoming terminals.
+  \param[in] obegin Iterator to the first Symbol of the output of the applied
+  Rule.
+  \param[in] targets Indices of the target actions for all input terminals.
+  \param[out] attributeActions Targets to append incoming terminal's attributes.
   */
-  void create_attibute_targets(
+  void create_attibute_actions(
       tstack<Symbol>::iterator obegin, const vector<vector<size_t>> &targets,
-      tstack<vector<tstack<Symbol>::iterator>> &attributeTargets);
+      tstack<vector<tstack<Symbol>::iterator>> &attributeActions);
 
  public:
+  /**
+  \brief Constructs a LLTranslationControl.
+  */
   LLTranslationControl() = default;
+  /**
+  \brief Default destructor.
+  */
   virtual ~LLTranslationControl() = default;
+  /**
+  \brief Constructs LLTranslationControl with a LexicalAnalyzer and
+  TranslationGrammar.
+  \param[in] la A reference to the lexical analyzer to be used to get tokens.
+  \param[in] tg The translation grammar for this translation.
+  */
   LLTranslationControl(LexicalAnalyzer &la, TranslationGrammar &tg);
 
+  /**
+  \brief Sets translation grammar.
+  \param[in] tg The translation grammar for this translation.
+  */
   virtual void set_grammar(const TranslationGrammar &tg);
 
   /**
   \brief Runs the translation. Output symbols are stored in output_.
-
-  If the translation fails, an appropriate exception is thrown.
   */
   virtual void run();
 };

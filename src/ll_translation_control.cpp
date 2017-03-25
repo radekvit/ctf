@@ -23,15 +23,15 @@ void LLTranslationControl::run() {
   using Type = Symbol::Type;
 
   if (!lexicalAnalyzer_)
-    throw SyntacticError("No lexical analyzer was attached.");
+    throw TranslationError("No lexical analyzer was attached.");
   else if (!translationGrammar_)
-    throw SyntacticError("No translation grammar was attached.");
+    throw TranslationError("No translation grammar was attached.");
 
   input_.clear();
   output_.clear();
   inputString_.clear();
   vector<const Rule *> rules;
-  tstack<vector<tstack<Symbol>::iterator>> attributeTargets;
+  tstack<vector<tstack<Symbol>::iterator>> attributeActions;
 
   Symbol token = next_token(inputString_);
 
@@ -51,7 +51,7 @@ void LLTranslationControl::run() {
         break;
       case Type::TERMINAL:
         if (top == token) {
-          for (auto it : attributeTargets.pop()) {
+          for (auto it : attributeActions.pop()) {
             it->attribute() += token.attribute();
           }
           input_.pop();
@@ -66,11 +66,10 @@ void LLTranslationControl::run() {
           auto &rule = translationGrammar_->rules()[ruleIndex];
           input_.replace(input_.begin(), rule.input());
           auto obegin = output_.replace(top, rule.output());
-          create_attibute_targets(obegin, rule.targets(), attributeTargets);
+          create_attibute_targets(obegin, rule.targets(), attributeActions);
           rules.push_back(&(rule));
         } else {
-          throw SyntacticError(
-              syntaxErrorMessage_(top, token) + ".");
+          throw SyntacticError(syntaxErrorMessage_(top, token) + ".");
         }
         break;
       default:
@@ -79,9 +78,9 @@ void LLTranslationControl::run() {
   }
 }
 
-void LLTranslationControl::create_attibute_targets(
+void LLTranslationControl::create_attibute_actions(
     tstack<Symbol>::iterator obegin, const vector<vector<size_t>> &targets,
-    tstack<vector<tstack<Symbol>::iterator>> &attributeTargets) {
+    tstack<vector<tstack<Symbol>::iterator>> &attributeActions) {
   for (auto &target : reverse(targets)) {
     vector<tstack<Symbol>::iterator> iterators;
     for (auto &i : target) {
@@ -91,7 +90,7 @@ void LLTranslationControl::create_attibute_targets(
       if (oit->type() == Symbol::Type::TERMINAL)
         iterators.push_back(oit);
     }
-    attributeTargets.push(iterators);
+    attributeActions.push(iterators);
   }
 }
 

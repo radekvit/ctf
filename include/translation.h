@@ -48,49 +48,76 @@ class Translation {
   OutputGenerator outputGenerator_;
 
  public:
- /**
- \brief Constructs Translation with given lexical analyzer, translation control, translation grammar and output generator.
- */
+  /**
+  \brief Constructs Translation with given lexical analyzer, translation
+  control, translation grammar and output generator.
+  \param[in] la A callable to perform lexical analysis.
+  \param[in] tc A translation control to drive the translation.
+  \param[in] tg Translation grammar that defines the input and output languages.
+  \param[in] og A callable to perform output generation.
+  */
   Translation(LexicalAnalyzer::token_function la, TranslationControl &tc,
               const TranslationGrammar &tg,
               OutputGenerator::output_function og);
-/**
-\brief Constructs Translation with given lexical analyzer, translation grammar and output generator. Translation control is constructed by name.
-*/
+  /**
+  \brief Constructs Translation with given lexical analyzer, translation grammar
+  and output generator. Translation control is constructed by name.
+   \param[in] la A callable to perform lexical analysis.
+   \param[in] tcName Name of a built-in translation control.
+   \param[in] tg Translation grammar that defines the input and output
+  languages.
+   \param[in] og A callable to perform output generation.
+  */
   Translation(LexicalAnalyzer::token_function la, const string &tcName,
               const TranslationGrammar &tg,
               OutputGenerator::output_function og);
- /**
- \brief Constructs Translation with given lexical analyzer, translation control, translation grammar and output generator. Custom error messages are given for syntax errors.
- */ 
+  /**
+  \brief Constructs Translation with given lexical analyzer, translation
+  control, translation grammar and output generator. Custom error messages are
+  given for syntax errors.
+   \param[in] la A callable to perform lexical analysis.
+  \param[in] tc A translation control to drive the translation.
+  \param[in] tg Translation grammar that defines the input and output languages.
+  \param[in] og A callable to perform output generation
+  \param[in] syntaxErrors A callable to provide syntax error messages.
+  */
   Translation(LexicalAnalyzer::token_function la, TranslationControl &tc,
-              const TranslationGrammar &tg,
-              OutputGenerator::output_function og,
-              TranslationControl::error_function syntaxErrors):
-              Translation(la,tc,tg,og)
-              {
-                translationControl_.set_syntax_error_message(syntaxErrors);
-              }
-/**
-\brief Constructs Translation with given lexical analyzer, translation grammar and output generator. Translation control is constructed by name. Custom error messages are given for syntax errors.
-*/
+              const TranslationGrammar &tg, OutputGenerator::output_function og,
+              TranslationControl::error_function syntaxErrors)
+      : Translation(la, tc, tg, og) {
+    translationControl_.set_syntax_error_message(syntaxErrors);
+  }
+  /**
+  \brief Constructs Translation with given lexical analyzer, translation grammar
+  and output generator. Translation control is constructed by name. Custom error
+  messages are given for syntax errors.
+   \param[in] la A callable to perform lexical analysis.
+   \param[in] tcName Name of a built-in translation control.
+   \param[in] tg Translation grammar that defines the input and output
+  languages.
+   \param[in] og A callable to perform output generation.
+   \param[in] syntaxErrors A callable to provide syntax error messages.
+  */
   Translation(LexicalAnalyzer::token_function la, const string &tcName,
-              const TranslationGrammar &tg,
-              OutputGenerator::output_function og,
-              TranslationControl::error_function syntaxErrors):
-                            Translation(la,tcName,tg,og)
-              {
-                translationControl_.set_syntax_error_message(syntaxErrors);
-              }
-  ~Translation() {} //= default;
+              const TranslationGrammar &tg, OutputGenerator::output_function og,
+              TranslationControl::error_function syntaxErrors)
+      : Translation(la, tcName, tg, og) {
+    translationControl_.set_syntax_error_message(syntaxErrors);
+  }
+  ~Translation() {}  //= default;
 
   /**
   \brief Translates input from istream and outputs the translation to ostream.
+  \param[in] input Input stream.
+  \param[out] output Output stream.
   */
   void run(std::istream &input, std::ostream &output);
 
   /**
   \brief Factory method for creating TranslationControl variants.
+  \param[in] name Name of built-in translation control. Viable options are:
+  "ll".
+  \returns A std::unique_ptr containing a new translation control.
   */
   static std::unique_ptr<TranslationControl> control(const string &name) {
     const static map<string,
@@ -103,7 +130,8 @@ class Translation {
         };
     auto it = controls.find(name);
     if (it == controls.end())
-      throw std::invalid_argument("No translation control with name " + name + ".");
+      throw std::invalid_argument("No translation control with name " + name +
+                                  ".");
     else
       return (*it).second();
   }

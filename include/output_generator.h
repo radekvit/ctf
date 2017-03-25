@@ -11,6 +11,9 @@ and outputs it into a stream.
 
 namespace ctf {
 
+/**
+\brief An exception class for semantic errors.
+*/
 class SemanticError : public TranslationException {
  public:
   using TranslationException::TranslationException;
@@ -39,11 +42,16 @@ class OutputGenerator {
  public:
   /**
   \brief Constructs OutputGenerator without an output stream.
+  \param[in] f Callable to print incoming symbols to a stream. At the end of
+  output, it will receive Symbol::EOI() and should reset itself.
   */
   OutputGenerator(output_function f = OutputGenerator::default_output)
       : os(nullptr), outputFunction(f) {}
   /**
   \brief Constructs OutputGenerator with an output stream.
+  \param[in] _o Output stream.
+  \param[in] f Callable to print incoming symbols to a stream. At the end of
+  output, it will receive Symbol::EOI() and should reset itself.
   */
   OutputGenerator(std::ostream &_o,
                   output_function f = OutputGenerator::default_output)
@@ -51,21 +59,35 @@ class OutputGenerator {
 
   /**
   \brief Returns true if an output stream has been set.
+  \returns True if an output stream has been set. False otherwise.
   */
   bool stream_set() const { return os; }
   /**
   \brief Sets the output stream.
+  \param[in] o Output stream.
   */
   void set_output(std::ostream &o) { os = &o; }
   /**
-  \brief Outputs a token to the given stream. If OutputGenerator::stream_set()
+  \brief Outputs a token to the given stream.
+  \param[in] t Symbol to be output. If t is equal to Symbol::EOI(),
+  outputFunction should reset itself.
+
+  If OutputGenerator::stream_set()
   is false, this results in undefined behavior.
   */
   void get_token(const Symbol &t) { outputFunction(*os, t); }
 
+  /**
+  \brief Default output function.
+
+  Prints Symbol name and attribute.
+  */
   static void default_output(std::ostream &os, const Symbol &t) {
     if (t != Symbol::EOI())
-      os << t.name() << "." << t.attribute() << "\n";
+      os << t.name();
+    if (t.attribute() != "")
+      os << "." << t.attribute();
+    os << "\n";
   }
 };
 }  // namespace ctf
