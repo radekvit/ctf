@@ -142,7 +142,7 @@ class Symbol {
   }
 
   friend bool operator==(const Symbol &lhs, const Symbol &rhs) {
-    return lhs.type_ == rhs.type_ && lhs.name_ == rhs.name_;
+    return lhs.name_ == rhs.name_;
   }
 
   friend bool operator!=(const Symbol &lhs, const Symbol &rhs) {

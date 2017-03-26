@@ -48,7 +48,7 @@ class TranslationControl {
   /**
   \brief Tstack of input symbols.
   */
-  tstack<Symbol> input_
+  tstack<Symbol> input_;
       /**
       \brief Tstack of output symbols.
       */

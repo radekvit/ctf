@@ -23,9 +23,9 @@ void LLTranslationControl::run() {
   using Type = Symbol::Type;
 
   if (!lexicalAnalyzer_)
-    throw TranslationError("No lexical analyzer was attached.");
+    throw TranslationException("No lexical analyzer was attached.");
   else if (!translationGrammar_)
-    throw TranslationError("No translation grammar was attached.");
+    throw TranslationException("No translation grammar was attached.");
 
   input_.clear();
   output_.clear();
@@ -47,7 +47,7 @@ void LLTranslationControl::run() {
         if (token.type() == Type::EOI)
           return;
         else
-          throw SyntacticError("Unexpected token after derivation is done.");
+          throw SyntaxError("Unexpected token after derivation is done.");
         break;
       case Type::TERMINAL:
         if (top == token) {
@@ -57,7 +57,7 @@ void LLTranslationControl::run() {
           input_.pop();
           token = next_token(inputString_);
         } else {
-          throw SyntacticError("Unexpected token " + token.name() + ".");
+          throw SyntaxError("Unexpected token " + token.name() + ", expected " + top.name() + ".");
         }
         break;
       case Type::NONTERMINAL:
@@ -66,10 +66,10 @@ void LLTranslationControl::run() {
           auto &rule = translationGrammar_->rules()[ruleIndex];
           input_.replace(input_.begin(), rule.input());
           auto obegin = output_.replace(top, rule.output());
-          create_attibute_targets(obegin, rule.targets(), attributeActions);
+          create_attibute_actions(obegin, rule.actions(), attributeActions);
           rules.push_back(&(rule));
         } else {
-          throw SyntacticError(syntaxErrorMessage_(top, token) + ".");
+          throw SyntaxError(syntaxErrorMessage_(top, token) + ".");
         }
         break;
       default:

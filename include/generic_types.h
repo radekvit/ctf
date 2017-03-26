@@ -119,7 +119,7 @@ class tstack {
                       [](auto lhs, auto rhs) { return lhs == rhs; }) {
     iterator it;
     for (it = list_.begin(); it != list_.end(); ++it) {
-      if (searchOperator(*it, target))
+      if (predicate(*it, target))
         break;
     }
     return it;
@@ -138,7 +138,7 @@ class tstack {
           [](auto lhs, auto rhs) { return lhs == rhs; }) const {
     const_iterator it;
     for (it = list_.cbegin(); it != list_.cend(); ++it) {
-      if (searchOperator(*it, target))
+      if (predicate(*it, target))
         break;
     }
     return it;
@@ -186,7 +186,7 @@ class tstack {
   iterator replace(const T &target, const TS &string,
                    std::function<bool(const T &, const T &)> predicate =
                        [](auto lhs, auto rhs) { return lhs == rhs; }) {
-    return replace(search(target, searchOperator), string);
+    return replace(search(target, predicate), string);
   }
   /**
   \brief Swaps the contents of this tstack with another tstack.
@@ -373,7 +373,7 @@ class const_reverser {
   const T &ref;
 
  public:
-  const_reverset() = delete;
+  const_reverser() = delete;
   /**
   \brief Constructs a const_reverser.
   \param[in] _t Container to be reversed.
