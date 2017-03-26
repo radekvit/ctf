@@ -59,7 +59,7 @@ class LexicalAnalyzer {
   specified, f determines the tokenFunction.
   \param[in] f A callable for extracting Tokens from a stream.
   */
-  LexicalAnalyzer(token_function f = LexicalAnalyzer::default_token_getter)
+  LexicalAnalyzer(token_function f = LexicalAnalyzer::default_input)
       : is(nullptr), tokenFunction(f) {}
   /**
   \brief Constructs LexicalAnalyzer with a given istream. If specified, f
@@ -68,7 +68,7 @@ class LexicalAnalyzer {
   \param[in] f A callable for extracting Tokens from a stream.
   */
   LexicalAnalyzer(std::istream &_i,
-                  token_function f = LexicalAnalyzer::default_token_getter)
+                  token_function f = LexicalAnalyzer::default_input)
       : is(&_i), tokenFunction(f) {}
 
   /**
@@ -92,7 +92,7 @@ class LexicalAnalyzer {
   \brief Default token extractor. All characters that are not spaces become
   tokens.
   */
-  static Token default_token_getter(std::istream &is) {
+  static Token default_input(std::istream &is) {
     char c;
   read:
     if (is.get(c)) {

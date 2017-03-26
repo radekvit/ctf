@@ -33,7 +33,7 @@ int main() {
   std::ofstream out("out");
 
   auto tc = Translation::control("ll");
-  Translation tranny{LexicalAnalyzer::default_token_getter, *tc, tg, OutputGenerator::default_output};
+  Translation tranny{LexicalAnalyzer::default_input, *tc, tg, OutputGenerator::default_output};
   tranny.run(in, out);
 
   return 0;
