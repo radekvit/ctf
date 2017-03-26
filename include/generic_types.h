@@ -132,10 +132,11 @@ class tstack {
   predicate. If no element fits the criteria, the returned iterator is
   equal to tstack::cend().
   */
-  const_iterator search(
-      const T &target,
-      std::function<bool(const T &, const T &)> predicate =
-          [](auto lhs, auto rhs) { return lhs == rhs; }) const {
+  const_iterator search(const T &target,
+                        std::function<bool(const T &, const T &)> predicate =
+                            [](auto lhs, auto rhs) {
+                              return lhs == rhs;
+                            }) const {
     const_iterator it;
     for (it = list_.cbegin(); it != list_.cend(); ++it) {
       if (predicate(*it, target))

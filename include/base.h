@@ -45,7 +45,8 @@ class Symbol {
     */
     UNKNOWN,
     /**
-    \brief FUTURE: Special marker symbols.
+    \brief Denotes a symbol with special meaning for the translation control or
+    output generator.
     */
     SPECIAL,
   };
@@ -192,6 +193,14 @@ inline Symbol operator""_t(const char *s, size_t) { return Terminal({s}); }
 \returns Symbol with type Terminal and given name.
 */
 inline Symbol operator""_nt(const char *s, size_t) { return Nonterminal({s}); }
+/**
+\brief Returns a Symbol of Type::Special with given name.
+\param[in] s C string representing the name of the returned Symbol.
+\returns Symbol with type Special and given name.
+*/
+inline Symbol operator""_s(const char *s, size_t) {
+  return Symbol(Symbol::Type::SPECIAL, {s});
+}
 #endif
 
 }  // namespace ctf

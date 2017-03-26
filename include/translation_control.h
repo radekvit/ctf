@@ -49,11 +49,10 @@ class TranslationControl {
   \brief Tstack of input symbols.
   */
   tstack<Symbol> input_;
-      /**
-      \brief Tstack of output symbols.
-      */
-      tstack<Symbol>
-          output_;
+  /**
+  \brief Tstack of output symbols.
+  */
+  tstack<Symbol> output_;
   /**
   \brief Syntax error message function.
 

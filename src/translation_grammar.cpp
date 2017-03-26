@@ -21,7 +21,8 @@ void TranslationGrammar::Rule::check_nonterminals() {
   for (auto &s : input_) {
     if (s.type() == Symbol::Type::NONTERMINAL)
       inputNonterminals.push_back(s);
-    else if (s.type() != Symbol::Type::TERMINAL)
+    else if (s.type() != Symbol::Type::TERMINAL &&
+             s.type() != Symbol::Type::SPECIAL)
       throw std::invalid_argument("Unknown symbol type in Rule input.");
   }
   for (auto &s : output_) {
@@ -51,7 +52,7 @@ TranslationGrammar::TranslationGrammar(const vector<Rule> &_rules,
         case Symbol::Type::TERMINAL:
           terminals_.push_back(s);
         default:
-          // should never happen
+          // ignore all other types
           break;
       }  // switch
     }    // for all input

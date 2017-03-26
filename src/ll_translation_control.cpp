@@ -57,7 +57,8 @@ void LLTranslationControl::run() {
           input_.pop();
           token = next_token(inputString_);
         } else {
-          throw SyntaxError("Unexpected token " + token.name() + ", expected " + top.name() + ".");
+          throw SyntaxError("Unexpected token " + token.name() + ", expected " +
+                            top.name() + ".");
         }
         break;
       case Type::NONTERMINAL:
