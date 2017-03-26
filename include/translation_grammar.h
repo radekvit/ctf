@@ -97,12 +97,12 @@ class TranslationGrammar {
             "constructing class "
             "TranslationGrammar::Rule.");
       for (auto &target : attributeActions) {
-        if (target.size() >= output_.size())
+        if (target.size() > output_.size())
           throw std::invalid_argument(
-              "More assigned actions than nonterminals in output when "
+              "More assigned actions than symbols in output when "
               "constructing class TranslationGrammar::Rule.");
         for (auto i : target) {
-          if (i >= output_.size() ||
+          if (i > output_.size() ||
               output_[i].type() != Symbol::Type::TERMINAL)
             throw std::invalid_argument(
                 "Attribute target not an output terminal when constructing "

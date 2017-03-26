@@ -28,7 +28,8 @@ void TranslationGrammar::Rule::check_nonterminals() {
   for (auto &s : output_) {
     if (s.type() == Symbol::Type::NONTERMINAL)
       outputNonterminals.push_back(s);
-    else if (s.type() != Symbol::Type::TERMINAL)
+    else if (s.type() != Symbol::Type::TERMINAL &&
+             s.type() != Symbol::Type::SPECIAL)
       throw std::invalid_argument("Unknown symbol type in Rule output.");
   }
   if (inputNonterminals != outputNonterminals)
