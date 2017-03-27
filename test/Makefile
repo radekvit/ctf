@@ -1,14 +1,12 @@
 APPNAME=ctf_test
 INCLUDE=../include
-SRC=../src
+SRC=.
 CXXFLAGS += -std=c++14 -Wall -Wextra -pedantic -I. -I $(INCLUDE)
 OBJ=obj
 $(shell mkdir -p $(OBJ))
 
-HEADERS=$(INCLUDE)/generic_types.h $(INCLUDE)/ll_table.h \
-$(INCLUDE)/translation_grammar.h
+HEADERS=$(wildcard $(SRC)/*.h)
 OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
-OBJFILES += $(OBJ)/main.o
 
 .PHONY: all format clean debug build test
 
@@ -26,9 +24,6 @@ $(APPNAME): $(OBJFILES)
 	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
 
 $(OBJ)/main.o: main.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(OBJ)/%.o: $(SRC)/%.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:

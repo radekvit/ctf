@@ -10,13 +10,11 @@
 #include <memory>
 #include <ostream>
 
-#include <generic_types.h>
-#include <lexical_analyzer.h>
-#include <output_generator.h>
-#include <translation_control.h>
-#include <translation_grammar.h>
-
-#include <ll_translation_control.h>
+#include "lexical_analyzer.h"
+#include "output_generator.h"
+#include "translation_control.h"
+#include "translation_grammar.h"
+#include "ll_translation_control.h"
 
 namespace ctf {
 /**
@@ -58,7 +56,14 @@ class Translation {
   */
   Translation(LexicalAnalyzer::token_function la, TranslationControl &tc,
               const TranslationGrammar &tg,
-              OutputGenerator::output_function og);
+              OutputGenerator::output_function og)
+                  : lexicalAnalyzer_(la),
+      translationControl_(tc),
+      translationGrammar_(tg),
+      outputGenerator_(og) {
+  translationControl_.set_grammar(translationGrammar_);
+  translationControl_.set_lexical_analyzer(lexicalAnalyzer_);
+}
   /**
   \brief Constructs Translation with given lexical analyzer, translation grammar
   and output generator. Translation control is constructed by name.
@@ -70,7 +75,15 @@ class Translation {
   */
   Translation(LexicalAnalyzer::token_function la, const string &tcName,
               const TranslationGrammar &tg,
-              OutputGenerator::output_function og);
+              OutputGenerator::output_function og)
+                  : lexicalAnalyzer_(la),
+      control_(Translation::control(tcName)),
+      translationControl_(*control_),
+      translationGrammar_(tg),
+      outputGenerator_(og) {
+  translationControl_.set_grammar(translationGrammar_);
+  translationControl_.set_lexical_analyzer(lexicalAnalyzer_);
+}
   /**
   \brief Constructs Translation with given lexical analyzer, translation
   control, translation grammar and output generator. Custom error messages are
@@ -111,7 +124,15 @@ class Translation {
   \param[in] input Input stream.
   \param[out] output Output stream.
   */
-  void run(std::istream &input, std::ostream &output);
+  void run(std::istream &input, std::ostream &output) {
+  lexicalAnalyzer_.set_input(input);
+  outputGenerator_.set_output(output);
+  translationControl_.run();
+  auto &outputTokens = translationControl_.output();
+  for (auto &t : outputTokens) {
+    outputGenerator_.get_token(t);
+  }
+}
 
   /**
   \brief Factory method for creating TranslationControl variants.

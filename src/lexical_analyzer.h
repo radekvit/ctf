@@ -6,10 +6,11 @@
 #ifndef CTF_LEXICAL_ANALYZER
 #define CTF_LEXICAL_ANALYZER
 
-#include <base.h>
 #include <cctype>
 #include <functional>
 #include <istream>
+
+#include "base.h"
 
 namespace ctf {
 

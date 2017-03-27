@@ -6,8 +6,9 @@ and outputs it into a stream.
 #ifndef CTF_OUTPUT
 #define CTF_OUTPUT
 
-#include <base.h>
 #include <ostream>
+
+#include "base.h"
 
 namespace ctf {
 

@@ -6,9 +6,10 @@
 #ifndef CTF_BASE_H
 #define CTF_BASE_H
 
-#include <generic_types.h>
 #include <ostream>
 #include <stdexcept>
+
+#include "generic_types.h"
 
 namespace ctf {
 

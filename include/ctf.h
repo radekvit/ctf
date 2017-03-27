@@ -9,8 +9,7 @@ before including this header.
 #ifndef CTF_CTF_HEADER
 #define CTF_CTF_HEADER
 
-#include "ll_translation_control.h"
-#include "translation.h"
+#include "../src/translation.h"
 
 #ifndef CTF_NO_USING_NAMESPACE
 // Translation class

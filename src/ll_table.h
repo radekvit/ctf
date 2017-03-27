@@ -6,11 +6,10 @@
 #ifndef CTF_LL_H
 #define CTF_LL_H
 
-#include <base.h>
-#include <generic_types.h>
-#include <translation_grammar.h>
 #include <stdexcept>
 #include <utility>
+
+#include "translation_grammar.h"
 
 namespace ctf {
 /**
