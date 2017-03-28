@@ -1,36 +1,6 @@
-APPNAME=libctf.so
-INCLUDE=include
-SRC=src
-CXXFLAGS += -std=c++14 -Wall -Wextra -pedantic -I. -I $(INCLUDE) -fpic
-OBJ=obj
-$(shell mkdir -p $(OBJ))
+.PHONY: all format test pack doc
 
-HEADERS=$(wildcard $(INCLUDE)/*.h)
-OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
-
-.PHONY: all format clean debug build test pack doc
-
-all: deploy
-
-build: $(APPNAME)
-
-debug: CXXFLAGS+=-g -O0
-debug: build
-
-deploy: CXXFLAGS+=-O3 -DNDEBUG
-deploy: build
-
-install: all
-	sudo cp $(APPNAME) /usr/lib
-
-$(APPNAME): $(OBJFILES)
-	$(CXX) -shared $(CXXFLAGS) $(LDLIBS) $^ -o $@
-
-$(OBJ)/%.o: $(SRC)/%.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-clean:
-	-rm -rf $(OBJFILES) $(APPNAME) doc/html
+all:
 
 format:
 	clang-format -style=file -i $(SRC)/*.cpp $(INCLUDE)/*.h
@@ -38,9 +8,9 @@ format:
 test:
 	make -C test test
 
-pack: all
 pack:
-	zip ctf.zip include/*.h $(APPNAME)
+	make -C test clean
+	zip -r ctf.zip .
 
 doc:
 	make -C doc

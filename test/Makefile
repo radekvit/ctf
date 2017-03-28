@@ -27,12 +27,11 @@ $(OBJ)/main.o: main.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	-rm -f $(OBJFILES) $(APPNAME)
+	-rm -rf $(OBJ) $(APPNAME)
 
 format:
 	clang-format -style=file -i $(SRC)/*.cpp $(INCLUDE)/*.h
 
-test: all
+test: debug
 test:
 	./$(APPNAME) && diff expected out
-test: clean
