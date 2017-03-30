@@ -160,7 +160,7 @@ class Symbol {
   }
 
   friend bool operator>=(const Symbol &lhs, const Symbol &rhs) {
-    return lhs > rhs || lhs == rhs;
+    return rhs <= lhs;
   }
   ///@}
 };
