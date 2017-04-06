@@ -1,11 +1,12 @@
 APPNAME=ctf_test
-INCLUDE=../include
+INCLUDE=../src
 SRC=.
-CXXFLAGS += -std=c++14 -Wall -Wextra -pedantic -I. -I $(INCLUDE)
+CATCH = ../lib/Catch/single_include
+CXXFLAGS += -std=c++14 -Wall -Wextra -pedantic -I. -I $(CATCH) -I $(INCLUDE)
 OBJ=obj
 $(shell mkdir -p $(OBJ))
 
-HEADERS=$(wildcard $(SRC)/*.h)
+HEADERS=$(wildcard $(INCLUDE)/*.h)
 OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
 
 .PHONY: all format clean debug build test
@@ -23,7 +24,7 @@ deploy: build
 $(APPNAME): $(OBJFILES)
 	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
 
-$(OBJ)/main.o: main.cpp
+$(OBJ)/%.o: $(SRC)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:

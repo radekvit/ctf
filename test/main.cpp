@@ -1,3 +1,7 @@
+#define CATCH_CONFIG_MAIN
+#include <catch.hpp>
+
+#if 0
 #include <ll_table.h>
 #include <ll_translation_control.h>
 #include <translation.h>
@@ -38,3 +42,4 @@ int main() {
 
   return 0;
 }
+#endif

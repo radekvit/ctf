@@ -411,7 +411,7 @@ const const_reverser<T> reverse(const T &t) {
 \param[in] it Container from which the target container is constructed.
 \returns A container with all elements of the first container.
 */
-template <class T, template <class T> class IT, template <class T> class OT>
+template <class T, template <class X1> class IT, template <class X2> class OT>
 OT<T> transform(const IT<T> &it) {
   return OT<T>{begin(it), end(it)};
 }
