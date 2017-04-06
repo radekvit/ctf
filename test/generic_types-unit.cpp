@@ -144,6 +144,7 @@ TEST_CASE("set_union") {
   int last = -1;
   for (int i : result) {
     REQUIRE(i > last);
+    last = i;
   }
 }
 
