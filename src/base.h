@@ -182,6 +182,7 @@ inline Symbol Nonterminal(const string &name) {
   return Symbol(Symbol::Type::NONTERMINAL, name);
 }
 #ifndef CTF_NO_QUOTE_OPERATORS
+inline namespace literals {
 /**
 \brief Returns a Symbol of Type::Terminal with given name.
 \param[in] s C string representing the name of the returned Symbol.
@@ -202,6 +203,7 @@ inline Symbol operator""_nt(const char *s, size_t) { return Nonterminal({s}); }
 inline Symbol operator""_s(const char *s, size_t) {
   return Symbol(Symbol::Type::SPECIAL, {s});
 }
+}  // inline namespace literals
 #endif
 
 }  // namespace ctf

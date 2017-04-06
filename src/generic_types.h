@@ -69,23 +69,23 @@ class tstack {
   \returns a reference to the top element of the stack.
   \returns A reference to the top element of the stack.
   */
-  T &top() { return list_.front(); }
+  T &top() noexcept { return list_.front(); }
   /**
   \brief Returns a constant reference to the top element of the stack.
   \returns A const reference to the top element of the stack.
   */
-  const T &top() const { return list_.front(); }
+  const T &top() const noexcept { return list_.front(); }
 
   /**
   \brief Returns true if there are no elements on the stack.
   \returns True when the stack is empty. False otherwise.
   */
-  bool empty() const { return list_.size() == 0; }
+  bool empty() const noexcept { return list_.size() == 0; }
   /**
   \brief Returns the number of elements on the stack.
   \returns The number of elements on the stack.
   */
-  size_type size() const { return list_.size(); }
+  size_type size() const noexcept { return list_.size(); }
   /**
   \brief Removes all elements from the stack.
   */
@@ -101,7 +101,7 @@ class tstack {
   \brief Pops the top element from the stack and returns it.
   \returns The element that was on the top of the stack before its removal.
   */
-  T pop() {
+  T pop() noexcept {
     T temp{list_.front()};
     list_.pop_front();
     return temp;
@@ -192,7 +192,7 @@ class tstack {
   /**
   \brief Swaps the contents of this tstack with another tstack.
   */
-  void swap(tstack &other) { std::swap(list_, other.list_); }
+  void swap(tstack &other) noexcept { std::swap(list_, other.list_); }
 
   ///@{
   /**
@@ -201,9 +201,9 @@ class tstack {
 
   If the stack is empty, the returned iterator will be equal to end().
   */
-  iterator begin() { return list_.begin(); }
-  const_iterator begin() const { return list_.begin(); }
-  const_iterator cbegin() const { return list_.cbegin(); }
+  iterator begin() noexcept { return list_.begin(); }
+  const_iterator begin() const noexcept { return list_.begin(); }
+  const_iterator cbegin() const noexcept { return list_.cbegin(); }
   ///@}
 
   ///@{
@@ -216,9 +216,9 @@ class tstack {
   This element acts as a placeholder. Trying to access it results in undefined
   behavior.
   */
-  iterator end() { return list_.end(); }
-  const_iterator end() const { return list_.end(); }
-  const_iterator cend() const { return list_.cend(); }
+  iterator end() noexcept { return list_.end(); }
+  const_iterator end() const noexcept { return list_.end(); }
+  const_iterator cend() const noexcept { return list_.cend(); }
   ///@}
 
   ///@{
@@ -226,9 +226,9 @@ class tstack {
   \brief Returns a reverse iterator to the furthest element from the top.
   \returns A reverse iterator to the furthest element from the top.
   */
-  reverse_iterator rbegin() { return list_.rbegin(); }
-  const_reverse_iterator rbegin() const { return list_.rbegin(); }
-  const_reverse_iterator crbegin() const { return list_.rbegin(); }
+  reverse_iterator rbegin() noexcept { return list_.rbegin(); }
+  const_reverse_iterator rbegin() const noexcept { return list_.rbegin(); }
+  const_reverse_iterator crbegin() const noexcept { return list_.crbegin(); }
   ///@}
 
   ///@{
@@ -239,9 +239,9 @@ class tstack {
   This element acts as a placeholder. Trying to access it results in undefined
   behavior.
   */
-  reverse_iterator rend() { return list_.rend(); }
-  const_reverse_iterator rend() const { return list_.rend(); }
-  const_reverse_iterator crend() const { return list_.rend(); }
+  reverse_iterator rend() noexcept { return list_.rend(); }
+  const_reverse_iterator rend() const noexcept { return list_.rend(); }
+  const_reverse_iterator crend() const noexcept { return list_.crend(); }
   ///@}
 
   /**
@@ -252,22 +252,22 @@ class tstack {
   \returns True if the lexicographic comparison is true.
   */
   ///@{
-  friend bool operator==(const tstack<T> &lhs, const tstack<T> &rhs) {
+  friend bool operator==(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
     return lhs.list_ == rhs.list_;
   }
-  friend bool operator!=(const tstack<T> &lhs, const tstack<T> &rhs) {
+  friend bool operator!=(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
     return !(lhs == rhs);
   }
-  friend bool operator<(const tstack<T> &lhs, const tstack<T> &rhs) {
+  friend bool operator<(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
     return lhs.list_ < rhs.list_;
   }
-  friend bool operator>(const tstack<T> &lhs, const tstack<T> &rhs) {
+  friend bool operator>(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
     return rhs.list_ < lhs.list_;
   }
-  friend bool operator<=(const tstack<T> &lhs, const tstack<T> &rhs) {
+  friend bool operator<=(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
     return lhs < rhs || lhs == rhs;
   }
-  friend bool operator>=(const tstack<T> &lhs, const tstack<T> &rhs) {
+  friend bool operator>=(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
     return lhs > rhs || lhs == rhs;
   }
   ///@}
@@ -305,7 +305,7 @@ void make_set(T &container) {
 template <class T, class CT>
 bool is_in(const CT &c, const T &e) {
   auto it = std::lower_bound(c.begin(), c.end(), e);
-  return it != c.end() && it->name() == e.name();
+  return it != c.end() && *it == e;
 }
 
 /**
@@ -411,9 +411,9 @@ const const_reverser<T> reverse(const T &t) {
 \param[in] it Container from which the target container is constructed.
 \returns A container with all elements of the first container.
 */
-template <class T, template <class X1> class IT, template <class X2> class OT>
-OT<T> transform(const IT<T> &it) {
-  return OT<T>{begin(it), end(it)};
+template <class IT, class OT>
+OT transform(const IT &it) {
+  return OT{begin(it), end(it)};
 }
 
 }  // namespace ctf
