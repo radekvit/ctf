@@ -182,20 +182,16 @@ class TranslationGrammar {
     /**
     \name Comparison operators
     \brief Lexicographic comparison of the three elements of Rules. Nonterminals
-    have the highest priority, then input, then output.
+    have the highest priority, then input.
     \returns True if the comparison is true. False otherwise.
     */
     ///@{
     friend bool operator<(const Rule &lhs, const Rule &rhs) {
-      return lhs.nonterminal() < rhs.nonterminal()
-                 ? true
-                 : (lhs.input() < rhs.input() ? true
-                                              : lhs.output() < rhs.output());
+      return lhs.nonterminal() < rhs.nonterminal() || lhs.input() < rhs.input();
     }
     friend bool operator==(const Rule &lhs, const Rule &rhs) {
-      return lhs.nonterminal() == rhs.nonterminal()
-                 ? lhs.input() == rhs.input() && lhs.output() == rhs.output()
-                 : false;
+      return lhs.nonterminal() == rhs.nonterminal() &&
+             lhs.input() == rhs.input() && lhs.output() == rhs.output();
     }
     friend bool operator!=(const Rule &lhs, const Rule &rhs) {
       return !(lhs == rhs);

@@ -52,6 +52,7 @@ class Translation {
   \param[in] la A callable to perform lexical analysis.
   \param[in] tc A translation control to drive the translation.
   \param[in] tg Translation grammar that defines the input and output languages.
+  A copy is made.
   \param[in] og A callable to perform output generation.
   */
   Translation(LexicalAnalyzer::token_function la, TranslationControl &tc,
