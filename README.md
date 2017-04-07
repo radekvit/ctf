@@ -25,10 +25,10 @@ speeding up development greatly.
 
 ## Supported translation methods
 
-* LL table
+* LL table - "ll"
 
 ## Future translation methods
 
-* LR table
-* bottom-up
-* switched LL and bottom-up
+* LR table - "lr"
+* bottom-up - "precedence"
+* switched LL and bottom-up - "ll-switched"
