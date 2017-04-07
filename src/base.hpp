@@ -40,7 +40,7 @@ class Symbol {
     /**
     \brief End of input
     */
-    EOI,
+    EOF,
     /**
     \brief Undefined type
     */
@@ -72,14 +72,14 @@ class Symbol {
   and attribute.
   \param[in] type Type of constructed Symbol.
   \param[in] name Name of constructed Symbol. Defaults to "". "" is only valid
-  for Type::EOI.
+  for Type::EOF.
   \param[in] atr Attribute of constructed Symbol.
   */
   Symbol(Type type, const string &name = "", const string &atr = "")
       : type_(type), name_(name), attribute_(atr) {
-    if (type != Symbol::Type::EOI && name == "")
+    if (type != Symbol::Type::EOF && name == "")
       throw std::invalid_argument(
-          "Empty name when constructing non-EOI Symbol.");
+          "Empty name when constructing non-EOF Symbol.");
   }
   /**
   \brief Constructs a Symbol with unspecified type. Sets Symbol's name and if
@@ -95,10 +95,10 @@ class Symbol {
   ~Symbol() = default;
 
   /**
-  \brief Creates an EOI Symbol.
-  \returns An EOI Symbol.
+  \brief Creates an EOF Symbol.
+  \returns An EOF Symbol.
   */
-  static Symbol EOI() { return Symbol(Type::EOI); }
+  static Symbol eof() { return Symbol(Type::EOF); }
 
   /**
   \brief Returns a reference to name.

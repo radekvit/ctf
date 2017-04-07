@@ -138,7 +138,7 @@ class LLTranslationControl : public TranslationControl {
     const TranslationGrammar &tg = *translationGrammar_;
     follow_ = {tg.nonterminals().size(), vector<Symbol>{}};
     follow_[tg.nonterminal_index(tg.starting_symbol())].push_back(
-        Symbol::EOI());
+        Symbol::eof());
 
     bool changed = false;
     do {
@@ -297,16 +297,16 @@ class LLTranslationControl : public TranslationControl {
 
     Symbol token = next_token(inputString_);
 
-    input_.push(Symbol::EOI());
-    output_.push(Symbol::EOI());
+    input_.push(Symbol::eof());
+    output_.push(Symbol::eof());
     input_.push(translationGrammar_->starting_symbol());
     output_.push(translationGrammar_->starting_symbol());
     while (1) {
       Symbol &top = input_.top();
       size_t ruleIndex;
       switch (top.type()) {
-        case Type::EOI:
-          if (token.type() == Type::EOI)
+        case Type::EOF:
+          if (token.type() == Type::EOF)
             return;
           else
             throw SyntaxError("Unexpected token after derivation is done.");

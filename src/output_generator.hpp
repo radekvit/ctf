@@ -44,7 +44,7 @@ class OutputGenerator {
   /**
   \brief Constructs OutputGenerator without an output stream.
   \param[in] f Callable to print incoming symbols to a stream. At the end of
-  output, it will receive Symbol::EOI() and should reset itself.
+  output, it will receive Symbol::eofI() and should reset itself.
   */
   OutputGenerator(output_function f = OutputGenerator::default_output)
       : os(nullptr), outputFunction(f) {}
@@ -52,7 +52,7 @@ class OutputGenerator {
   \brief Constructs OutputGenerator with an output stream.
   \param[in] _o Output stream.
   \param[in] f Callable to print incoming symbols to a stream. At the end of
-  output, it will receive Symbol::EOI() and should reset itself.
+  output, it will receive Symbol::eof() and should reset itself.
   */
   OutputGenerator(std::ostream &_o,
                   output_function f = OutputGenerator::default_output)
@@ -70,7 +70,7 @@ class OutputGenerator {
   void set_output(std::ostream &o) { os = &o; }
   /**
   \brief Outputs a token to the given stream.
-  \param[in] t Symbol to be output. If t is equal to Symbol::EOI(),
+  \param[in] t Symbol to be output. If t is equal to Symbol::eof(),
   outputFunction should reset itself.
 
   If OutputGenerator::stream_set()
@@ -84,7 +84,7 @@ class OutputGenerator {
   Prints Symbol name and attribute.
   */
   static void default_output(std::ostream &os, const Symbol &t) {
-    if (t == Symbol::EOI())
+    if (t == Symbol::eof())
       return;
     os << t.name();
     if (t.attribute() != "")

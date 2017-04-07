@@ -10,7 +10,7 @@ std::ostream &operator<<(std::ostream &os, const Symbol &s) {
     case Symbol::Type::TERMINAL:
       os << "TERMINAL: ";
       break;
-    case Symbol::Type::EOI:
+    case Symbol::Type::EOF:
       os << "EOF";
       break;
     case Symbol::Type::SPECIAL:

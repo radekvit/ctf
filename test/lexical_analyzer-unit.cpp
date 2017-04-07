@@ -27,9 +27,9 @@ TEST_CASE("LexicalAnalyzer default input", "[LexicalAnalyzer]") {
 
   REQUIRE(l.get_token() == "a"_t);
   REQUIRE(l.get_token() == "b"_t);
-  REQUIRE(l.get_token() == ctf::Symbol::EOI());
+  REQUIRE(l.get_token() == ctf::Symbol::eof());
 
   s << "  ";
 
-  REQUIRE(l.get_token() == ctf::Symbol::EOI());
+  REQUIRE(l.get_token() == ctf::Symbol::eof());
 }

@@ -50,7 +50,7 @@ class LexicalAnalyzer {
   std::istream *is;
   /**
   \brief A function, lambda or callable object used to extract tokens from an
-  input stream. At EOF it is expected to return Token::EOI().
+  input stream. At EOF it is expected to return Token::eof().
   */
   token_function tokenFunction;
 
@@ -101,7 +101,7 @@ class LexicalAnalyzer {
         goto read;
       return Token{{c}};
     } else
-      return Token::EOI();
+      return Token::eof();
   }
 };
 }  // namespace ctf
