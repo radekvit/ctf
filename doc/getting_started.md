@@ -23,7 +23,8 @@ We will go through them in order in the following sections.
 A lexical analyzer is anything which can be called with the signature `Token foo(const std::istream &)`. At the end of input, it should return `Symbol::EOI()` and reset itself. When a lexical error is encountered, it should throw `LexicalError`.
 You can make your own callable class, use a lambda expression or a function pointer. As an example, we define a lexical analyzer which creates a token from each nonempty input line. The string before the optional `.` is the token name, and the string behind it is the token's attribute. If the file doesn't end in a newline or if a token's name would be empty, a lexical error is thrown.
 
-```#include<ctf.h>
+```c++
+#include<ctf.h>
 #include <string>
 
 Token analyzer(std::istream &is) {
@@ -66,7 +67,8 @@ We encourage to define translation grammars as a vector of rules and the startin
 
 In this example, we define a translation grammar that takes simple infix expressions with addition and multiplication and translates them into postfix expressions.
 
-```#include <ctf.h>
+```c++
+#include <ctf.h>
 
 TranslationGrammar grammar{
   // The vector of rules
@@ -93,7 +95,8 @@ The output generator transforms the outgoing tokens to the output string. It can
 
 In this example, we accept the output from the translation grammar above and output it in the same way the lexical analyzer reads them. In this example, any identifiers with the name "PHP" are considered a semantic error.
 
-```#include <ctf.h>
+```c++
+#include <ctf.h>
 
 void generator(std::ostream &os, const Symbol &s) {
   if(s.name() == "i" && s.attribute() == "PHP")
@@ -114,7 +117,8 @@ Optionally, you can provide a callable that provides syntax error messages for e
 
 In this example, we use the modules from the previous examples to create the `Translation` object.
 
-```#include <ctf.h>
+```c++
+#include <ctf.h>
 #include <iostream>
 
 extern TranslationGrammar grammar;
@@ -133,3 +137,4 @@ int main() {
     std::cerr << "Something went wrong.\n";
   }
 }
+```
