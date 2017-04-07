@@ -6,15 +6,15 @@ CTF is a framework for rapid translation definition. Translations are defined wi
 
 ## Getting started
 
-* See [getting started](doc/getting_started.md) for a brief tutorial
-* See [full documentation](http://www.stud.fit.vutbr.cz/~xvitra00/ctf/)
+* See **[getting started](doc/getting_started.md)** for a brief tutorial
+* See the **[full documentation](http://www.stud.fit.vutbr.cz/~xvitra00/ctf/)**
 
 ## Translation Definition
 ### Lexical analyzer
 Lexical analyzers extract tokens from the input. We encourage you to use other C++ tools to do this job, integrating them to CTF should be very easy.
 
 ### Translation grammar
-Translation grammars are formal systems that describe translations, where output is defined for each production. See [examples](doc/translation_grammars.md) to learn more. In CTF, translation grammars also describe the relationship between input and output token attributes.
+Translation grammars are formal systems that describe translations, where output is defined for each production. See the **[examples](doc/translation_grammars.md)** to learn more. In CTF, translation grammars also describe the relationship between input and output token attributes.
 
 Output generators make semantic checks and transform output tokens to text or binary output.
 

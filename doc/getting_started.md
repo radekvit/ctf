@@ -24,7 +24,7 @@ A lexical analyzer is anything which can be called with the signature `Token foo
 You can make your own callable class, use a lambda expression or a function pointer. As an example, we define a lexical analyzer which creates a token from each nonempty input line. The string before the optional `.` is the token name, and the string behind it is the token's attribute. If the file doesn't end in a newline or if a token's name would be empty, a lexical error is thrown.
 
 ```c++
-#include<ctf.h>
+#include <ctf.h>
 #include <string>
 
 Token analyzer(std::istream &is) {
@@ -134,7 +134,10 @@ int main() {
     translation.run(std::cin, std::cout);
   }
   catch (TranslationException &e) {
-    std::cerr << "Something went wrong.\n";
+    std::cerr << "Something went wrong: " + e.what() + "\n";
+	return 1;
   }
+
+  return 0;
 }
 ```
