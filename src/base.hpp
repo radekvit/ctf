@@ -20,6 +20,7 @@ class TranslationException : public std::runtime_error {
   using std::runtime_error::runtime_error;
 };
 
+
 /**
 \brief Symbol, may represent a Terminal, Nonterminal or end of input.
 */
@@ -40,7 +41,7 @@ class Symbol {
     /**
     \brief End of input
     */
-    EOF,
+    EOI,
     /**
     \brief Undefined type
     */
@@ -72,14 +73,14 @@ class Symbol {
   and attribute.
   \param[in] type Type of constructed Symbol.
   \param[in] name Name of constructed Symbol. Defaults to "". "" is only valid
-  for Type::EOF.
+  for Type::EOI.
   \param[in] atr Attribute of constructed Symbol.
   */
   Symbol(Type type, const string &name = "", const string &atr = "")
       : type_(type), name_(name), attribute_(atr) {
-    if (type != Symbol::Type::EOF && name == "")
+    if (type != Symbol::Type::EOI && name == "")
       throw std::invalid_argument(
-          "Empty name when constructing non-EOF Symbol.");
+          "Empty name when constructing non-EOI Symbol.");
   }
   /**
   \brief Constructs a Symbol with unspecified type. Sets Symbol's name and if
@@ -98,7 +99,7 @@ class Symbol {
   \brief Creates an EOF Symbol.
   \returns An EOF Symbol.
   */
-  static Symbol eof() { return Symbol(Type::EOF); }
+  static Symbol eof() { return Symbol(Type::EOI); }
 
   /**
   \brief Returns a reference to name.

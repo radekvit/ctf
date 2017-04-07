@@ -35,7 +35,7 @@ TEST_CASE("Symbol Construction", "[Symbol]") {
   REQUIRE(s.attribute() == "");
 
   s = Symbol::eof();
-  REQUIRE(s.type() == Symbol::Type::EOF);
+  REQUIRE(s.type() == Symbol::Type::EOI);
   REQUIRE(s.name() == "");
 }
 

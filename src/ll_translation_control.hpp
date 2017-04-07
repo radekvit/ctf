@@ -305,8 +305,8 @@ class LLTranslationControl : public TranslationControl {
       Symbol &top = input_.top();
       size_t ruleIndex;
       switch (top.type()) {
-        case Type::EOF:
-          if (token.type() == Type::EOF)
+        case Type::EOI:
+          if (token.type() == Type::EOI)
             return;
           else
             throw SyntaxError("Unexpected token after derivation is done.");
