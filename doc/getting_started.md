@@ -20,7 +20,7 @@ We will go through them in order in the following sections.
 
 ## Creating a lexical analyzer
 
-A lexical analyzer is anything which can be called with the signature `Token foo(const std::istream &)`. At the end of input, it should return `Symbol::EOI()` and reset itself. When a lexical error is encountered, it should throw `
+A lexical analyzer is anything which can be called with the signature `Token foo(const std::istream &)`. At the end of input, it should return `Symbol::EOI()` and reset itself. When a lexical error is encountered, it should throw `LexicalError`.
 You can make your own callable class, use a lambda expression or a function pointer. As an example, we define a lexical analyzer which creates a token from each nonempty input line. The string before the optional `.` is the token name, and the string behind it is the token's attribute. If the file doesn't end in a newline or if a token's name would be empty, a lexical error is thrown.
 
 ```#include<ctf.h>
