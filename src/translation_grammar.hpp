@@ -1,5 +1,5 @@
 /**
-\file translation_grammar.h
+\file translation_grammar.hpp
 \brief Defines class TranslationGrammar and its subclasses and implements their
 methods.
 \author Radek Vít
@@ -12,7 +12,7 @@ methods.
 #include <stdexcept>
 #include <utility>
 
-#include "base.h"
+#include "base.hpp"
 
 namespace ctf {
 
@@ -373,4 +373,4 @@ class TranslationGrammar {
 };
 }  // namespace ctf
 #endif
-/*** End of file translation_grammar.h ***/
+/*** End of file translation_grammar.hpp ***/

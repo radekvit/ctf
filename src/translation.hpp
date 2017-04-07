@@ -1,5 +1,5 @@
 /**
-\file translation.h
+\file translation.hpp
 \brief Defines class Translation and its methods.
 \author Radek Vít
 */
@@ -10,11 +10,11 @@
 #include <memory>
 #include <ostream>
 
-#include "lexical_analyzer.h"
-#include "ll_translation_control.h"
-#include "output_generator.h"
-#include "translation_control.h"
-#include "translation_grammar.h"
+#include "lexical_analyzer.hpp"
+#include "ll_translation_control.hpp"
+#include "output_generator.hpp"
+#include "translation_control.hpp"
+#include "translation_grammar.hpp"
 
 namespace ctf {
 /**
@@ -159,4 +159,4 @@ class Translation {
 }  // namespace ctf
 
 #endif
-/*** End of file translation.h ***/
+/*** End of file translation.hpp ***/

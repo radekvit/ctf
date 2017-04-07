@@ -1,6 +1,6 @@
 #include <catch.hpp>
 
-#include "../src/lexical_analyzer.h"
+#include "../src/lexical_analyzer.hpp"
 
 #include <sstream>
 

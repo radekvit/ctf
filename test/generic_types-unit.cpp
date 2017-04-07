@@ -1,4 +1,4 @@
-#include "../src/generic_types.h"
+#include "../src/generic_types.hpp"
 #include <catch.hpp>
 
 #include <list>

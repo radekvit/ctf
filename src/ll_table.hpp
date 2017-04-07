@@ -1,5 +1,5 @@
 /**
-\file ll_table.h
+\file ll_table.hpp
 \brief Defines class LLTable and its methods.
 \author Radek Vít
 */
@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include "translation_grammar.h"
+#include "translation_grammar.hpp"
 
 namespace ctf {
 /**
@@ -114,4 +114,4 @@ class LLTable {
 }  // namespace ctf
 
 #endif
-/*** End of file ll_table.h ***/
+/*** End of file ll_table.hpp ***/

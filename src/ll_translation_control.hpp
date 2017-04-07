@@ -1,12 +1,12 @@
 /**
-\file
+\file ll_translation_control.hpp
 \brief Defines class LLTranslationControl and defines its methods.
 \author Radek Vít
 */
 #ifndef CTF_LL_TRANSLATION_CONTROL
 #define CTF_LL_TRANSLATION_CONTROL
 
-#include "translation_control.h"
+#include "translation_control.hpp"
 
 namespace ctf {
 
@@ -343,4 +343,4 @@ class LLTranslationControl : public TranslationControl {
 };
 }  // namespace ctf
 #endif
-/*** End of file ll_translation_control.h ***/
+/*** End of file ll_translation_control.hpp ***/

@@ -1,5 +1,5 @@
 /**
-\file generic_types.h
+\file generic_types.hpp
 \brief Defines types, STL classes and generic STL adapters and functions for
 this project.
 \author Radek Vít
@@ -418,4 +418,4 @@ OT transform(const IT &it) {
 
 }  // namespace ctf
 #endif
-/*** Enf of file generic_types.h ***/
+/*** Enf of file generic_types.hpp ***/

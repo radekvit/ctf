@@ -1,5 +1,5 @@
 /**
-\file base.h
+\file base.hpp
 \brief Defines base formal language types used throughout this project.
 \author Radek Vít
 */
@@ -9,7 +9,7 @@
 #include <ostream>
 #include <stdexcept>
 
-#include "generic_types.h"
+#include "generic_types.hpp"
 
 namespace ctf {
 
@@ -209,4 +209,4 @@ inline Symbol operator""_s(const char *s, size_t) {
 }  // namespace ctf
 
 #endif
-/*** End of file base.h ***/
+/*** End of file base.hpp ***/

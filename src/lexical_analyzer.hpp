@@ -1,5 +1,5 @@
 /**
-\file lexical_analyzer.h
+\file lexical_analyzer.hpp
 \brief Defines class LexicalAnalyzer used to supply tokens from input stream.
 \author Radek Vít
 */
@@ -10,7 +10,7 @@
 #include <functional>
 #include <istream>
 
-#include "base.h"
+#include "base.hpp"
 
 namespace ctf {
 
@@ -107,4 +107,4 @@ class LexicalAnalyzer {
 }  // namespace ctf
 
 #endif
-/*** End of file lexical_analyzer.h ***/
+/*** End of file lexical_analyzer.hpp ***/

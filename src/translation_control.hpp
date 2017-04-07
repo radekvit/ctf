@@ -1,14 +1,14 @@
 /**
-\file translation_control.h
+\file translation_control.hpp
 \brief Defines class TranslationControl and its methods.
 \author Radek Vít
 */
 #ifndef CTF_TRANSLATION_CONTROL
 #define CTF_TRANSLATION_CONTROL
 
-#include "lexical_analyzer.h"
-#include "ll_table.h"
-#include "translation_grammar.h"
+#include "lexical_analyzer.hpp"
+#include "ll_table.hpp"
+#include "translation_grammar.hpp"
 
 namespace ctf {
 
@@ -104,4 +104,4 @@ class TranslationControl {
 };
 }  // namespace ctf
 #endif
-/*** End of file translation_control.h ***/
+/*** End of file translation_control.hpp ***/

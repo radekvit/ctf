@@ -1,5 +1,5 @@
 /**
-\file output_generator.h
+\file output_generator.hpp
 \brief Defines class OutputGenerator, which transforms output tokens to output
 and outputs it into a stream.
 */
@@ -8,7 +8,7 @@ and outputs it into a stream.
 
 #include <ostream>
 
-#include "base.h"
+#include "base.hpp"
 
 namespace ctf {
 
@@ -95,4 +95,4 @@ class OutputGenerator {
 }  // namespace ctf
 
 #endif
-/*** End of file output_generator.h ***/
+/*** End of file output_generator.hpp ***/

@@ -1,7 +1,7 @@
 SRC = src
 INCLUDE = include
 
-.PHONY: all format test pack doc
+.PHONY: all format test pack doc clean
 
 all:
 
@@ -17,3 +17,6 @@ pack:
 
 doc:
 	make -C doc
+
+clean:
+	-rm -r doc/html

@@ -1,6 +1,6 @@
 #include <catch.hpp>
 
-#include "../src/base.h"
+#include "../src/base.hpp"
 
 TEST_CASE("TranslationException") {
   REQUIRE_THROWS_AS(throw ctf::TranslationException("m"),

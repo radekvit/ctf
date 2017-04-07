@@ -1,5 +1,5 @@
 /**
-\file ctf.h
+\file ctf.hpp
 \brief Single header to be included by end user.
 \author Radek Vít
 
@@ -9,7 +9,7 @@ before including this header.
 #ifndef CTF_CTF_HEADER
 #define CTF_CTF_HEADER
 
-#include "../src/translation.h"
+#include "../src/translation.hpp"
 
 #ifndef CTF_NO_USING_NAMESPACE
 // Translation class
@@ -18,4 +18,4 @@ using namespace ctf;
 #endif  // endif CTF_KEEP_NAMESPACE
 
 #endif
-/*** End of file ctf.h ***/
+/*** End of file ctf.hpp ***/

@@ -35,4 +35,4 @@ format:
 
 test: debug
 test:
-	./$(APPNAME) && diff expected out
+	./$(APPNAME) && make clean
