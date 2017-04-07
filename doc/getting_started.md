@@ -4,7 +4,7 @@ Download ctf source from [bitbucket](https://bitbucket.org/RadekVit/ctf/src).
 
 ## Where to put it
 
-Ctf is a header only library. You only need your project to reach include/ctf.h.
+Ctf is a header only library. You only need your project to reach include/ctf.hpp.
 The rest of this tutorial will assume that ctf.h is avaliable unqualified, but you might need to prefix it with a folder name if neccessary.
 
 Everything in CTF is put in `namespace ctf`. The header ctf.h has `using namespace ctf;` in it, but this can be switched off by defining `CTF_KEEP_NAMESPACE` before including the header.
