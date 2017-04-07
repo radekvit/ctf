@@ -187,7 +187,17 @@ class TranslationGrammar {
     */
     ///@{
     friend bool operator<(const Rule &lhs, const Rule &rhs) {
-      return lhs.nonterminal() < rhs.nonterminal() || lhs.input() < rhs.input();
+      if (lhs.nonterminal_ < rhs.nonterminal_) {
+        return true;
+      } else if (lhs.nonterminal_ == rhs.nonterminal_) {
+        if (lhs.input_ < rhs.input_) {
+          return true;
+        } else if (lhs.input_ == rhs.input_) {
+          return lhs.output_ < rhs.output_;
+        } else
+          return false;
+      } else
+        return false;
     }
     friend bool operator==(const Rule &lhs, const Rule &rhs) {
       return lhs.nonterminal() == rhs.nonterminal() &&
@@ -228,9 +238,10 @@ class TranslationGrammar {
 
  public:
   /**
-  \brief Constructs empty TranslationGrammar.
+  \brief Constructs an empty TranslationGrammar. Implicit starting symbol is
+  "E"_nt.
   */
-  TranslationGrammar();
+  TranslationGrammar() : starting_symbol_("E"_nt) {}
   /**
   \brief Constructs a TranslationGrammar, takes terminals and nonterminals from
   the rules' inputs and starting symbol.
@@ -240,7 +251,7 @@ class TranslationGrammar {
   */
   TranslationGrammar(const vector<Rule> &rules, const Symbol &starting_symbol)
       : rules_(rules), starting_symbol_(starting_symbol) {
-    make_set(rules_);
+    sort(rules_.begin(), rules_.end());
     /* add nonterminals and terminals */
     starting_symbol_.type() = Symbol::Type::NONTERMINAL;
     nonterminals_.push_back(starting_symbol_);
@@ -282,7 +293,7 @@ class TranslationGrammar {
         starting_symbol_(starting_symbol) {
     make_set(terminals_);
     make_set(nonterminals_);
-    make_set(rules_);
+    sort(rules_.begin(), rules_.end());
     for (auto &t : terminals_) {
       t.type() = Symbol::Type::TERMINAL;
     }

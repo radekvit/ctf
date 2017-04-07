@@ -1,5 +1,29 @@
 #define CATCH_CONFIG_MAIN
 #include <catch.hpp>
+#include "../include/ctf.h"
+
+std::ostream &operator<<(std::ostream &os, const Symbol &s) {
+  switch (s.type()) {
+    case Symbol::Type::NONTERMINAL:
+      os << "NONTERMINAL: ";
+      break;
+    case Symbol::Type::TERMINAL:
+      os << "TERMINAL: ";
+      break;
+    case Symbol::Type::EOI:
+      os << "EOF";
+      break;
+    case Symbol::Type::SPECIAL:
+      os << "SPECIAL: ";
+      break;
+    default:
+      os << "SYMBOL: ";
+      break;
+  }
+  os << s.name();
+
+  return os;
+}
 
 #if 0
 #include <ll_table.h>

@@ -76,7 +76,7 @@ class LexicalAnalyzer {
   \brief Returns true when a stream has been set.
   \returns True when a stream has been set. False otherwise.
   */
-  bool stream_set() const { return is; }
+  bool stream_set() const { return is != nullptr; }
   /**
   \brief Sets the input stream to a given stream.
   \param[in] s Stream to be set.

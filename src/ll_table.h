@@ -74,9 +74,16 @@ class LLTable {
     /* fill table */
     for (size_t i = 0; i < tg.rules().size(); ++i) {
       auto &terminals = predict[i];
+      // TranslationGrammar should require this to be found
       size_t ni = nonterminalMap_.at(tg.rules()[i].nonterminal());
       for (auto &t : terminals) {
-        if (table_[ni][terminalMap_.at(t)] != predict.size()) {
+        auto tit = terminalMap_.find(t);
+        if (tit == terminalMap_.end())
+          throw std::invalid_argument(
+              "Terminal in predict not a terminal in translation grammar when "
+              "constructing LLTable.");
+        size_t ti = tit->second;
+        if (table_[ni][ti] != predict.size()) {
           throw std::invalid_argument(
               "Constructing LLTable from a "
               "non-LL TranslationGrammar.");

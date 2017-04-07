@@ -84,8 +84,9 @@ class OutputGenerator {
   Prints Symbol name and attribute.
   */
   static void default_output(std::ostream &os, const Symbol &t) {
-    if (t != Symbol::EOI())
-      os << t.name();
+    if (t == Symbol::EOI())
+      return;
+    os << t.name();
     if (t.attribute() != "")
       os << "." << t.attribute();
     os << "\n";
