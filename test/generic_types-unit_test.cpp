@@ -1,4 +1,5 @@
 #include "../src/generic_types.hpp"
+#include "../src/base.hpp"
 #include <catch.hpp>
 
 #include <list>
@@ -110,8 +111,8 @@ TEST_CASE() {
 
   tstack<Symbol> stack{"A"_nt, "B"_nt, "C"_nt, "D"_nt, "E"_nt,};
 
-  auto it1 = stack.replace("B"_nt, vector{"X"_nt, "Y"_nt, "Z"_nt});
-  auto it2 = stack.replace("A"_nt, vector{"X"_nt, "Y"_nt, "Z"_nt});
+  auto it1 = stack.replace("B"_nt, vector<Symbol>{"X"_nt, "Y"_nt, "Z"_nt});
+  auto it2 = stack.replace("A"_nt, vector<Symbol>{"X"_nt, "Y"_nt, "Z"_nt});
 }
 
 TEST_CASE("tstack swap", "[tstack]") {
