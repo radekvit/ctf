@@ -286,7 +286,6 @@ class LLTranslationControl : public TranslationControl {
 
     input_.clear();
     output_.clear();
-    vector<const Rule *> rules;
     tstack<vector<tstack<Symbol>::iterator>> attributeActions;
 
     Symbol token = next_token();
@@ -325,7 +324,6 @@ class LLTranslationControl : public TranslationControl {
             input_.replace(input_.begin(), rule.input());
             auto obegin = output_.replace(top, rule.output());
             create_attibute_actions(obegin, rule.actions(), attributeActions);
-            rules.push_back(&(rule));
           } else {
             throw SyntaxError(syntaxErrorMessage_(top, token) + ".");
           }
