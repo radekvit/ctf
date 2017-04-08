@@ -87,16 +87,6 @@ class TranslationControl {
   */
   virtual void run() = 0;
   /**
-  \brief Gets token from lexicalAnalyzer_ and stores it in a given vector.
-  Returns this terminal.
-  \param[out] string Vector of all read symbols.
-  \returns New symbol obtained from lexical analyzer.
-  */
-  Token next_token(vector<Symbol> &string) {
-    string.push_back(lexicalAnalyzer_->get_token());
-    return string.back();
-  }
-  /**
   \brief Returns a constant reference to output symbols.
   \returns All output symbols.
   */

@@ -45,7 +45,7 @@ class LexicalAnalyzer {
  private:
   /**
   \brief Pointer to the input stream that tokenFunction takes input from. May
-  be changed between tokenFunction calls.
+  be changed between tokenFunction calls. LexicalAnalyzer does not own the istream.
   */
   std::istream *is;
   /**

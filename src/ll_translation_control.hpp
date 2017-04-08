@@ -289,54 +289,56 @@ class LLTranslationControl : public TranslationControl {
     else if (!translationGrammar_)
       throw TranslationException("No translation grammar was attached.");
 
+    const TranslationGrammar &grammar = *translationGrammar_;
+    LexicalAnalyzer &lex = *lexicalAnalyzer_;
+
     input_.clear();
     output_.clear();
     inputString_.clear();
-    vector<const Rule *> rules;
-    tstack<vector<tstack<Symbol>::iterator>> attributeActions;
-
-    Symbol token = next_token(inputString_);
 
     input_.push(Symbol::eof());
+    input_.push(grammar.starting_symbol());
+
     output_.push(Symbol::eof());
-    input_.push(translationGrammar_->starting_symbol());
-    output_.push(translationGrammar_->starting_symbol());
-    while (1) {
+    output_.push(grammar.starting_symbol());
+
+    Symbol token = lex.get_token();
+
+    while(1) {
       Symbol &top = input_.top();
-      size_t ruleIndex;
-      switch (top.type()) {
-        case Type::EOI:
-          if (token.type() == Type::EOI)
-            return;
-          else
-            throw SyntaxError("Unexpected token after derivation is done.");
-          break;
-        case Type::TERMINAL:
-          if (top == token) {
-            for (auto it : attributeActions.pop()) {
-              it->attribute() += token.attribute();
-            }
+      switch(top.type()) {
+        case Type::EOI: {
+          if(top == Symbol::eof()) {
             input_.pop();
-            token = next_token(inputString_);
-          } else {
-            throw SyntaxError("Unexpected token " + token.name() +
-                              ", expected " + top.name() + ".");
           }
-          break;
-        case Type::NONTERMINAL:
-          ruleIndex = llTable_.rule_index(top, token);
-          if (ruleIndex < translationGrammar_->rules().size()) {
-            auto &rule = translationGrammar_->rules()[ruleIndex];
-            input_.replace(input_.begin(), rule.input());
-            auto obegin = output_.replace(top, rule.output());
-            create_attibute_actions(obegin, rule.actions(), attributeActions);
-            rules.push_back(&(rule));
-          } else {
-            throw SyntaxError(syntaxErrorMessage_(top, token) + ".");
+          else
+            throw SyntaxError("Token read after translation ended.");
+          return;
+        }
+        case Type::TERMINAL: {
+          if(top != token) {
+            throw SyntaxError("Mismatched terminals.");
           }
+          //TODO transfer attributes
+          input_.pop();
+          token = lex.get_token();
           break;
-        default:
+        }
+        case Type::NONTERMINAL: {
+          size_t ruleIndex = llTable_.rule_index(top, token);
+          if(ruleIndex >= grammar.rules().size()) {
+            throw SyntaxError("");
+          }
+          const Rule &rule = grammar.rules()[ruleIndex];
+
+          input_.replace(top, rule.input());
+          auto firstOutput = output_.replace(top, rule.output());
+          //TODO set targets
           break;
+        }
+        default: {
+          input_.pop();
+        }
       }
     }
   }
