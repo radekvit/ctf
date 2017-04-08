@@ -62,6 +62,15 @@ class TranslationControl {
            (t.attribute() == "" ? "" : "." + t.attribute());
   };
 
+  /**
+  \brief Returns the next token obtained from lexicalAnalyzer_.
+  */
+  Symbol next_token() {
+    Symbol s = lexicalAnalyzer_->get_token();
+    s.type() = Symbol::Type::TERMINAL;
+    return s;
+  }
+
  public:
   virtual ~TranslationControl() = default;
 

@@ -38,11 +38,6 @@ class LLTranslationControl : public TranslationControl {
   LLTable llTable_;
 
   /**
-  \brief String of terminals got by LexicalAnalyzer_.
-  */
-  vector<Symbol> inputString_;
-
-  /**
   Creates all sets and creates a new LL table.
   */
   void create_ll_table() {
@@ -291,11 +286,10 @@ class LLTranslationControl : public TranslationControl {
 
     input_.clear();
     output_.clear();
-    inputString_.clear();
     vector<const Rule *> rules;
     tstack<vector<tstack<Symbol>::iterator>> attributeActions;
 
-    Symbol token = next_token(inputString_);
+    Symbol token = next_token();
 
     input_.push(Symbol::eof());
     output_.push(Symbol::eof());
@@ -306,7 +300,7 @@ class LLTranslationControl : public TranslationControl {
       size_t ruleIndex;
       switch (top.type()) {
         case Type::EOI:
-          if (token.type() == Type::EOI)
+          if (token == Symbol::eof())
             return;
           else
             throw SyntaxError("Unexpected token after derivation is done.");
@@ -317,7 +311,7 @@ class LLTranslationControl : public TranslationControl {
               it->attribute() += token.attribute();
             }
             input_.pop();
-            token = next_token(inputString_);
+            token = next_token();
           } else {
             throw SyntaxError("Unexpected token " + token.name() +
                               ", expected " + top.name() + ".");
@@ -327,6 +321,7 @@ class LLTranslationControl : public TranslationControl {
           ruleIndex = llTable_.rule_index(top, token);
           if (ruleIndex < translationGrammar_->rules().size()) {
             auto &rule = translationGrammar_->rules()[ruleIndex];
+
             input_.replace(input_.begin(), rule.input());
             auto obegin = output_.replace(top, rule.output());
             create_attibute_actions(obegin, rule.actions(), attributeActions);
@@ -336,6 +331,7 @@ class LLTranslationControl : public TranslationControl {
           }
           break;
         default:
+          input_.pop();
           break;
       }
     }
