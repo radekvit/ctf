@@ -20,7 +20,6 @@ class TranslationException : public std::runtime_error {
   using std::runtime_error::runtime_error;
 };
 
-
 /**
 \brief Symbol, may represent a Terminal, Nonterminal or end of input.
 */

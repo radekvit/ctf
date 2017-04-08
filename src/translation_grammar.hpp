@@ -101,23 +101,6 @@ class TranslationGrammar {
 
    public:
     /**
-    \brief Constructs a rule with implicit attribute actions.
-    \param[in] nonterminal Starting symbol.
-    \param[in] input Vector of input symbols. The nonterminals must match output
-    in their count and order.
-    \param[in] output Vector of output symbols. The nonterminals must match
-    input in their count and order.
-    */
-    Rule(const Symbol &nonterminal, const vector<Symbol> &input,
-         const vector<Symbol> &output)
-        : nonterminal_(nonterminal),
-          input_(input),
-          output_(output),
-          attributeActions_(vector<vector<size_t>>()) {
-      check_nonterminals();
-      create_empty_actions();
-    }
-    /**
     \brief Constructs a rule.
     \param[in] nonterminal Starting symbol.
     \param[in] input Vector of input symbols. The nonterminals must match output
@@ -125,19 +108,25 @@ class TranslationGrammar {
     \param[in] output Vector of output symbols. The nonterminals must match
     input in their count and order.
     \param[in] attributeActions Destinations of token attributes for each
-    terminal in the input.
+    terminal in the input. Implicitly no attribute actions take place.
     The numbers say which output symbols are the targets for each input token's
     attribute.
     */
     Rule(const Symbol &nonterminal, const vector<Symbol> &input,
          const vector<Symbol> &output,
-         const vector<vector<size_t>> &attributeActions)
+         const vector<vector<size_t>> &attributeActions = {})
         : nonterminal_(nonterminal),
           input_(input),
           output_(output),
           attributeActions_(attributeActions) {
       check_nonterminals();
 
+      // no actions provided
+      if (attributeActions_.size() == 0) {
+        create_empty_actions();
+        return;
+      }
+      // attribute actions were provided, checking validity
       if (attributeActions_.size() != count_input_terminals())
         throw std::invalid_argument(
             "Invalid attributeActions_ when "
@@ -157,13 +146,23 @@ class TranslationGrammar {
       }
     }
     /**
-    \brief Constructs a rule with same input and output. Attribute actions are
-    implicit.
+    \brief Constructs a rule with same input and output with specified attribute
+    actions.
     \param[in] nonterminal Starting symbol.
     \param[in] both Vector of input symbols and at the same time output symbols.
+
+    Attribute targets are created to match all terminals to themselves.
     */
     Rule(const Symbol &nonterminal, const vector<Symbol> &both)
-        : Rule(nonterminal, both, both) {}
+        : Rule(nonterminal, both, both) {
+      // implicit target for each terminal; matches itself
+      size_t target = 0;
+      for (size_t i = 0; i < attributeActions_.size(); ++i, ++target) {
+        while (output_[target].type() != Symbol::Type::TERMINAL)
+          ++target;
+        attributeActions_[i].push_back(target);
+      }
+    }
 
     ~Rule() = default;
 
@@ -264,6 +263,7 @@ class TranslationGrammar {
             break;
           case Symbol::Type::TERMINAL:
             terminals_.push_back(s);
+            break;
           default:
             // ignore all other types
             break;
@@ -284,9 +284,9 @@ class TranslationGrammar {
 
   Checks rules for validity with supplied terminals and nonterminals.
   */
-  TranslationGrammar(const vector<Symbol> &terminals,
-                     const vector<Symbol> &nonterminals,
-                     const vector<Rule> &rules, const Symbol &starting_symbol)
+  TranslationGrammar(const vector<Symbol> &nonterminals,
+                     const vector<Symbol> &terminals, const vector<Rule> &rules,
+                     const Symbol &starting_symbol)
       : terminals_(terminals),
         nonterminals_(nonterminals),
         rules_(rules),
@@ -295,15 +295,21 @@ class TranslationGrammar {
     make_set(nonterminals_);
     sort(rules_.begin(), rules_.end());
     for (auto &t : terminals_) {
+      if(t == Symbol::eof())
+        throw std::invalid_argument("EOF in terminals when constructing TranslationGrammar.");
       t.type() = Symbol::Type::TERMINAL;
     }
     for (auto &nt : nonterminals_) {
       nt.type() = Symbol::Type::NONTERMINAL;
     }
     starting_symbol_.type() = Symbol::Type::NONTERMINAL;
+    if (!is_in(nonterminals_, starting_symbol_))
+      throw std::invalid_argument(
+          "Starting symbol is not in nonterminals when constructing "
+          "TranslationGrammar.");
     for (auto &r : rules_) {
       if (!is_in(nonterminals_, r.nonterminal()))
-        throw std::invalid_argument("Rule with nonterminal " +
+        throw std::invalid_argument("Rule with production from nonterminal " +
                                     r.nonterminal().name() +
                                     ", no such nonterminal.");
       for (auto &s : r.input()) {
@@ -314,7 +320,7 @@ class TranslationGrammar {
                                           s.name() + ".");
             break;
           case Symbol::Type::NONTERMINAL:
-            if (!is_in(terminals_, s))
+            if (!is_in(nonterminals_, s))
               throw std::invalid_argument("Rule with unknown nonterminal " +
                                           s.name() + ".");
             break;

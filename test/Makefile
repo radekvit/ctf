@@ -31,7 +31,7 @@ clean:
 	-rm -rf $(OBJ) $(APPNAME)
 
 format:
-	clang-format -style=file -i $(SRC)/*.cpp $(INCLUDE)/*.h
+	clang-format -style=file -i *.cpp
 
 test: debug
 test:

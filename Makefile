@@ -6,7 +6,7 @@ INCLUDE = include
 all:
 
 format:
-	clang-format -style=file -i $(SRC)/*.h $(INCLUDE)/*.h
+	clang-format -style=file -i $(SRC)/*.hpp $(INCLUDE)/*.hpp
 
 test:
 	make -C test test
