@@ -295,8 +295,9 @@ class TranslationGrammar {
     make_set(nonterminals_);
     sort(rules_.begin(), rules_.end());
     for (auto &t : terminals_) {
-      if(t == Symbol::eof())
-        throw std::invalid_argument("EOF in terminals when constructing TranslationGrammar.");
+      if (t == Symbol::eof())
+        throw std::invalid_argument(
+            "EOF in terminals when constructing TranslationGrammar.");
       t.type() = Symbol::Type::TERMINAL;
     }
     for (auto &nt : nonterminals_) {

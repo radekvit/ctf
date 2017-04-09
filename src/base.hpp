@@ -133,7 +133,8 @@ class Symbol {
 
   /**
   \name Comparison operators
-  \brief Lexicographic comparison of Symbol names.
+  \brief Lexicographic comparison of Symbol names. In == and !=, Symbol type
+  matters.
   \param[in] lhs Left Symbol of the comparison.
   \param[out] rhs Right Symbol of the comparison.
   \returns True when the lexicographic comparison is true.
@@ -144,7 +145,7 @@ class Symbol {
   }
 
   friend bool operator==(const Symbol &lhs, const Symbol &rhs) {
-    return lhs.name_ == rhs.name_;
+    return lhs.type_ == rhs.type_ && lhs.name_ == rhs.name_;
   }
 
   friend bool operator!=(const Symbol &lhs, const Symbol &rhs) {

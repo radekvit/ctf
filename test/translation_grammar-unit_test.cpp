@@ -111,7 +111,7 @@ TEST_CASE("TranslationGrammar basic", "[TranslationGrammar]") {
           {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
       },
       "E"_nt};
-  vector<Symbol> expectedTerminals{"+"_nt, "("_nt, ")"_nt, "*"_nt, "i"_nt};
+  vector<Symbol> expectedTerminals{"+"_t, "("_t, ")"_t, "*"_t, "i"_t};
   vector<Symbol> expectedNonterminals{"E"_nt, "E'"_nt, "F"_nt, "T"_nt, "T'"_nt};
   std::sort(expectedTerminals.begin(), expectedTerminals.end());
   std::sort(expectedNonterminals.begin(), expectedNonterminals.end());

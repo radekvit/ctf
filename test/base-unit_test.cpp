@@ -50,7 +50,7 @@ TEST_CASE("operators", "[Symbol]") {
 
   REQUIRE(s1 < s2);
   REQUIRE_FALSE(s2 < s1);
-  REQUIRE(s3 == s2);
+  REQUIRE_FALSE(s3 == s2);
   REQUIRE_FALSE(s1 == s4);
   REQUIRE(s1 != s2);
   REQUIRE_FALSE(s2 != s2);

@@ -65,11 +65,7 @@ class TranslationControl {
   /**
   \brief Returns the next token obtained from lexicalAnalyzer_.
   */
-  Symbol next_token() {
-    Symbol s = lexicalAnalyzer_->get_token();
-    s.type() = Symbol::Type::TERMINAL;
-    return s;
-  }
+  Symbol next_token() { return lexicalAnalyzer_->get_token(); }
 
  public:
   virtual ~TranslationControl() = default;

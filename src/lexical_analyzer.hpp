@@ -45,7 +45,8 @@ class LexicalAnalyzer {
  private:
   /**
   \brief Pointer to the input stream that tokenFunction takes input from. May
-  be changed between tokenFunction calls. LexicalAnalyzer does not own the istream.
+  be changed between tokenFunction calls. LexicalAnalyzer does not own the
+  istream.
   */
   std::istream *is;
   /**
@@ -87,7 +88,12 @@ class LexicalAnalyzer {
   LexicalAnalyzer::stream_set() is false, this results in undefined behavior.
   \returns A token recieved from tokenFunction.
   */
-  Token get_token() { return tokenFunction(*is); };
+  Token get_token() {
+    Symbol s = tokenFunction(*is);
+    if (s != Symbol::eof())
+      s.type() = Symbol::Type::TERMINAL;
+    return s;
+  };
 
   /**
   \brief Default token extractor. All characters that are not spaces become
