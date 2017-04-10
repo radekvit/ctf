@@ -134,7 +134,7 @@ class tstack {
   */
   const_iterator search(const T &target,
                         std::function<bool(const T &, const T &)> predicate =
-                            [](auto lhs, auto rhs) {
+                            [](auto &lhs, auto &rhs) {
                               return lhs == rhs;
                             }) const {
     const_iterator it;
@@ -186,7 +186,7 @@ class tstack {
   template <class TS>
   iterator replace(const T &target, const TS &string,
                    std::function<bool(const T &, const T &)> predicate =
-                       [](auto lhs, auto rhs) { return lhs == rhs; }) {
+                       [](auto &lhs, auto &rhs) { return lhs == rhs; }) {
     return replace(search(target, predicate), string);
   }
   /**
