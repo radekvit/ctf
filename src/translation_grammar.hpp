@@ -59,7 +59,6 @@ class TranslationGrammar {
     \brief Checks if nonterminals are in same space in input and output strings.
     */
     void check_nonterminals() {
-      nonterminal_.type() = Symbol::Type::NONTERMINAL;
       vector<Symbol> inputNonterminals;
       vector<Symbol> outputNonterminals;
       for (auto &s : input_) {
@@ -252,7 +251,10 @@ class TranslationGrammar {
       : rules_(rules), starting_symbol_(starting_symbol) {
     sort(rules_.begin(), rules_.end());
     /* add nonterminals and terminals */
-    starting_symbol_.type() = Symbol::Type::NONTERMINAL;
+    if (starting_symbol_.type() != Symbol::Type::NONTERMINAL)
+      throw std::invalid_argument(
+          "Starting symbol is not a nonterminal when constructing "
+          "TranslationGrammar.");
     nonterminals_.push_back(starting_symbol_);
     for (auto &r : rules_) {
       nonterminals_.push_back(r.nonterminal());
@@ -298,12 +300,21 @@ class TranslationGrammar {
       if (t == Symbol::eof())
         throw std::invalid_argument(
             "EOF in terminals when constructing TranslationGrammar.");
-      t.type() = Symbol::Type::TERMINAL;
+      if (t.type() != Symbol::Type::TERMINAL)
+        throw std::invalid_argument(
+            "Symbol with type other than TERMINAL in terminals when "
+            "constructing TranslationGrammar.");
     }
     for (auto &nt : nonterminals_) {
-      nt.type() = Symbol::Type::NONTERMINAL;
+      if (nt.type() != Symbol::Type::NONTERMINAL)
+        throw std::invalid_argument(
+            "Symbol with type other than NONTERMINAL in nonterminals when "
+            "constructing TranslationGrammar.");
     }
-    starting_symbol_.type() = Symbol::Type::NONTERMINAL;
+    if (starting_symbol_.type() != Symbol::Type::NONTERMINAL)
+      throw std::invalid_argument(
+          "Starting symbol is not a nonterminal when constructing "
+          "TranslationGrammar.");
     if (!is_in(nonterminals_, starting_symbol_))
       throw std::invalid_argument(
           "Starting symbol is not in nonterminals when constructing "

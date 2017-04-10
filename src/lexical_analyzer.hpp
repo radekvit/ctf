@@ -86,12 +86,13 @@ class LexicalAnalyzer {
   /**
   \brief Uses tokenFunction to get a Token from input stream. If
   LexicalAnalyzer::stream_set() is false, this results in undefined behavior.
-  \returns A token recieved from tokenFunction.
+  \returns A token recieved from tokenFunction. Type UNKNOWN is changed to type
+  TERMINAL.
   */
   Token get_token() {
     Symbol s = tokenFunction(*is);
-    if (s != Symbol::eof())
-      s.type() = Symbol::Type::TERMINAL;
+    if (s.type() == Symbol::Type::UNKNOWN)
+      return Symbol(Symbol::Type::TERMINAL, s.name(), s.attribute());
     return s;
   };
 

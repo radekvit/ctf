@@ -90,8 +90,8 @@ class Symbol {
   Symbol(const string &name, const string &atr = "")
       : Symbol(Type::UNKNOWN, name, atr) {}
   /**
-\brief Default destructor.
-*/
+  \brief Default destructor.
+  */
   ~Symbol() = default;
 
   /**
@@ -106,29 +106,24 @@ class Symbol {
   */
   string &name() { return name_; }
   /**
-\brief Returns a const reference to name.
-\returns A const reference to name.
-*/
+  \brief Returns a const reference to name.
+  \returns A const reference to name.
+  */
   const string &name() const { return name_; }
   /**
-\brief Returns a reference to attribute.
-\returns A reference to attribute.
-*/
+  \brief Returns a reference to attribute.
+  \returns A reference to attribute.
+  */
   string &attribute() { return attribute_; }
   /**
-\brief Returns a const reference to attribute.
-\returns A const reference to attribute.
-*/
+  \brief Returns a const reference to attribute.
+  \returns A const reference to attribute.
+  */
   const string &attribute() const { return attribute_; }
   /**
-\brief Returns a reference to type.
-\returns A reference to type.
-*/
-  Type &type() { return type_; }
-  /**
-\brief Returns a const reference to type.
-\returns A const reference to type.
-*/
+  \brief Returns a const reference to type.
+  \returns A const reference to type.
+  */
   const Type &type() const { return type_; }
 
   /**
