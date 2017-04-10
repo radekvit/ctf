@@ -116,7 +116,7 @@ class tstack {
   */
   iterator search(const T &target,
                   std::function<bool(const T &, const T &)> predicate =
-                      [](auto lhs, auto rhs) { return lhs == rhs; }) {
+                      [](auto &lhs, auto &rhs) { return lhs == rhs; }) {
     iterator it;
     for (it = list_.begin(); it != list_.end(); ++it) {
       if (predicate(*it, target))

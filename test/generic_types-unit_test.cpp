@@ -69,7 +69,7 @@ TEST_CASE("tstack search", "[tstack]") {
   }
 
   SECTION("custom predicate") {
-    auto it = stack.search('c', [](auto lhs, auto rhs) { return lhs > rhs; });
+    auto it = stack.search('c', [](auto &lhs, auto &rhs) { return lhs > rhs; });
     REQUIRE(*it == 'd');
   }
 }
