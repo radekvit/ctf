@@ -321,8 +321,8 @@ class LLTranslationControl : public TranslationControl {
           if (ruleIndex < translationGrammar_->rules().size()) {
             auto &rule = translationGrammar_->rules()[ruleIndex];
 
-            input_.replace(input_.begin(), rule.input());
             auto obegin = output_.replace(top, rule.output());
+            input_.replace(input_.begin(), rule.input());
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
             throw SyntaxError(syntaxErrorMessage_(top, token) + ".");

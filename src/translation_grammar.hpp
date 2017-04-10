@@ -247,7 +247,7 @@ class TranslationGrammar {
   different atttribute actions.
   \param[in] starting_symbol The starting symbol.
   */
-  TranslationGrammar(const vector<Rule> rules, const Symbol starting_symbol)
+  TranslationGrammar(const vector<Rule> &rules, const Symbol &starting_symbol)
       : rules_(rules), starting_symbol_(starting_symbol) {
     sort(rules_.begin(), rules_.end());
     /* add nonterminals and terminals */
@@ -286,9 +286,9 @@ class TranslationGrammar {
 
   Checks rules for validity with supplied terminals and nonterminals.
   */
-  TranslationGrammar(const vector<Symbol> nonterminals,
-                     const vector<Symbol> terminals, const vector<Rule> rules,
-                     const Symbol starting_symbol)
+  TranslationGrammar(const vector<Symbol> &nonterminals,
+                     const vector<Symbol> &terminals, const vector<Rule> &rules,
+                     const Symbol &starting_symbol)
       : terminals_(terminals),
         nonterminals_(nonterminals),
         rules_(rules),

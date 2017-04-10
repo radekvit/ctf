@@ -1,6 +1,6 @@
 #include "../src/generic_types.hpp"
-#include "../src/base.hpp"
 #include <catch.hpp>
+#include "../src/base.hpp"
 
 #include <list>
 #include <vector>
@@ -109,7 +109,9 @@ TEST_CASE() {
   using ctf::Symbol;
   using namespace ctf::literals;
 
-  tstack<Symbol> stack{"A"_nt, "B"_nt, "C"_nt, "D"_nt, "E"_nt,};
+  tstack<Symbol> stack{
+      "A"_nt, "B"_nt, "C"_nt, "D"_nt, "E"_nt,
+  };
 
   auto it1 = stack.replace("B"_nt, vector<Symbol>{"X"_nt, "Y"_nt, "Z"_nt});
   auto it2 = stack.replace("A"_nt, vector<Symbol>{"X"_nt, "Y"_nt, "Z"_nt});

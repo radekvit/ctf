@@ -74,7 +74,9 @@ class TranslationControl {
   \brief Sets lexical analyzer.
   \param[in] la LexicalAnalyzer to be set.
   */
-  virtual void set_lexical_analyzer(LexicalAnalyzer &la) { lexicalAnalyzer_ = &la; }
+  virtual void set_lexical_analyzer(LexicalAnalyzer &la) {
+    lexicalAnalyzer_ = &la;
+  }
   /**
   \brief Sets translation grammar.
   \param[in] tg Translation grammar to be set.
@@ -86,7 +88,9 @@ class TranslationControl {
   \brief Sets syntax error message function.
   \param[in] f Callable to return syntax error strings.
   */
-  virtual void set_syntax_error_message(error_function f) { syntaxErrorMessage_ = f; }
+  virtual void set_syntax_error_message(error_function f) {
+    syntaxErrorMessage_ = f;
+  }
   /**
   \brief Runs translation.
   */
