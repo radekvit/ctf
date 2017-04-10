@@ -55,7 +55,7 @@ class TranslationControl {
   /**
   \brief Syntax error message function.
 
-  Defaults to writing nonterminal's and token's names.
+  Defaults to writing nonterminal's and token's names. Is bound to change.
   */
   error_function syntaxErrorMessage_ = [](auto nt, auto t) {
     return "Nonterminal " + nt.name() + ", token " + t.name() +
@@ -65,7 +65,7 @@ class TranslationControl {
   /**
   \brief Returns the next token obtained from lexicalAnalyzer_.
   */
-  Symbol next_token() { return lexicalAnalyzer_->get_token(); }
+  virtual Symbol next_token() { return lexicalAnalyzer_->get_token(); }
 
  public:
   virtual ~TranslationControl() = default;
@@ -74,7 +74,7 @@ class TranslationControl {
   \brief Sets lexical analyzer.
   \param[in] la LexicalAnalyzer to be set.
   */
-  void set_lexical_analyzer(LexicalAnalyzer &la) { lexicalAnalyzer_ = &la; }
+  virtual void set_lexical_analyzer(LexicalAnalyzer &la) { lexicalAnalyzer_ = &la; }
   /**
   \brief Sets translation grammar.
   \param[in] tg Translation grammar to be set.
@@ -86,7 +86,7 @@ class TranslationControl {
   \brief Sets syntax error message function.
   \param[in] f Callable to return syntax error strings.
   */
-  void set_syntax_error_message(error_function f) { syntaxErrorMessage_ = f; }
+  virtual void set_syntax_error_message(error_function f) { syntaxErrorMessage_ = f; }
   /**
   \brief Runs translation.
   */
@@ -95,7 +95,7 @@ class TranslationControl {
   \brief Returns a constant reference to output symbols.
   \returns All output symbols.
   */
-  const tstack<Symbol> &output() const { return output_; }
+  virtual const tstack<Symbol> &output() const { return output_; }
 };
 }  // namespace ctf
 #endif
