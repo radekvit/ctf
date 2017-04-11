@@ -22,14 +22,14 @@ TEST_CASE("LexicalAnalyzer construction and setup", "[LexicalAnalyzer]") {
 TEST_CASE("LexicalAnalyzer default input", "[LexicalAnalyzer]") {
   using namespace ctf::literals;
   stringstream s;
-  s << "a  b";
+  s << "a\nb\n";
   LexicalAnalyzer l{s};
 
   REQUIRE(l.get_token() == "a"_t);
   REQUIRE(l.get_token() == "b"_t);
   REQUIRE(l.get_token() == ctf::Symbol::eof());
 
-  s << "  ";
+  s << "";
 
   REQUIRE(l.get_token() == ctf::Symbol::eof());
 }

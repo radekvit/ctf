@@ -6,11 +6,11 @@
 #ifndef CTF_LEXICAL_ANALYZER
 #define CTF_LEXICAL_ANALYZER
 
+#include "base.hpp"
+
 #include <cctype>
 #include <functional>
 #include <istream>
-
-#include "base.hpp"
 
 namespace ctf {
 
@@ -101,14 +101,30 @@ class LexicalAnalyzer {
   tokens.
   */
   static Token default_input(std::istream &is) {
-    char c;
-  read:
-    if (is.get(c)) {
-      if (std::isspace(static_cast<unsigned char>(c)))
-        goto read;
-      return Token{{c}};
-    } else
-      return Token::eof();
+    string name;
+    string attribute;
+
+    int c = is.get();
+    if (c == std::char_traits<char>::eof())
+      return Symbol::eof();
+    if (c == '.')
+      throw LexicalError("Token with empty name.");
+    while (c != '.' && c != '\n') {
+      if (c == std::char_traits<char>::eof())
+        throw LexicalError("Unexpected EOF.");
+      name += string{static_cast<char>(c)};
+
+      c = is.get();
+    }
+    if(c == '.')
+      c = is.get();
+    while (c != '\n') {
+      if (c == std::char_traits<char>::eof())
+        break;
+      attribute += string{static_cast<char>(c)};
+      c = is.get();
+    }
+    return Terminal(name, attribute);
   }
 };
 }  // namespace ctf

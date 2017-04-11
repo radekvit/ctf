@@ -28,26 +28,27 @@ You can make your own callable class, use a lambda expression or a function poin
 #include <string>
 
 Token analyzer(std::istream &is) {
-  std::string name;
-  std::string attribute;
+  string name;
+  string attribute;
 
   int c = is.get();
-  if (c == Traits::eof())
+  if (c == std::char_traits<char>::eof())
     return Symbol::eof();
   if (c == '.')
     throw LexicalError("Token with empty name.");
   while (c != '.' && c != '\n') {
-    if (c == Traits::eof())
+    if (c == std::char_traits<char>::eof())
       throw LexicalError("Unexpected EOF.");
-	name += string{static_cast<char>(c)};
+    name += string{static_cast<char>(c)};
 
-	c = is.get();
+    c = is.get();
   }
-  while(c != '\n') {
-    if (c == Traits::eof())
-      throw LexicalError("Unexpected EOF.");
+  if(c == '.')
+    c = is.get();
+  while (c != '\n') {
+    if (c == std::char_traits<char>::eof())
+      break;
     attribute += string{static_cast<char>(c)};
-
     c = is.get();
   }
   return Terminal(name, attribute);

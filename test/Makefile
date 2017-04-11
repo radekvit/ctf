@@ -6,7 +6,7 @@ CXXFLAGS += -std=c++14 -Wall -Wextra -pedantic -I. -I $(CATCH) -I $(INCLUDE)
 OBJ=obj
 $(shell mkdir -p $(OBJ))
 
-HEADERS=$(wildcard $(INCLUDE)/*.h)
+HEADERS=$(wildcard $(INCLUDE)/*.hpp)
 OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
 
 .PHONY: all format clean debug build test
@@ -24,7 +24,7 @@ deploy: build
 $(APPNAME): $(OBJFILES)
 	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
 
-$(OBJ)/%.o: $(SRC)/%.cpp
+$(OBJ)/%.o: $(SRC)/%.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
