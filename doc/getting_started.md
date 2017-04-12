@@ -124,8 +124,8 @@ In this example, we use the modules from the previous examples to create the `Tr
 
 extern TranslationGrammar grammar;
 
-Token foo(std::istream &);
-void bar(std::ostream &, const Symbol &);
+Token analyzer(std::istream &);
+void generator(std::ostream &, const Symbol &);
 
 int main() {
   Translation translation(analyzer, "ll", grammar, generator);
