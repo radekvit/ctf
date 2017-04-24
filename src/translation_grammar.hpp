@@ -53,7 +53,7 @@ class TranslationGrammar {
     Implicitly
     created to copy no attributes.
      */
-    vector<vector<size_t>> attributeActions_;
+    vector<set<size_t>> attributeActions_;
 
     /**
     \brief Checks if nonterminals are in same space in input and output strings.
@@ -95,7 +95,7 @@ class TranslationGrammar {
     */
     void create_empty_actions() {
       attributeActions_ =
-          vector<vector<size_t>>(count_input_terminals(), vector<size_t>());
+          vector<set<size_t>>(count_input_terminals(), set<size_t>());
     }
 
    public:
@@ -113,7 +113,7 @@ class TranslationGrammar {
     */
     Rule(const Symbol &nonterminal, const vector<Symbol> &input,
          const vector<Symbol> &output,
-         const vector<vector<size_t>> &attributeActions = {})
+         const vector<set<size_t>> &attributeActions = {})
         : nonterminal_(nonterminal),
           input_(input),
           output_(output),
@@ -159,7 +159,7 @@ class TranslationGrammar {
       for (size_t i = 0; i < attributeActions_.size(); ++i, ++target) {
         while (output_[target].type() != Symbol::Type::TERMINAL)
           ++target;
-        attributeActions_[i].push_back(target);
+        attributeActions_[i].insert(target);
       }
     }
 
@@ -174,8 +174,8 @@ class TranslationGrammar {
     vector<Symbol> &output() { return output_; }
     const vector<Symbol> &output() const { return output_; }
 
-    vector<vector<size_t>> &actions() { return attributeActions_; }
-    const vector<vector<size_t>> &actions() const { return attributeActions_; }
+    vector<set<size_t>> &actions() { return attributeActions_; }
+    const vector<set<size_t>> &actions() const { return attributeActions_; }
 
     /**
     \name Comparison operators

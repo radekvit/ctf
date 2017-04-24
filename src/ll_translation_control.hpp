@@ -229,7 +229,7 @@ class LLTranslationControl : public TranslationControl {
   \param[out] attributeActions Targets to append incoming terminal's attributes.
   */
   void create_attibute_actions(
-      tstack<Symbol>::iterator obegin, const vector<vector<size_t>> &targets,
+      tstack<Symbol>::iterator obegin, const vector<set<size_t>> &targets,
       tstack<vector<tstack<Symbol>::iterator>> &attributeActions) {
     for (auto &target : reverse(targets)) {
       vector<tstack<Symbol>::iterator> iterators;
