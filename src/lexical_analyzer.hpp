@@ -116,7 +116,7 @@ class LexicalAnalyzer {
 
       c = is.get();
     }
-    if(c == '.')
+    if (c == '.')
       c = is.get();
     while (c != '\n') {
       if (c == std::char_traits<char>::eof())

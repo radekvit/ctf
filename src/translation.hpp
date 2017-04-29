@@ -133,7 +133,7 @@ class Translation {
     for (auto &t : outputTokens) {
       outputGenerator_.get_token(t);
     }
-    //buffers the output so that there is no output in case of a semantic error
+    // buffers the output so that there is no output in case of a semantic error
     output << ss.str();
   }
 

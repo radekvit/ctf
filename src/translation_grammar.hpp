@@ -249,7 +249,7 @@ class TranslationGrammar {
   */
   TranslationGrammar(const vector<Rule> &rules, const Symbol &starting_symbol)
       : rules_(rules), starting_symbol_(starting_symbol) {
-    //sort(rules_.begin(), rules_.end());
+    // sort(rules_.begin(), rules_.end());
     /* add nonterminals and terminals */
     if (starting_symbol_.type() != Symbol::Type::NONTERMINAL)
       throw std::invalid_argument(
@@ -295,7 +295,7 @@ class TranslationGrammar {
         starting_symbol_(starting_symbol) {
     make_set(terminals_);
     make_set(nonterminals_);
-    //sort(rules_.begin(), rules_.end());
+    // sort(rules_.begin(), rules_.end());
     for (auto &t : terminals_) {
       if (t == Symbol::eof())
         throw std::invalid_argument(

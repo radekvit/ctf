@@ -11,10 +11,10 @@ this project.
 #include <functional>
 #include <list>
 #include <map>
+#include <set>
 #include <stack>
 #include <string>
 #include <vector>
-#include <set>
 
 namespace ctf {
 
@@ -267,10 +267,10 @@ class tstack {
     return rhs.list_ < lhs.list_;
   }
   friend bool operator<=(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
-    return lhs < rhs || lhs == rhs;
+    return lhs == rhs || lhs < rhs;
   }
   friend bool operator>=(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
-    return lhs > rhs || lhs == rhs;
+    return rhs <= lhs;
   }
   ///@}
 };

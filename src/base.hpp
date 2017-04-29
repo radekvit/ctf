@@ -28,7 +28,11 @@ class Symbol {
   /**
   \brief Type of the Symbol.
   */
-  enum class Type {
+  enum class Type : unsigned char {
+    /**
+    \brief Undefined type
+    */
+    UNKNOWN,
     /**
     \brief Terminal symbol
     */
@@ -41,10 +45,6 @@ class Symbol {
     \brief End of input
     */
     EOI,
-    /**
-    \brief Undefined type
-    */
-    UNKNOWN,
     /**
     \brief Denotes a symbol with special meaning for the translation control or
     output generator.
@@ -128,15 +128,16 @@ class Symbol {
 
   /**
   \name Comparison operators
-  \brief Lexicographic comparison of Symbol names. In == and !=, Symbol type
-  matters.
+  \brief Numeric comparison of types and lexicographic comparison of names.
+  Types have higher priority.
   \param[in] lhs Left Symbol of the comparison.
   \param[out] rhs Right Symbol of the comparison.
   \returns True when the lexicographic comparison is true.
   */
   ///@{
   friend bool operator<(const Symbol &lhs, const Symbol &rhs) {
-    return lhs.name_ < rhs.name_;
+    return lhs.type_ < rhs.type_ ||
+           (lhs.type_ == rhs.type_ && lhs.name_ < rhs.name_);
   }
 
   friend bool operator==(const Symbol &lhs, const Symbol &rhs) {
@@ -152,7 +153,7 @@ class Symbol {
   }
 
   friend bool operator<=(const Symbol &lhs, const Symbol &rhs) {
-    return lhs < rhs || lhs == rhs;
+    return lhs == rhs || lhs < rhs;
   }
 
   friend bool operator>=(const Symbol &lhs, const Symbol &rhs) {
