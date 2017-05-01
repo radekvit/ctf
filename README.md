@@ -1,6 +1,6 @@
 ![ctf logo](media/ctf-logo-medium.png)
 
-# CTF is a Compact Translation Framework
+# CTF ain't a Translation Framework
 
 CTF is a framework for rapid translation definition. Translations are defined with lexical analyzers, translation grammars and output generators. The API is subject to change in the future slightly to allow a more rigid way to define custom error messages and to provide a solid API for future translation methods.
 
