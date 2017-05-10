@@ -11,7 +11,7 @@ TranslationGrammar tg{
     {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "E'"_nt}},
     {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
     {"F"_nt, {"i"_t}, {"o"_t}, {{0}}},
-	{"F"_nt, {"n"}},
+    {"F"_nt, {"n"}},
     {"T"_nt, {"F"_nt, "T'"_nt}},
     {"T'"_nt, {}},
     {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "T'"_nt}},
