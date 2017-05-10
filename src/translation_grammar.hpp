@@ -154,8 +154,9 @@ class TranslationGrammar {
     */
     Rule(const Symbol &nonterminal, const vector<Symbol> &both)
         : Rule(nonterminal, both, both) {
-      // implicit target for each terminal; matches itself
+      // implicit target for each terminal is the identical output terminal
       size_t target = 0;
+      // attribute actions have the same size as the number of terminals
       for (size_t i = 0; i < attributeActions_.size(); ++i, ++target) {
         while (output_[target].type() != Symbol::Type::TERMINAL)
           ++target;

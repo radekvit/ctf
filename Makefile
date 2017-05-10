@@ -15,7 +15,7 @@ pack: clean
 	zip -r ctf.zip LICENSE.MIT README.md $(SRC)/*.hpp $(INCLUDE)/*.hpp doc media .clang-format Makefile test/Makefile test/*.cpp test/media test/ lib
 
 doc:
-	make -C doc
+	make -C docs
 
 clean:
 	-rm -r doc/html
