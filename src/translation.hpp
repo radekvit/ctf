@@ -151,6 +151,10 @@ class Translation {
              []() -> std::unique_ptr<TranslationControl> {
                return std::make_unique<LLTranslationControl>();
              }},
+            {"predictive",
+             []() -> std::unique_ptr<TranslationControl> {
+               return std::make_unique<LLTranslationControl>();
+             }},
         };
     auto it = controls.find(name);
     if (it == controls.end())

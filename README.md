@@ -25,10 +25,9 @@ speeding up development greatly.
 
 ## Supported translation methods
 
-* LL table - "ll"
+* predictive top-down translation - "ll", "predictive"
 
 ## Future translation methods
 
-* LR table - "lr"
-* bottom-up - "precedence"
-* switched LL and bottom-up - "ll-switched"
+* LR bottom-up translation - "lr"
+* operator precedence - "op"
