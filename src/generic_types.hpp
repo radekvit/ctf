@@ -109,6 +109,46 @@ class tstack {
     return temp;
   }
   /**
+  \brief Searches for an element between a given position and the end.
+  \param[in] target The reference element for the search.
+  \param[in] it The first element of the search.
+  \param[in] predicate Predicate to find the targer. Defaults to operator ==.
+  \returns An iterator to the element defined by target and
+  predicate. If no element fits the criteria, the returned iterator is
+  equal to tstack::end().
+  */
+  iterator search(const T &target, iterator from,
+                  std::function<bool(const T &, const T &)> predicate =
+                      [](auto &lhs, auto &rhs) { return lhs == rhs; }) {
+    iterator it;
+    for (it = from; it != list_.end(); ++it) {
+      if (predicate(*it, target))
+        break;
+    }
+    return it;
+  }
+  /**
+  \brief Searches for an element in a const tstack.
+  \param[in] target The reference element for the search.
+  \param[in] it The first element of the search.
+  \param[in] predicate Predicate to find the target. Defaults to operator ==.
+  \returns A const iterator to the element defined by target and
+  predicate. If no element fits the criteria, the returned iterator is
+  equal to tstack::cend().
+  */
+  const_iterator search(const T &target, const_iterator from,
+                        std::function<bool(const T &, const T &)> predicate =
+                            [](auto &lhs, auto &rhs) {
+                              return lhs == rhs;
+                            }) const {
+    const_iterator it;
+    for (it = from; it != list_.cend(); ++it) {
+      if (predicate(*it, target))
+        break;
+    }
+    return it;
+  }
+  /**
   \brief Searches for an element.
   \param[in] target The reference element for the search.
   \param[in] predicate Predicate to find the targer. Defaults to operator ==.
@@ -119,12 +159,7 @@ class tstack {
   iterator search(const T &target,
                   std::function<bool(const T &, const T &)> predicate =
                       [](auto &lhs, auto &rhs) { return lhs == rhs; }) {
-    iterator it;
-    for (it = list_.begin(); it != list_.end(); ++it) {
-      if (predicate(*it, target))
-        break;
-    }
-    return it;
+    return search(target, begin(), predicate);
   }
   /**
   \brief Searches for an element in a const tstack.
@@ -139,12 +174,7 @@ class tstack {
                             [](auto &lhs, auto &rhs) {
                               return lhs == rhs;
                             }) const {
-    const_iterator it;
-    for (it = list_.cbegin(); it != list_.cend(); ++it) {
-      if (predicate(*it, target))
-        break;
-    }
-    return it;
+    return search(target, begin(), predicate);
   }
   /**
   \brief Replaces the element at the position given by an iterator with elements
@@ -171,7 +201,28 @@ class tstack {
     return it;
   }
   /**
-  \brief Replaces element defined by target and predicate by a string of
+  \brief Replaces an element defined by a target, its first possible position,
+  and a predicate by a string of elements.
+  \param[in] target The reference element for the search.
+  \param[in] string A string of elements to be pushed to tstack instead of the
+  given element.
+  \param[in] predicate Predicate to find the target. Defaults to operator ==. If
+  no element on the stack makes this predicate true, nothing happens.
+  \returns An iterator to the element defined by target and
+  predicate. If no element fits the criteria, the returned iterator is
+  equal to tstack::end().
+
+  The first element in the string will be closest to top of the
+  stack.
+  */
+  template <class TS>
+  iterator replace(const T &target, const TS &string, iterator from,
+                   std::function<bool(const T &, const T &)> predicate =
+                       [](auto &lhs, auto &rhs) { return lhs == rhs; }) {
+    return replace(search(target, from, predicate), string);
+  }
+  /**
+  \brief Replaces an element defined by target and a predicate by a string of
   elements.
   \param[in] target The reference element for the search.
   \param[in] string A string of elements to be pushed to tstack instead of the

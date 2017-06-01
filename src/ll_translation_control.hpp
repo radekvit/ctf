@@ -294,6 +294,10 @@ class LLTranslationControl : public TranslationControl {
     output_.push(Symbol::eof());
     input_.push(translationGrammar_->starting_symbol());
     output_.push(translationGrammar_->starting_symbol());
+
+    // iterator to the first symbol of the last inserted string
+    auto obegin = output_.begin();
+
     while (1) {
       Symbol &top = input_.top();
       size_t ruleIndex;
@@ -321,7 +325,7 @@ class LLTranslationControl : public TranslationControl {
           if (ruleIndex < translationGrammar_->rules().size()) {
             auto &rule = translationGrammar_->rules()[ruleIndex];
 
-            auto obegin = output_.replace(top, rule.output());
+            obegin = output_.replace(top, rule.output(), obegin);
             input_.replace(input_.begin(), rule.input());
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
