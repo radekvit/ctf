@@ -125,15 +125,13 @@ class Translation {
   \param[out] output Output stream.
   */
   void run(std::istream &input, std::ostream &output) {
+    // buffers the output so that there is no output in case of a semantic error
     std::stringstream ss;
-    lexicalAnalyzer_.set_input(input);
-    outputGenerator_.set_output(ss);
+    lexicalAnalyzer_.set_stream(input);
+    outputGenerator_.set_stream(ss);
     translationControl_.run();
     auto &outputTokens = translationControl_.output();
-    for (auto &t : outputTokens) {
-      outputGenerator_.get_token(t);
-    }
-    // buffers the output so that there is no output in case of a semantic error
+    outputGenerator_.output(outputTokens);
     output << ss.str();
   }
 

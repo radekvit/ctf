@@ -82,7 +82,7 @@ class LexicalAnalyzer {
   \brief Sets the input stream to a given stream.
   \param[in] s Stream to be set.
   */
-  void set_input(std::istream &s) { is = &s; }
+  void set_stream(std::istream &s) { is = &s; }
   /**
   \brief Uses tokenFunction to get a Token from input stream. If
   LexicalAnalyzer::stream_set() is false, this results in undefined behavior.

@@ -15,7 +15,7 @@ TEST_CASE("LexicalAnalyzer construction and setup", "[LexicalAnalyzer]") {
 
   REQUIRE(l1.stream_set() == false);
   REQUIRE(l2.stream_set() == true);
-  l1.set_input(s);
+  l1.set_stream(s);
   REQUIRE(l1.stream_set() == true);
 }
 

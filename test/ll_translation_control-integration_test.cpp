@@ -36,7 +36,7 @@ TEST_CASE("LLTranslationControl run", "[LLTranslationControl]") {
   SECTION("Accept empty string only") {
     TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
     std::stringstream in;
-    a.set_input(in);
+    a.set_stream(in);
     LLTranslationControl ll(a, tg);
     ll.run();
     // only eof

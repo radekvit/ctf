@@ -27,7 +27,7 @@ class OutputGenerator {
   /**
   \brief Alias for std::function.
   */
-  using output_function = std::function<void(std::ostream &, const Symbol &)>;
+  using output_function = std::function<void(std::ostream &, const tstack<Symbol> &)>;
 
  private:
   /**
@@ -67,7 +67,7 @@ class OutputGenerator {
   \brief Sets the output stream.
   \param[in] o Output stream.
   */
-  void set_output(std::ostream &o) { os = &o; }
+  void set_stream(std::ostream &o) { os = &o; }
   /**
   \brief Outputs a token to the given stream.
   \param[in] t Symbol to be output. If t is equal to Symbol::eof(),
@@ -76,20 +76,22 @@ class OutputGenerator {
   If OutputGenerator::stream_set()
   is false, this results in undefined behavior.
   */
-  void get_token(const Symbol &t) { outputFunction(*os, t); }
+  void output(const tstack<Symbol> &tokens) { outputFunction(*os, tokens); }
 
   /**
   \brief Default output function.
 
   Prints Symbol name and attribute.
   */
-  static void default_output(std::ostream &os, const Symbol &t) {
-    if (t == Symbol::eof())
-      return;
-    os << t.name();
-    if (t.attribute() != "")
-      os << "." << t.attribute();
-    os << "\n";
+  static void default_output(std::ostream &os, const tstack<Symbol> &terminals) {
+    for (auto &t: terminals) {
+      if (t == Symbol::eof())
+        return;
+      os << t.name();
+      if (t.attribute() != "")
+        os << "." << t.attribute();
+      os << "\n";
+    }
   }
 };
 }  // namespace ctf
