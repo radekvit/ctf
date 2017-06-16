@@ -21,6 +21,21 @@ class TranslationException : public std::runtime_error {
 };
 
 /**
+\brief Source location
+**/
+struct Location {
+  uint32_t col;
+  uint32_t row;
+
+  Location(uint32_t _col = 1, uint32_t _row = 1): col(_col), row(_row) {}
+  Location(const Location &) = default;
+  static const Location &not_specified() noexcept { static const Location ns{0, 0}; return ns; }
+  void inc_col() noexcept { ++col; }
+  void inc_row() noexcept { ++row; col = 1; }
+  void reset() noexcept { col = row = 1; }
+};
+
+/**
 \brief Symbol, may represent a Terminal, Nonterminal or end of input.
 */
 class Symbol {
@@ -65,6 +80,10 @@ class Symbol {
   \brief Attribute of this Symbol. Only valid for some types.
   */
   string attribute_;
+  /**
+  \brief Location of the origin of this Symbol.
+  */
+  Location location_;
 
  public:
   /**
@@ -75,8 +94,8 @@ class Symbol {
   for Type::EOI.
   \param[in] atr Attribute of constructed Symbol.
   */
-  Symbol(Type type, const string &name = "", const string &atr = "")
-      : type_(type), name_(name), attribute_(atr) {
+  Symbol(Type type, const string &name = "", const string &atr = "", const Location &loc = Location::not_specified())
+      : type_(type), name_(name), attribute_(atr), location_(loc) {
     if (type != Symbol::Type::EOI && name == "")
       throw std::invalid_argument(
           "Empty name when constructing non-EOI Symbol.");
@@ -87,8 +106,8 @@ class Symbol {
   \param[in] name Name of constructed Symbol.
   \param[in] atr Attribute of constructed Symbol. Defaults to "".
   */
-  Symbol(const string &name, const string &atr = "")
-      : Symbol(Type::UNKNOWN, name, atr) {}
+  Symbol(const string &name, const string &atr = "", const Location &loc = Location::not_specified())
+      : Symbol(Type::UNKNOWN, name, atr, loc) {}
   /**
   \brief Default destructor.
   */
@@ -125,6 +144,20 @@ class Symbol {
   \returns A const reference to type.
   */
   const Type &type() const { return type_; }
+  /**
+  \brief Returns the Symbol's location.
+  \returns The Symbol's original location.
+  */
+  const Location &location() const { return location_; }
+
+  /**
+  \brief Merges symbol's attribute and sets location if not set.
+  */
+  void add_attribute(const Symbol &other) {
+    attribute_ += other.attribute();
+    if(location_.row == 0 || location_.col == 0)
+      location_ = other.location();
+  }
 
   /**
   \name Comparison operators
