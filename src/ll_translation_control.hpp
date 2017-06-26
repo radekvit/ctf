@@ -347,7 +347,7 @@ class LLTranslationControl : public TranslationControl {
             // TODO message
             errorString_ += "Unexpected token " + token.name() + ": " +
                             token.location().to_string() +
-                            ", expected MISSING REST OF ERROR MESSAGE\n";
+                            ", nonterminal " + top.name() + " TODO expected tokens\n";
             // TODO error recovery
             return;
           }

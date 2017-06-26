@@ -50,7 +50,10 @@ class LexicalAnalyzer {
   \brief Sets the input stream to a given stream.
   \param[in] s Stream to be set.
   */
-  virtual void set_stream(std::istream &s) noexcept { is_ = &s; }
+  virtual void set_stream(std::istream &s) noexcept {
+    is_ = &s;
+    clear_error();
+  }
   /**
   \returns True when an error has been encountered.
   */

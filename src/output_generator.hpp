@@ -15,7 +15,7 @@ namespace ctf {
 Outputs tokens to output stream. Base class.
 */
 class OutputGenerator {
- private:
+ protected:
   /**
   \brief Pointer to the output stream tokens will be output to.
   */
@@ -27,7 +27,7 @@ class OutputGenerator {
 
  public:
   OutputGenerator() = default;
-  OutputGenerator(std::ostream &os): os_(&os) {}
+  OutputGenerator(std::ostream &os) : os_(&os) {}
   virtual ~OutputGenerator() = default;
   /**
   \brief Returns true if an output stream has been set.
