@@ -357,14 +357,14 @@ class LLTranslationControl : public TranslationControl {
     errorString_ += token.location().to_string() + ": ";
     switch(top.type()) {
       case Type::EOI:
-        errorString_ += "Unexpected token " + token.name() + " after translation has finished.";
+        errorString_ += "Unexpected token '" + token.name() + "' after translation has finished.";
         break;
       case Type::TERMINAL:
-        errorString_ += "Unexpected token" + token.name() + ", expected " + top.name();
+        errorString_ += "Unexpected token '" + token.name() + "'; expected '" + top.name() + "'";
         break;
       case Type::NONTERMINAL:
         // TODO list expected tokens
-        errorString_ += "Unexpected token" + token.name() + ", nonterminal " + top.name();
+        errorString_ += "Unexpected token '" + token.name() + "', nonterminal '" + top.name() + "'";
         break;
       default:
         break;
