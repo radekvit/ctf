@@ -15,6 +15,7 @@ this project.
 #include <stack>
 #include <string>
 #include <vector>
+#include <queue>
 
 namespace ctf {
 
@@ -31,6 +32,7 @@ using std::vector;
 using std::list;
 using std::map;
 using std::set;
+using std::queue;
 
 /**
  \brief STL stack with added functionality. Iterators don't lose validity when

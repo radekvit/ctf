@@ -32,13 +32,17 @@ struct Location {
   uint64_t col;
   uint64_t row;
 
-  Location(uint32_t _col = 1, uint32_t _row = 1) : col(_col), row(_row) {}
+  string fileName;
+
+  Location(uint32_t _col = 1, uint32_t _row = 1, string _fileName = "") : col(_col), row(_row), fileName(_fileName) {}
+  Location(string _fileName) : col(1), row(1), fileName(_fileName) {}
   Location(const Location &) = default;
   static const Location &not_specified() noexcept {
     static const Location ns{0, 0};
     return ns;
   }
   void inc_col() noexcept { ++col; }
+  void dec_col() noexcept { --col; }
   void inc_row() noexcept {
     ++row;
     col = 1;
@@ -46,9 +50,9 @@ struct Location {
   void reset() noexcept { col = row = 1; }
   string to_string() const {
     if (row == 0) {
-      return "unknown location";
+      return "unknown:0:0";
     }
-    return std::to_string(row) + ":" + std::to_string(col);
+    return fileName + ":" + std::to_string(row) + ":" + std::to_string(col);
   }
 };
 
