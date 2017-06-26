@@ -19,15 +19,32 @@
 
 namespace ctf {
 /**
+\brief Exception class for syntax errors.
+*/
+class TranslationError : public TranslationException {
+  using TranslationException::TranslationException;
+};
+/**
+\brief An exception class for semantic errors.
+*/
+class SemanticError : public TranslationException {
+ public:
+  using TranslationException::TranslationException;
+};
+/**
 \brief Defines a translation. Can be used multiple times for different inputs
 and outputs.
 */
 class Translation {
  protected:
   /**
+  \brief Lexical Analyzer ownership.
+  */
+  std::unique_ptr<LexicalAnalyzer> lexer_;
+  /**
   \brief Provides input terminals from istream.
   */
-  LexicalAnalyzer lexicalAnalyzer_;
+  LexicalAnalyzer &lexicalAnalyzer_;
   /**
   \brief Holds standard control when generated with Translation::control().
   */
@@ -42,9 +59,13 @@ class Translation {
   */
   TranslationGrammar translationGrammar_;
   /**
+  \brief Output generator ownership
+  */
+  std::unique_ptr<OutputGenerator> generator_;
+  /**
   \brief Outputs output terminals to ostream.
   */
-  OutputGenerator outputGenerator_;
+  OutputGenerator &outputGenerator_;
 
  public:
   /**
@@ -56,14 +77,17 @@ class Translation {
   A copy is made.
   \param[in] og A callable to perform output generation.
   */
-  Translation(LexicalAnalyzer::token_function la, TranslationControl &tc,
-              const TranslationGrammar &tg, OutputGenerator::output_function og)
-      : lexicalAnalyzer_(la),
+  Translation(std::unique_ptr<LexicalAnalyzer> &&la, TranslationControl &tc,
+              const TranslationGrammar &tg,
+              std::unique_ptr<OutputGenerator> &&og)
+      : lexer_(std::move(la)),
+        lexicalAnalyzer_(*lexer_),
         translationControl_(tc),
         translationGrammar_(tg),
-        outputGenerator_(og) {
-    translationControl_.set_grammar(translationGrammar_);
+        generator_(std::move(og)),
+        outputGenerator_(*generator_) {
     translationControl_.set_lexical_analyzer(lexicalAnalyzer_);
+    translationControl_.set_grammar(translationGrammar_);
   }
   /**
   \brief Constructs Translation with given lexical analyzer, translation grammar
@@ -74,48 +98,18 @@ class Translation {
   languages.
    \param[in] og A callable to perform output generation.
   */
-  Translation(LexicalAnalyzer::token_function la, const string &tcName,
-              const TranslationGrammar &tg, OutputGenerator::output_function og)
-      : lexicalAnalyzer_(la),
+  Translation(std::unique_ptr<LexicalAnalyzer> &&la, const string &tcName,
+              const TranslationGrammar &tg,
+              std::unique_ptr<OutputGenerator> &&og)
+      : lexer_(std::move(la)),
+        lexicalAnalyzer_(*lexer_),
         control_(Translation::control(tcName)),
         translationControl_(*control_),
         translationGrammar_(tg),
-        outputGenerator_(og) {
+        generator_(std::move(og)),
+        outputGenerator_(*generator_) {
     translationControl_.set_grammar(translationGrammar_);
     translationControl_.set_lexical_analyzer(lexicalAnalyzer_);
-  }
-  /**
-  \brief Constructs Translation with given lexical analyzer, translation
-  control, translation grammar and output generator. Custom error messages are
-  given for syntax errors.
-   \param[in] la A callable to perform lexical analysis.
-  \param[in] tc A translation control to drive the translation.
-  \param[in] tg Translation grammar that defines the input and output languages.
-  \param[in] og A callable to perform output generation
-  \param[in] syntaxErrors A callable to provide syntax error messages.
-  */
-  Translation(LexicalAnalyzer::token_function la, TranslationControl &tc,
-              const TranslationGrammar &tg, OutputGenerator::output_function og,
-              TranslationControl::error_function syntaxErrors)
-      : Translation(la, tc, tg, og) {
-    translationControl_.set_syntax_error_message(syntaxErrors);
-  }
-  /**
-  \brief Constructs Translation with given lexical analyzer, translation grammar
-  and output generator. Translation control is constructed by name. Custom error
-  messages are given for syntax errors.
-   \param[in] la A callable to perform lexical analysis.
-   \param[in] tcName Name of a built-in translation control.
-   \param[in] tg Translation grammar that defines the input and output
-  languages.
-   \param[in] og A callable to perform output generation.
-   \param[in] syntaxErrors A callable to provide syntax error messages.
-  */
-  Translation(LexicalAnalyzer::token_function la, const string &tcName,
-              const TranslationGrammar &tg, OutputGenerator::output_function og,
-              TranslationControl::error_function syntaxErrors)
-      : Translation(la, tcName, tg, og) {
-    translationControl_.set_syntax_error_message(syntaxErrors);
   }
   ~Translation() {}  //= default;
 
@@ -125,13 +119,31 @@ class Translation {
   \param[out] output Output stream.
   */
   void run(std::istream &input, std::ostream &output) {
-    // buffers the output so that there is no output in case of a semantic error
+    // extra output buffer
     std::stringstream ss;
+    // setup
+    translationControl_.reset();
     lexicalAnalyzer_.set_stream(input);
     outputGenerator_.set_stream(ss);
+
+    // lexical analysis, syntax analysis and translation
     translationControl_.run();
+
+    // translation error
+    if (lexicalAnalyzer_.error() || translationControl_.error()) {
+      throw TranslationError{lexicalAnalyzer_.error_message() +
+                             translationControl_.error_message()};
+    }
+
+    // semantic analysis and code generation
     auto &outputTokens = translationControl_.output();
     outputGenerator_.output(outputTokens);
+
+    // semantic error
+    if (outputGenerator_.error()) {
+      throw SemanticError{outputGenerator_.error_message()};
+    }
+
     output << ss.str();
   }
 

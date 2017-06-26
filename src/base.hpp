@@ -21,18 +21,35 @@ class TranslationException : public std::runtime_error {
 };
 
 /**
+\brief Symbol attribute type.
+*/
+using Attribute = string;
+
+/**
 \brief Source location
 **/
 struct Location {
-  uint32_t col;
-  uint32_t row;
+  uint64_t col;
+  uint64_t row;
 
-  Location(uint32_t _col = 1, uint32_t _row = 1): col(_col), row(_row) {}
+  Location(uint32_t _col = 1, uint32_t _row = 1) : col(_col), row(_row) {}
   Location(const Location &) = default;
-  static const Location &not_specified() noexcept { static const Location ns{0, 0}; return ns; }
+  static const Location &not_specified() noexcept {
+    static const Location ns{0, 0};
+    return ns;
+  }
   void inc_col() noexcept { ++col; }
-  void inc_row() noexcept { ++row; col = 1; }
+  void inc_row() noexcept {
+    ++row;
+    col = 1;
+  }
   void reset() noexcept { col = row = 1; }
+  string to_string() const {
+    if (row == 0) {
+      return "unknown location";
+    }
+    return std::to_string(row) + ":" + std::to_string(col);
+  }
 };
 
 /**
@@ -79,7 +96,7 @@ class Symbol {
   /**
   \brief Attribute of this Symbol. Only valid for some types.
   */
-  string attribute_;
+  Attribute attribute_;
   /**
   \brief Location of the origin of this Symbol.
   */
@@ -94,7 +111,8 @@ class Symbol {
   for Type::EOI.
   \param[in] atr Attribute of constructed Symbol.
   */
-  Symbol(Type type, const string &name = "", const string &atr = "", const Location &loc = Location::not_specified())
+  Symbol(Type type, const string &name = "", const Attribute &atr = "",
+         const Location &loc = Location::not_specified())
       : type_(type), name_(name), attribute_(atr), location_(loc) {
     if (type != Symbol::Type::EOI && name == "")
       throw std::invalid_argument(
@@ -106,7 +124,8 @@ class Symbol {
   \param[in] name Name of constructed Symbol.
   \param[in] atr Attribute of constructed Symbol. Defaults to "".
   */
-  Symbol(const string &name, const string &atr = "", const Location &loc = Location::not_specified())
+  Symbol(const string &name, const Attribute &atr = "",
+         const Location &loc = Location::not_specified())
       : Symbol(Type::UNKNOWN, name, atr, loc) {}
   /**
   \brief Default destructor.
@@ -133,12 +152,12 @@ class Symbol {
   \brief Returns a reference to attribute.
   \returns A reference to attribute.
   */
-  string &attribute() { return attribute_; }
+  Attribute &attribute() { return attribute_; }
   /**
   \brief Returns a const reference to attribute.
   \returns A const reference to attribute.
   */
-  const string &attribute() const { return attribute_; }
+  const Attribute &attribute() const { return attribute_; }
   /**
   \brief Returns a const reference to type.
   \returns A const reference to type.
@@ -154,8 +173,9 @@ class Symbol {
   \brief Merges symbol's attribute and sets location if not set.
   */
   void add_attribute(const Symbol &other) {
+    // TODO change for future Attribute type
     attribute_ += other.attribute();
-    if(location_.row == 0 || location_.col == 0)
+    if (location_.row == 0 || location_.col == 0)
       location_ = other.location();
   }
 
@@ -200,8 +220,9 @@ class Symbol {
 \param[in] attribute Attribute of returned Symbol. Defaults to "".
 \returns A Symbol with type Terminal, given name and given attribute.
 */
-inline Symbol Terminal(const string &name, const string &attribute = "") {
-  return Symbol(Symbol::Type::TERMINAL, name, attribute);
+inline Symbol Terminal(const string &name, const Attribute &attribute = "",
+                       const Location &loc = Location::not_specified()) {
+  return Symbol(Symbol::Type::TERMINAL, name, attribute, loc);
 }
 /**
 \brief Returns a Symbol with Type::Nonterminal, given name and attribute.

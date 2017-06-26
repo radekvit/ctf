@@ -13,10 +13,10 @@ TEST_CASE("LexicalAnalyzer construction and setup", "[LexicalAnalyzer]") {
   LexicalAnalyzer l1{};
   LexicalAnalyzer l2{s};
 
-  REQUIRE(l1.stream_set() == false);
-  REQUIRE(l2.stream_set() == true);
+  REQUIRE(l1.has_stream() == false);
+  REQUIRE(l2.has_stream() == true);
   l1.set_stream(s);
-  REQUIRE(l1.stream_set() == true);
+  REQUIRE(l1.has_stream() == true);
 }
 
 TEST_CASE("LexicalAnalyzer default input", "[LexicalAnalyzer]") {

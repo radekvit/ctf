@@ -38,6 +38,11 @@ class LLTranslationControl : public TranslationControl {
   LLTable llTable_;
 
   /**
+  \brief Error message string.
+  */
+  string errorString_;
+
+  /**
   Creates all sets and creates a new LL table.
   */
   void create_ll_table() {
@@ -303,10 +308,15 @@ class LLTranslationControl : public TranslationControl {
       size_t ruleIndex;
       switch (top.type()) {
         case Type::EOI:
-          if (token == Symbol::eof())
+          if (token == Symbol::eof()) {
             return;
-          else
-            throw SyntaxError("Unexpected token after derivation is done.");
+          } else {
+            errorFlag_ = true;
+            errorString_ += "Unexpected token at " +
+                            token.location().to_string() +
+                            " after translation has finished.\n";
+            return;
+          }
           break;
         case Type::TERMINAL:
           if (top == token) {
@@ -316,8 +326,12 @@ class LLTranslationControl : public TranslationControl {
             input_.pop();
             token = next_token();
           } else {
-            throw SyntaxError("Unexpected token " + token.name() +
-                              ", expected " + top.name() + ".");
+            errorFlag_ = true;
+            errorString_ += "Unexpected token " + token.name() + ": " +
+                            token.location().to_string() + ", expected " +
+                            top.name() + ".\n";
+            // TODO error recovery
+            return;
           }
           break;
         case Type::NONTERMINAL:
@@ -329,15 +343,24 @@ class LLTranslationControl : public TranslationControl {
             input_.replace(input_.begin(), rule.input());
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
-            throw SyntaxError(syntaxErrorMessage_(top, token) + ".");
+            errorFlag_ = true;
+            // TODO message
+            errorString_ += "Unexpected token " + token.name() + ": " +
+                            token.location().to_string() +
+                            ", expected MISSING REST OF ERROR MESSAGE\n";
+            // TODO error recovery
+            return;
           }
           break;
         default:
+          // unexpected symbol type on input stack
           input_.pop();
           break;
       }
     }
   }
+
+  string error_message() { return errorString_; }
 };
 }  // namespace ctf
 #endif
