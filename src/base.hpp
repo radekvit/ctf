@@ -29,13 +29,13 @@ using Attribute = string;
 \brief Source location
 **/
 struct Location {
-  uint64_t col;
   uint64_t row;
+  uint64_t col;
 
   string fileName;
 
-  Location(uint32_t _col = 1, uint32_t _row = 1, string _fileName = "") : col(_col), row(_row), fileName(_fileName) {}
-  Location(string _fileName) : col(1), row(1), fileName(_fileName) {}
+  Location(uint64_t _row = 1, uint64_t _col = 0, string _fileName = "") : col(_col), row(_row), fileName(_fileName) {}
+  Location(string _fileName) : row(1), col(0), fileName(_fileName) {}
   Location(const Location &) = default;
   static const Location &not_specified() noexcept {
     static const Location ns{0, 0};
@@ -47,10 +47,10 @@ struct Location {
     ++row;
     col = 1;
   }
-  void reset() noexcept { col = row = 1; }
+  void reset() noexcept { row = 1; col = 0; }
   string to_string() const {
     if (row == 0) {
-      return "unknown:0:0";
+      return "";
     }
     return fileName + ":" + std::to_string(row) + ":" + std::to_string(col);
   }
