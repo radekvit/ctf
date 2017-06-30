@@ -44,7 +44,7 @@ class TranslationControl {
   /**
   \brief Returns the next token obtained from lexicalAnalyzer_.
   */
-  Symbol next_token() { return lexicalAnalyzer_->get_token(); }
+  virtual Symbol next_token() { return lexicalAnalyzer_->get_token(); }
 
  public:
   virtual ~TranslationControl() = default;
