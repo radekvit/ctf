@@ -34,8 +34,8 @@ struct Location {
 
   string fileName;
 
-  Location(uint64_t _row = 1, uint64_t _col = 0, string _fileName = "") : col(_col), row(_row), fileName(_fileName) {}
-  Location(string _fileName) : row(1), col(0), fileName(_fileName) {}
+  Location(uint64_t _row = 1, uint64_t _col = 1, string _fileName = "") : col(_col), row(_row), fileName(_fileName) {}
+  Location(string _fileName) : row(1), col(1), fileName(_fileName) {}
   Location(const Location &) = default;
   static const Location &not_specified() noexcept {
     static const Location ns{0, 0};
@@ -47,7 +47,7 @@ struct Location {
     ++row;
     col = 1;
   }
-  void reset() noexcept { row = 1; col = 0; }
+  void reset() noexcept { row = 1; col = 1; }
   string to_string() const {
     if (row == 0) {
       return "";
