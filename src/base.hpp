@@ -31,7 +31,8 @@ struct Location {
 
   string fileName;
 
-  Location(uint64_t _row = 1, uint64_t _col = 1, string _fileName = "") : row(_row), col(_col), fileName(_fileName) {}
+  Location(uint64_t _row = 1, uint64_t _col = 1, string _fileName = "")
+      : row(_row), col(_col), fileName(_fileName) {}
   Location(string _fileName) : row(1), col(1), fileName(_fileName) {}
   Location(const Location &) = default;
   Location(Location &&) = default;
@@ -111,12 +112,8 @@ class Symbol {
   for Type::EOI.
   \param[in] atr Attribute of constructed Symbol.
   */
-<<<<<<< HEAD
-  Symbol(Type type, const string &name = "", const string &atr = "",
-=======
   Symbol(Type type, const string &name = "", const Attribute &atr = "",
->>>>>>> 7b2b80229b3eed08f3dbfae9f7e58b3608024cd3
-         const Location &loc = Location::not_specified())
+         const Location &loc = Location::invalid())
       : type_(type), name_(name), attribute_(atr), location_(loc) {
     if (type != Symbol::Type::EOI && name == "")
       throw std::invalid_argument(
@@ -128,12 +125,8 @@ class Symbol {
   \param[in] name Name of constructed Symbol.
   \param[in] atr Attribute of constructed Symbol. Defaults to "".
   */
-<<<<<<< HEAD
-  Symbol(const string &name, const string &atr = "",
-=======
   Symbol(const string &name, const Attribute &atr = "",
->>>>>>> 7b2b80229b3eed08f3dbfae9f7e58b3608024cd3
-         const Location &loc = Location::not_specified())
+         const Location &loc = Location::invalid())
       : Symbol(Type::UNKNOWN, name, atr, loc) {}
   /**
   \brief Default destructor.
@@ -229,7 +222,7 @@ class Symbol {
 \returns A Symbol with type Terminal, given name and given attribute.
 */
 inline Symbol Terminal(const string &name, const Attribute &attribute = "",
-                       const Location &loc = Location::not_specified()) {
+                       const Location &loc = Location::invalid()) {
   return Symbol(Symbol::Type::TERMINAL, name, attribute, loc);
 }
 /**

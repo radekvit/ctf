@@ -11,12 +11,12 @@ this project.
 #include <functional>
 #include <list>
 #include <map>
+#include <queue>
 #include <set>
+#include <stack>
 #include <stack>
 #include <string>
 #include <vector>
-#include <queue>
-#include <stack>
 
 namespace ctf {
 

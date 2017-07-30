@@ -7,7 +7,7 @@
 #define CTF_LEXICAL_ANALYZER
 
 #include "base.hpp"
-#include "line_buffer.hpp"
+#include "input_reader.hpp"
 
 #include <cctype>
 #include <functional>
@@ -29,34 +29,54 @@ attribute should be used as an error message.
 class LexicalAnalyzer {
  protected:
   /**
-  \brief Pointer to the input stream that tokenFunction takes input from.
-  LexicalAnalyzer does not own the
-  istream.
+  \brief Error flag.
   */
-  std::istream *is_;
-
-  string streamName_;
-
   bool errorFlag_ = false;
+  /**
+  \brief Input manager.
+  */
+  InputReader &reader_;
+  /**
+  \brief Current token location.
+  */
+  Location location_ = Location::invalid();
+
+  /**
+  \brief Helper method. Sets the current token location if not yet specified.
+  */
+  virtual int get() {
+    if (location_ == Location::invalid()) {
+      return reader_.get(location_);
+    }
+    return reader_.get();
+  }
+
+  virtual Token token(const string &name = "", const string &attr - "") const {
+    auto location = location_;
+    location_ = Location::invalid();
+    return Terminal(name, attr, location);
+  }
 
  public:
   LexicalAnalyzer() = default;
-  LexicalAnalyzer(std::istream &is) : is_(&is) {}
+  LexicalAnalyzer(std::istream &is) : reader_(&is) {}
   virtual ~LexicalAnalyzer() = default;
 
   /**
   \brief Returns true when a stream has been set.
   \returns True when a stream has been set. False otherwise.
   */
-  virtual bool has_stream() const noexcept { return is_ != nullptr; }
+  virtual bool has_stream() const noexcept {
+    return reader_.stream() != nullptr;
+  }
   /**
   \brief Sets the input stream to a given stream.
   \param[in] s Stream to be set.
   */
   virtual void set_stream(std::istream &s, const string &streamName = "") {
-    is_ = &s;
     clear_error();
-    streamName_ = streamName;
+    location_ = Location::invalid();
+    reader_.set_stream(s, streamName);
   }
   /**
   \returns True when an error has been encountered.
@@ -75,37 +95,27 @@ class LexicalAnalyzer {
   \brief Gets next Token from stream. Sets error flag on error.
   \returns A token from the input stream.
 
-  Default implementation; characters before a dot set the token name, characters
-  after the first dot are the attribute.
+  Default implementation; reading a token name until a whitespace or EOF is
+  read.
   */
   virtual Token get_token() {
-    static bool eofFlag = false;
     string name;
-    string attribute;
-    if (eofFlag)
-      return Symbol::eof();
-    int c = is_->get();
-    if (c == std::char_traits<char>::eof())
-      return Symbol::eof();
-    // ignoring prefix dot characters, setting error if encountered
-    while (c == '.') {
-      errorFlag_ = true;
-      c = is_->get();
+    // first character
+    int c = get();
+    while (std::isspace(c)) {
+      c = get();
     }
-    while (c != '.' && c != '\n' && c != std::char_traits<char>::eof()) {
-      name += string{static_cast<char>(c)};
+    if (c == std::char_traits<char>::eof()) {
+      return Token::eof();
+    }
 
-      c = is_->get();
+    while (!isspace(c) && c != std::char_traits<char>::eof()) {
+      name += c;
+      c = get();
     }
-    if (c == '.')
-      c = is_->get();
-    while (c != '\n' && c != std::char_traits<char>::eof()) {
-      attribute += string{static_cast<char>(c)};
-      c = is_->get();
-    }
-    if (c == std::char_traits<char>::eof())
-      eofFlag = true;
-    return Terminal(name, attribute);
+    reader_.unget();
+
+    return token(name);
   }
 };
 }  // namespace ctf
