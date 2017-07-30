@@ -38,6 +38,11 @@ class LLTranslationControl : public TranslationControl {
   LLTable llTable_;
 
   /**
+  \brief Error message string.
+  */
+  string errorString_;
+
+  /**
   Creates all sets and creates a new LL table.
   */
   void create_ll_table() {
@@ -303,10 +308,12 @@ class LLTranslationControl : public TranslationControl {
       size_t ruleIndex;
       switch (top.type()) {
         case Type::EOI:
-          if (token == Symbol::eof())
+          if (token == Symbol::eof()) {
             return;
-          else
-            throw SyntaxError("Unexpected token after derivation is done.");
+          } else {
+            add_error(top, token);
+            return;
+          }
           break;
         case Type::TERMINAL:
           if (top == token) {
@@ -316,8 +323,9 @@ class LLTranslationControl : public TranslationControl {
             input_.pop();
             token = next_token();
           } else {
-            throw SyntaxError("Unexpected token " + token.name() +
-                              ", expected " + top.name() + ".");
+            add_error(top, token);
+            // TODO error recovery
+            return;
           }
           break;
         case Type::NONTERMINAL:
@@ -329,15 +337,43 @@ class LLTranslationControl : public TranslationControl {
             input_.replace(input_.begin(), rule.input());
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
-            throw SyntaxError(syntaxErrorMessage_(top, token) + ".");
+            add_error(top, token);
+            // TODO error recovery
+            return;
           }
           break;
         default:
+          // unexpected symbol type on input stack
           input_.pop();
           break;
       }
     }
   }
+
+  virtual void add_error(const Symbol &top, const Symbol &token) {
+    using Type = Symbol::Type;
+    
+    errorFlag_ = true;
+    errorString_ += token.location().to_string() + ": ";
+    switch(top.type()) {
+      case Type::EOI:
+        errorString_ += "Unexpected token '" + token.name() + "' after translation has finished.";
+        break;
+      case Type::TERMINAL:
+        errorString_ += "Unexpected token '" + token.name() + "'; expected '" + top.name() + "'";
+        break;
+      case Type::NONTERMINAL:
+        // TODO list expected tokens
+        errorString_ += "Unexpected token '" + token.name() + "', nonterminal '" + top.name() + "'";
+        break;
+      default:
+        break;
+
+    }
+    errorString_ += "\n";
+  }
+
+  string error_message() { return errorString_; }
 };
 }  // namespace ctf
 #endif

@@ -11,25 +11,10 @@
 #include "translation_grammar.hpp"
 
 namespace ctf {
-
-/**
-\brief Exception class for syntax errors.
-*/
-class SyntaxError : public TranslationException {
-  using TranslationException::TranslationException;
-};
-
 /**
 \brief Abstract class for syntax driven translation control.
 */
 class TranslationControl {
- public:
-  /**
-  \brief Error message getter function.
-  */
-  using error_function =
-      std::function<string(const Symbol &nonterminal, const Symbol &terminal)>;
-
  protected:
   /**
   \brief Alias for TranslationGrammar::Rule
@@ -53,15 +38,9 @@ class TranslationControl {
   */
   tstack<Symbol> output_;
   /**
-  \brief Syntax error message function.
-
-  Defaults to writing nonterminal's and token's names. Is bound to change.
+  \brief Error flag.
   */
-  error_function syntaxErrorMessage_ = [](auto nt, auto t) {
-    return "Nonterminal " + nt.name() + ", token " + t.name() +
-           (t.attribute() == "" ? "" : "." + t.attribute());
-  };
-
+  bool errorFlag_ = false;
   /**
   \brief Returns the next token obtained from lexicalAnalyzer_.
   */
@@ -70,6 +49,20 @@ class TranslationControl {
  public:
   virtual ~TranslationControl() = default;
 
+  /**
+  \brief Resets translation state.
+  */
+  void reset() noexcept { clear_error(); }
+  virtual bool error() const { return errorFlag_; }
+  /**
+  \brief Clears the error flag.
+  */
+  virtual void clear_error() noexcept { errorFlag_ = false; }
+  /**
+  \returns String with appropriate error message. Is only to be called when
+  error() is true.
+  */
+  virtual string error_message() { return "Something went wrong.\n"; }
   /**
   \brief Sets lexical analyzer.
   \param[in] la LexicalAnalyzer to be set.
@@ -85,13 +78,6 @@ class TranslationControl {
     translationGrammar_ = &tg;
   }
   /**
-  \brief Sets syntax error message function.
-  \param[in] f Callable to return syntax error strings.
-  */
-  virtual void set_syntax_error_message(error_function f) {
-    syntaxErrorMessage_ = f;
-  }
-  /**
   \brief Runs translation.
   */
   virtual void run() = 0;
@@ -99,7 +85,7 @@ class TranslationControl {
   \brief Returns a constant reference to output symbols.
   \returns All output symbols.
   */
-  virtual const tstack<Symbol> &output() const { return output_; }
+  virtual const tstack<Symbol> &output() const noexcept { return output_; }
 };
 }  // namespace ctf
 #endif

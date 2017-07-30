@@ -24,15 +24,15 @@ TEST_CASE("Constructing translation", "[Translation]") {
           {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
       },
       "E"_nt};
-  REQUIRE_NOTHROW(Translation(LexicalAnalyzer::default_input, "ll", tg,
-                              OutputGenerator::default_output));
+  REQUIRE_NOTHROW(Translation(std::make_unique<LexicalAnalyzer>(), "ll", tg,
+                              std::make_unique<OutputGenerator>()));
 
   auto tcp = Translation::control("ll");
-  REQUIRE_NOTHROW(Translation(LexicalAnalyzer::default_input, *tcp, tg,
-                              OutputGenerator::default_output));
+  REQUIRE_NOTHROW(Translation(std::make_unique<LexicalAnalyzer>(), *tcp, tg,
+                              std::make_unique<OutputGenerator>()));
 
-  REQUIRE_THROWS_AS(Translation(LexicalAnalyzer::default_input, "fail, please",
-                                tg, OutputGenerator::default_output),
+  REQUIRE_THROWS_AS(Translation(std::make_unique<LexicalAnalyzer>(), "fail, please",
+                                tg, std::make_unique<OutputGenerator>()),
                     std::invalid_argument &);
 }
 
@@ -50,8 +50,8 @@ TEST_CASE("Running translation", "[Translation]") {
             {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
         },
         "E"_nt};
-    Translation tr(LexicalAnalyzer::default_input, "ll", tg,
-                   OutputGenerator::default_output);
+    Translation tr(std::make_unique<LexicalAnalyzer>(), "ll", tg,
+                   std::make_unique<OutputGenerator>());
     std::stringstream expected;
     std::stringstream out;
     std::ifstream in("media/in");
@@ -75,8 +75,8 @@ TEST_CASE("Running translation", "[Translation]") {
             {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "T'"_nt}},
         },
         "E"_nt};
-    Translation tr(LexicalAnalyzer::default_input, "ll", tg,
-                   OutputGenerator::default_output);
+    Translation tr(std::make_unique<LexicalAnalyzer>(), "ll", tg,
+                   std::make_unique<OutputGenerator>());
     std::stringstream out;
     std::ifstream in("media/in");
     if (in.fail())

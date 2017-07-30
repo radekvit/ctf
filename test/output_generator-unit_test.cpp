@@ -8,14 +8,14 @@
 using ctf::OutputGenerator;
 
 TEST_CASE("OutputGenerator construction", "[OutputGenerator]") {
-  OutputGenerator o1([](std::ostream &, const ctf::tstack<ctf::Symbol> &) { return; });
+  OutputGenerator o1{};
   OutputGenerator o2{std::cout};
 
-  REQUIRE(o1.stream_set() == false);
-  REQUIRE(o2.stream_set() == true);
+  REQUIRE(o1.has_stream() == false);
+  REQUIRE(o2.has_stream() == true);
 
   o1.set_stream(std::cout);
-  REQUIRE(o1.stream_set() == true);
+  REQUIRE(o1.has_stream() == true);
 }
 
 TEST_CASE("OutputGenerator default output", "[OutputGenerator]") {

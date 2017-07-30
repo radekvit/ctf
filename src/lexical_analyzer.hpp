@@ -14,16 +14,6 @@
 #include <istream>
 
 namespace ctf {
-
-/**
-\brief Exception class to be thrown by user defined lexical analyzers on lexical
-errors.
-*/
-class LexicalError : public TranslationException {
- public:
-  using TranslationException::TranslationException;
-};
-
 /**
 \brief Alias for Symbol. Token and Symbol are interchangable.
 */
@@ -31,100 +21,90 @@ using Token = Symbol;
 
 /**
 \brief Extracts tokens from input stream. Tokens can be Symbols of any type,
-type is to be ignored.
+type is to be ignored. Abstract base class.
 
 Lexical errors are created by creating a token with an unused name. Then,
 attribute should be used as an error message.
 */
 class LexicalAnalyzer {
- public:
+ protected:
   /**
-  \brief Alias to std::function.
-  */
-  using token_function = std::function<Token(std::istream &)>;
-
- private:
-  /**
-  \brief Pointer to the input stream that tokenFunction takes input from. May
-  be changed between tokenFunction calls. LexicalAnalyzer does not own the
+  \brief Pointer to the input stream that tokenFunction takes input from.
+  LexicalAnalyzer does not own the
   istream.
   */
-  std::istream *is;
-  /**
-  \brief A function, lambda or callable object used to extract tokens from an
-  input stream. At EOF it is expected to return Token::eof().
-  */
-  token_function tokenFunction;
+  std::istream *is_;
+
+  string streamName_;
+
+  bool errorFlag_ = false;
 
  public:
-  /**
-  \brief Constructs LexicalAnalyzer without a given input stream. If
-  specified, f determines the tokenFunction.
-  \param[in] f A callable for extracting Tokens from a stream.
-  */
-  LexicalAnalyzer(token_function f = LexicalAnalyzer::default_input)
-      : is(nullptr), tokenFunction(f) {}
-  /**
-  \brief Constructs LexicalAnalyzer with a given istream. If specified, f
-  determines the tokenFunction.
-  \param[in] _i A stream from which tokens are extracted.
-  \param[in] f A callable for extracting Tokens from a stream.
-  */
-  LexicalAnalyzer(std::istream &_i,
-                  token_function f = LexicalAnalyzer::default_input)
-      : is(&_i), tokenFunction(f) {}
+  LexicalAnalyzer() = default;
+  LexicalAnalyzer(std::istream &is) : is_(&is) {}
+  virtual ~LexicalAnalyzer() = default;
 
   /**
   \brief Returns true when a stream has been set.
   \returns True when a stream has been set. False otherwise.
   */
-  bool stream_set() const { return is != nullptr; }
+  virtual bool has_stream() const noexcept { return is_ != nullptr; }
   /**
   \brief Sets the input stream to a given stream.
   \param[in] s Stream to be set.
   */
-  void set_stream(std::istream &s) { is = &s; }
+  virtual void set_stream(std::istream &s, const string &streamName = "") {
+    is_ = &s;
+    clear_error();
+    streamName_ = streamName;
+  }
   /**
-  \brief Uses tokenFunction to get a Token from input stream. If
-  LexicalAnalyzer::stream_set() is false, this results in undefined behavior.
-  \returns A token recieved from tokenFunction. Type UNKNOWN is changed to type
-  TERMINAL.
+  \returns True when an error has been encountered.
   */
-  Token get_token() {
-    Symbol s = tokenFunction(*is);
-    if (s.type() == Symbol::Type::UNKNOWN)
-      return Symbol(Symbol::Type::TERMINAL, s.name(), s.attribute());
-    return s;
-  };
+  virtual bool error() noexcept { return errorFlag_; }
+  /**
+  \brief Clears the error flag.
+  */
+  virtual void clear_error() noexcept { errorFlag_ = false; }
+  /**
+  \returns String with appropriate error message. Is only to be called when
+  error() is true.
+  */
+  virtual string error_message() { return "Something went wrong.\n"; }
+  /**
+  \brief Gets next Token from stream. Sets error flag on error.
+  \returns A token from the input stream.
 
-  /**
-  \brief Default token extractor. All characters that are not spaces become
-  tokens.
+  Default implementation; characters before a dot set the token name, characters
+  after the first dot are the attribute.
   */
-  static Token default_input(std::istream &is) {
+  virtual Token get_token() {
+    static bool eofFlag = false;
     string name;
     string attribute;
-
-    int c = is.get();
+    if (eofFlag)
+      return Symbol::eof();
+    int c = is_->get();
     if (c == std::char_traits<char>::eof())
       return Symbol::eof();
-    if (c == '.')
-      throw LexicalError("Token with empty name.");
-    while (c != '.' && c != '\n') {
-      if (c == std::char_traits<char>::eof())
-        throw LexicalError("Unexpected EOF.");
+    // ignoring prefix dot characters, setting error if encountered
+    while (c == '.') {
+      errorFlag_ = true;
+      c = is_->get();
+    }
+    while (c != '.' && c != '\n' && c != std::char_traits<char>::eof()) {
       name += string{static_cast<char>(c)};
 
-      c = is.get();
+      c = is_->get();
     }
     if (c == '.')
-      c = is.get();
-    while (c != '\n') {
-      if (c == std::char_traits<char>::eof())
-        break;
+      c = is_->get();
+    while (c != '\n' && c != std::char_traits<char>::eof()) {
       attribute += string{static_cast<char>(c)};
-      c = is.get();
+      c = is_->get();
     }
+    if (c == std::char_traits<char>::eof())
+      eofFlag = true;
     return Terminal(name, attribute);
   }
 };
