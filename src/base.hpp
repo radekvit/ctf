@@ -21,18 +21,24 @@ class TranslationException : public std::runtime_error {
 };
 
 /**
-\brief Source location
+\brief POD struct holding location coordinates.
+
+Coordinates start at 1.
 **/
 struct Location {
-  uint32_t col;
-  uint32_t row;
+  size_t row;
+  size_t col;
 
-  Location(uint32_t _col = 1, uint32_t _row = 1): col(_col), row(_row) {}
+  Location(uint32_t _row = 1, uint32_t _col = 1) : row(_row), col(_col) {}
   Location(const Location &) = default;
-  static const Location &not_specified() noexcept { static const Location ns{0, 0}; return ns; }
-  void inc_col() noexcept { ++col; }
-  void inc_row() noexcept { ++row; col = 1; }
-  void reset() noexcept { col = row = 1; }
+  Location(Location &&) = default;
+  ~Location() = default;
+  static const Location &invalid() noexcept {
+    static const Location ns{0, 0};
+    return ns;
+  }
+  Location &operator=(const Location &) = default;
+  Location &operator=(Location &&) = default;
 };
 
 /**
@@ -94,7 +100,8 @@ class Symbol {
   for Type::EOI.
   \param[in] atr Attribute of constructed Symbol.
   */
-  Symbol(Type type, const string &name = "", const string &atr = "", const Location &loc = Location::not_specified())
+  Symbol(Type type, const string &name = "", const string &atr = "",
+         const Location &loc = Location::not_specified())
       : type_(type), name_(name), attribute_(atr), location_(loc) {
     if (type != Symbol::Type::EOI && name == "")
       throw std::invalid_argument(
@@ -106,7 +113,8 @@ class Symbol {
   \param[in] name Name of constructed Symbol.
   \param[in] atr Attribute of constructed Symbol. Defaults to "".
   */
-  Symbol(const string &name, const string &atr = "", const Location &loc = Location::not_specified())
+  Symbol(const string &name, const string &atr = "",
+         const Location &loc = Location::not_specified())
       : Symbol(Type::UNKNOWN, name, atr, loc) {}
   /**
   \brief Default destructor.
@@ -155,7 +163,7 @@ class Symbol {
   */
   void add_attribute(const Symbol &other) {
     attribute_ += other.attribute();
-    if(location_.row == 0 || location_.col == 0)
+    if (location_.row == 0 || location_.col == 0)
       location_ = other.location();
   }
 

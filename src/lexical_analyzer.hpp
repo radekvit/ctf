@@ -7,6 +7,7 @@
 #define CTF_LEXICAL_ANALYZER
 
 #include "base.hpp"
+#include "line_buffer.hpp"
 
 #include <cctype>
 #include <functional>

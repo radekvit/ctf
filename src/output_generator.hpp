@@ -27,7 +27,8 @@ class OutputGenerator {
   /**
   \brief Alias for std::function.
   */
-  using output_function = std::function<void(std::ostream &, const tstack<Symbol> &)>;
+  using output_function =
+      std::function<void(std::ostream &, const tstack<Symbol> &)>;
 
  private:
   /**
@@ -83,8 +84,9 @@ class OutputGenerator {
 
   Prints Symbol name and attribute.
   */
-  static void default_output(std::ostream &os, const tstack<Symbol> &terminals) {
-    for (auto &t: terminals) {
+  static void default_output(std::ostream &os,
+                             const tstack<Symbol> &terminals) {
+    for (auto &t : terminals) {
       if (t == Symbol::eof())
         return;
       os << t.name();
