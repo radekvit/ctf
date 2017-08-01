@@ -8,6 +8,7 @@ using ctf::Symbol;
 using ctf::LLTranslationControl;
 using ctf::TranslationGrammar;
 using ctf::LexicalAnalyzer;
+using ctf::InputReader;
 using namespace ctf::literals;
 
 TEST_CASE("LLTranslationControl construction", "[LLTranslationControl]") {
@@ -36,7 +37,8 @@ TEST_CASE("LLTranslationControl run", "[LLTranslationControl]") {
   SECTION("Accept empty string only") {
     TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
     std::stringstream in;
-    a.set_stream(in);
+    InputReader r{in};
+    a.set_reader(r);
     LLTranslationControl ll(a, tg);
     ll.run();
     // only eof

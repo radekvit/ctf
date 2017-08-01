@@ -38,6 +38,10 @@ and outputs.
 class Translation {
  protected:
   /**
+  \brief The input reader and buffer.
+  */
+  InputReader reader_;
+  /**
   \brief Lexical Analyzer ownership.
   */
   std::unique_ptr<LexicalAnalyzer> lexer_;
@@ -118,12 +122,14 @@ class Translation {
   \param[in] input Input stream.
   \param[out] output Output stream.
   */
-  void run(std::istream &input, std::ostream &output) {
+  void run(std::istream &input, std::ostream &output, const string &inputName = "") {
     // extra output buffer
     std::stringstream ss;
     // setup
     translationControl_.reset();
-    lexicalAnalyzer_.set_stream(input);
+    lexicalAnalyzer_.reset();
+    lexicalAnalyzer_.set_reader(reader_);
+    reader_.set_stream(input, inputName);
     outputGenerator_.set_stream(ss);
 
     // lexical analysis, syntax analysis and translation

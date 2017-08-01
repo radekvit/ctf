@@ -165,7 +165,7 @@ class InputReader {
     */
     Location next_location(int c, const Location &location) const noexcept {
       if (c == '\n') {
-        return {location.row + 1, location.col, location.fileName};
+        return {location.row + 1, 1, location.fileName};
       } else {
         return {location.row, location.col + 1, location.fileName};
       }
@@ -183,11 +183,14 @@ class InputReader {
 
  public:
   InputReader() = default;
-  InputReader(std::istream &is, const string &streamName) {
+  InputReader(std::istream &is, const string &streamName = "") {
     set_stream(is, streamName);
   }
 
-  void set_stream(std::istream &is, const string &streamName) {
+  std::istream *stream() const { return is_; }
+  const string &stream_name() const noexcept { return streamName_; }
+
+  void set_stream(std::istream &is, const string &streamName = "") {
     is_ = &is;
     streamName_ = streamName;
     inputBuffer_.reset();
@@ -229,10 +232,6 @@ class InputReader {
 
     return c;
   }
-
-  const string &stream_name() const noexcept { return streamName_; }
-
-  std::istream *stream() const { return is_; }
 };
 
 }  // namespace ctf

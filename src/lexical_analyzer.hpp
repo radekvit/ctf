@@ -33,9 +33,9 @@ class LexicalAnalyzer {
   */
   bool errorFlag_ = false;
   /**
-  \brief Input manager.
+  \brief Input manager. The managing object is responsible for setting up the reader object.
   */
-  InputReader &reader_;
+  InputReader *reader_;
   /**
   \brief Current token location.
   */
@@ -44,39 +44,48 @@ class LexicalAnalyzer {
   /**
   \brief Helper method. Sets the current token location if not yet specified.
   */
-  virtual int get() {
+  int get() {
     if (location_ == Location::invalid()) {
-      return reader_.get(location_);
+      return reader_->get(location_);
     }
-    return reader_.get();
+    return reader_->get();
   }
 
-  virtual Token token(const string &name = "", const string &attr - "") const {
+  int unget(size_t num = 1) {
+    return reader_->unget(num);
+  }
+
+  virtual Token token(const string &name = "", const string &attr = "") {
     auto location = location_;
     location_ = Location::invalid();
     return Terminal(name, attr, location);
   }
 
  public:
-  LexicalAnalyzer() = default;
-  LexicalAnalyzer(std::istream &is) : reader_(&is) {}
+  LexicalAnalyzer() : reader_(nullptr) {}
+  LexicalAnalyzer(InputReader &reader) : reader_(&reader) {}
   virtual ~LexicalAnalyzer() = default;
 
   /**
-  \brief Returns true when a stream has been set.
-  \returns True when a stream has been set. False otherwise.
+  \brief Returns true when a reader has been set and the reader has a stream set.
+  \returns True when the lexical analyzer is ready to receive input. False otherwise.
   */
-  virtual bool has_stream() const noexcept {
-    return reader_.stream() != nullptr;
+  bool has_input() const noexcept {
+    return reader_ != nullptr && reader_->stream() != nullptr;
+  }
+  /**
+  \brief Sets the reader.
+  */
+  void set_reader(InputReader &reader) noexcept {
+    reader_ = &reader;
   }
   /**
   \brief Sets the input stream to a given stream.
   \param[in] s Stream to be set.
   */
-  virtual void set_stream(std::istream &s, const string &streamName = "") {
+  virtual void reset() {
     clear_error();
     location_ = Location::invalid();
-    reader_.set_stream(s, streamName);
   }
   /**
   \returns True when an error has been encountered.
@@ -113,7 +122,7 @@ class LexicalAnalyzer {
       name += c;
       c = get();
     }
-    reader_.unget();
+    reader_->unget();
 
     return token(name);
   }

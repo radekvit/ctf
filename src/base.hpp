@@ -13,6 +13,8 @@
 
 namespace ctf {
 
+using Attribute = string;
+
 /**
 \brief Base exception class for project specific exceptions.
 */
@@ -37,6 +39,7 @@ struct Location {
   Location(const Location &) = default;
   Location(Location &&) = default;
   ~Location() = default;
+
   static const Location &invalid() noexcept {
     static const Location ns{0, 0};
     return ns;
@@ -44,6 +47,12 @@ struct Location {
 
   Location &operator=(const Location &) = default;
   Location &operator=(Location &&) = default;
+  friend bool operator==(const Location &lhs, const Location &rhs) {
+    return lhs.row == rhs.row && lhs.col == rhs.col;
+  }
+  friend bool operator!=(const Location &lhs, const Location &rhs) {
+    return !(lhs == rhs);
+  }
 
   string to_string() const {
     if (row == 0) {
