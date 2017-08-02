@@ -122,7 +122,8 @@ class Translation {
   \param[in] input Input stream.
   \param[out] output Output stream.
   */
-  void run(std::istream &input, std::ostream &output, const string &inputName = "") {
+  void run(std::istream &input, std::ostream &output,
+           const string &inputName = "") {
     // extra output buffer
     std::stringstream ss;
     // setup

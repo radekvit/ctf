@@ -4,12 +4,27 @@
 #include <fstream>
 #include <sstream>
 
+using ctf::Token;
 using ctf::Translation;
 using ctf::LexicalAnalyzer;
 using ctf::TranslationGrammar;
 using ctf::OutputGenerator;
 
 using namespace ctf::literals;
+
+class TestLexicalAnalyzer : public ctf::LexicalAnalyzer {
+  using LexicalAnalyzer::LexicalAnalyzer;
+
+  virtual Token get_token() {
+    static char c = '1';
+    Token t = LexicalAnalyzer::get_token();
+    if (t.name() == "i") {
+      t.attribute() = {c};
+      c++;
+    }
+    return t;
+  }
+};
 
 TEST_CASE("Constructing translation", "[Translation]") {
   TranslationGrammar tg{
@@ -50,7 +65,7 @@ TEST_CASE("Running translation", "[Translation]") {
             {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
         },
         "E"_nt};
-    Translation tr(std::make_unique<LexicalAnalyzer>(), "ll", tg,
+    Translation tr(std::make_unique<TestLexicalAnalyzer>(), "ll", tg,
                    std::make_unique<OutputGenerator>());
     std::stringstream expected;
     std::stringstream out;

@@ -33,7 +33,8 @@ class LexicalAnalyzer {
   */
   bool errorFlag_ = false;
   /**
-  \brief Input manager. The managing object is responsible for setting up the reader object.
+  \brief Input manager. The managing object is responsible for setting up the
+  reader object.
   */
   InputReader *reader_;
   /**
@@ -51,9 +52,7 @@ class LexicalAnalyzer {
     return reader_->get();
   }
 
-  int unget(size_t num = 1) {
-    return reader_->unget(num);
-  }
+  int unget(size_t num = 1) { return reader_->unget(num); }
 
   virtual Token token(const string &name = "", const string &attr = "") {
     auto location = location_;
@@ -67,8 +66,10 @@ class LexicalAnalyzer {
   virtual ~LexicalAnalyzer() = default;
 
   /**
-  \brief Returns true when a reader has been set and the reader has a stream set.
-  \returns True when the lexical analyzer is ready to receive input. False otherwise.
+  \brief Returns true when a reader has been set and the reader has a stream
+  set.
+  \returns True when the lexical analyzer is ready to receive input. False
+  otherwise.
   */
   bool has_input() const noexcept {
     return reader_ != nullptr && reader_->stream() != nullptr;
@@ -76,9 +77,7 @@ class LexicalAnalyzer {
   /**
   \brief Sets the reader.
   */
-  void set_reader(InputReader &reader) noexcept {
-    reader_ = &reader;
-  }
+  void set_reader(InputReader &reader) noexcept { reader_ = &reader; }
   /**
   \brief Sets the input stream to a given stream.
   \param[in] s Stream to be set.

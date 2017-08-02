@@ -16,7 +16,7 @@ namespace ctf {
 using Attribute = string;
 
 /**
-\brief Base exception class for project specific exceptions.
+\brief Base exception class for ctf specific exceptions.
 */
 class TranslationException : public std::runtime_error {
   using std::runtime_error::runtime_error;
@@ -25,7 +25,8 @@ class TranslationException : public std::runtime_error {
 /**
 \brief POD struct holding location coordinates.
 
-Coordinates start at 1.
+Valid row and col numbers start at 1. Zero value row or col values are equal to
+the invalid() constant.
 **/
 struct Location {
   uint64_t row;
@@ -48,6 +49,10 @@ struct Location {
   Location &operator=(const Location &) = default;
   Location &operator=(Location &&) = default;
   friend bool operator==(const Location &lhs, const Location &rhs) {
+    // Location::invalid comparison
+    if ((lhs.row == 0 || lhs.col == 0) && (rhs.row == 0 || rhs.col == 0))
+      return true;
+    // regular comparison
     return lhs.row == rhs.row && lhs.col == rhs.col;
   }
   friend bool operator!=(const Location &lhs, const Location &rhs) {
