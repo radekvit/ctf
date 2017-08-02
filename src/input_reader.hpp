@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <istream>
 #include "base.hpp"
 
 namespace ctf {
@@ -103,7 +104,7 @@ class InputReader {
     */
     vector<char>::const_iterator line_end(size_t line) const noexcept {
       // no next line info, ends at end of buffer
-      if (line + 1 >= lineStartBuffer_.size()) {
+      if (line == std::numeric_limits<size_t>::max() || line + 1 >= lineStartBuffer_.size()) {
         return charBuffer_.cend();
       }
       // ends at beginning of next line
@@ -174,7 +175,7 @@ class InputReader {
 
     \return A vector of all characters on that row.
     */
-    vector<char> get_line(size_t row) const {
+    string get_line(size_t row) const {
       return {line_begin(row - 1), line_end(row - 1)};
     }
 
@@ -186,7 +187,7 @@ class InputReader {
 
     \return A vector of all characters on the row in location.
     */
-    vector<char> get_line(const Location &location) const {
+    string get_line(const Location &location) const {
       return get_line(location.row);
     }
 
@@ -204,14 +205,18 @@ class InputReader {
     */
     Location unget(const Location &location, size_t rollback = 1) const
         noexcept {
-      size_t index = charBuffer_.size() - rollback;
-      auto it = std::lower_bound(lineStartBuffer_.begin(),
-                                 lineStartBuffer_.end(), index);
-      if (it == lineStartBuffer_.end()) {
+      const auto begin = lineStartBuffer_.begin();
+      // index of rolled back character
+      size_t index = character(location) - rollback - charBuffer_.begin();
+      // underflow check, return first location
+      if (index > (size_t(character(location) - charBuffer_.begin()))) {
         return {location.fileName};
-      } else {
-        return {*it + 1, index - *it + 1, location.fileName};
       }
+      // find first line after the current
+      auto it = std::upper_bound(lineStartBuffer_.begin(),
+                                 lineStartBuffer_.end(), index);
+      --it;
+      return {uint64_t(it - begin) + 1, index - *it + 1, location.fileName};
     }
 
     /**
@@ -326,7 +331,7 @@ class InputReader {
   int unget(size_t rollback = 1) noexcept {
     int c = 0;
     // rollback one more and read
-    currentLocation_ = inputBuffer_.unget(rollback + 1);
+    currentLocation_ = inputBuffer_.unget(currentLocation_, rollback + 1);
     // will always succeed
     inputBuffer_.get(c, currentLocation_);
 
@@ -344,12 +349,17 @@ class InputReader {
   int unget(Location &location, size_t rollback = 1) noexcept {
     int c = 0;
     // rollback one more and read
-    currentLocation_ = inputBuffer_.unget(rollback + 1);
+    currentLocation_ = inputBuffer_.unget(currentLocation_, rollback + 1);
     location = currentLocation_;
     // will always succeed
     inputBuffer_.get(c, currentLocation_);
 
     return c;
+  }
+
+  template<typename... Args>
+  string get_line(Args && ...args) {
+    return inputBuffer_.get_line(std::forward<Args>(args)...);
   }
 };
 

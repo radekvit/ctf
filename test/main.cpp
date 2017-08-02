@@ -24,3 +24,7 @@ std::ostream &operator<<(std::ostream &os, const Symbol &s) {
 
   return os;
 }
+
+std::ostream &operator<<(std::ostream &os, const Location &l) {
+  return os << l.to_string();
+}

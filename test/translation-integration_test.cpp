@@ -46,9 +46,10 @@ TEST_CASE("Constructing translation", "[Translation]") {
   REQUIRE_NOTHROW(Translation(std::make_unique<LexicalAnalyzer>(), *tcp, tg,
                               std::make_unique<OutputGenerator>()));
 
-  REQUIRE_THROWS_AS(Translation(std::make_unique<LexicalAnalyzer>(), "fail, please",
-                                tg, std::make_unique<OutputGenerator>()),
-                    std::invalid_argument &);
+  REQUIRE_THROWS_AS(
+      Translation(std::make_unique<LexicalAnalyzer>(), "fail, please", tg,
+                  std::make_unique<OutputGenerator>()),
+      std::invalid_argument &);
 }
 
 TEST_CASE("Running translation", "[Translation]") {
