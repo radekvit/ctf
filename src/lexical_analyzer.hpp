@@ -27,16 +27,46 @@ Lexical errors are created by creating a token with an unused name. Then,
 attribute should be used as an error message.
 */
 class LexicalAnalyzer {
- protected:
-  /**
-  \brief Error flag.
-  */
-  bool errorFlag_ = false;
+ private:
   /**
   \brief Input manager. The managing object is responsible for setting up the
   reader object.
   */
   InputReader *reader_;
+
+ protected:
+  /**
+  \brief Gets next Token from stream. Sets error flag on error.
+  \returns A token from the input stream.
+
+  Default implementation; reading a token name until a whitespace or EOF is
+  read.
+  */
+  virtual Token read_token() {
+    string name;
+    // first character
+    int c = get();
+    while (std::isspace(c)) {
+      c = get();
+    }
+    if (c == std::char_traits<char>::eof()) {
+      return Token::eof();
+    }
+
+    while (!isspace(c) && c != std::char_traits<char>::eof()) {
+      name += c;
+      c = get();
+    }
+    reader_->unget();
+
+    return token(name);
+  }
+
+  /**
+  \brief Error flag.
+  */
+  bool errorFlag_ = false;
+
   /**
   \brief Current token location.
   */
@@ -54,10 +84,11 @@ class LexicalAnalyzer {
 
   int unget(size_t num = 1) { return reader_->unget(num); }
 
-  virtual Token token(const string &name = "", const string &attr = "") {
-    auto location = location_;
-    location_ = Location::invalid();
-    return Terminal(name, attr, location);
+  /**
+  \brief Constructs a terminal symbol and inserts the current symbol location automatically.
+  */
+  virtual Token token(const string &name, const string &attr = "") {
+    return Terminal(name, attr, location_);
   }
 
  public:
@@ -100,30 +131,13 @@ class LexicalAnalyzer {
   */
   virtual string error_message() { return "Something went wrong.\n"; }
   /**
-  \brief Gets next Token from stream. Sets error flag on error.
+  \brief Gets next Token from stream. Sets error flag on error. Resets symbol location.
   \returns A token from the input stream.
-
-  Default implementation; reading a token name until a whitespace or EOF is
-  read.
   */
-  virtual Token get_token() {
-    string name;
-    // first character
-    int c = get();
-    while (std::isspace(c)) {
-      c = get();
-    }
-    if (c == std::char_traits<char>::eof()) {
-      return Token::eof();
-    }
-
-    while (!isspace(c) && c != std::char_traits<char>::eof()) {
-      name += c;
-      c = get();
-    }
-    reader_->unget();
-
-    return token(name);
+  Token get_token() {
+    auto token = read_token();
+    location_ = Location::invalid();
+    return token;
   }
 };
 }  // namespace ctf

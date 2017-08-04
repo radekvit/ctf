@@ -15,9 +15,9 @@ using namespace ctf::literals;
 class TestLexicalAnalyzer : public ctf::LexicalAnalyzer {
   using LexicalAnalyzer::LexicalAnalyzer;
 
-  virtual Token get_token() {
+  virtual Token read_token() override {
     static char c = '1';
-    Token t = LexicalAnalyzer::get_token();
+    Token t = LexicalAnalyzer::read_token();
     if (t.name() == "i") {
       t.attribute() = {c};
       c++;
