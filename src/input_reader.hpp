@@ -7,8 +7,8 @@
 #define CTF_INPUT_READER_H
 
 #include <algorithm>
-#include <limits>
 #include <istream>
+#include <limits>
 #include "base.hpp"
 
 namespace ctf {
@@ -49,7 +49,7 @@ class InputReader {
     /**
     \brief Returns an iterator to the character in location l.
 
-    \param [in] l The location of the retreived character.
+    \param[in] l The location of the retreived character.
 
     \return A constant iterator to the character.	If the character is not
     in the line, the returned iterator is larger than the line's line_end()
@@ -62,7 +62,7 @@ class InputReader {
     /**
     \brief Transforms Location row to line index.
 
-    \param [in] l The location object used as the source of the returned line
+    \param[in] l The location object used as the source of the returned line
     number.
 
     \return The line number starting from 0.
@@ -71,7 +71,7 @@ class InputReader {
     /**
     \brief Transforms Location col to column index.
 
-    \param [in] l The location object used as the source of the returned line
+    \param[in] l The location object used as the source of the returned line
     number.
 
     \return The column number starting from 0.
@@ -81,7 +81,7 @@ class InputReader {
     /**
     \brief Get a constant iterator to the first character on a line.
 
-    \param [in] line The begin of this line number is returned.
+    \param[in] line The begin of this line number is returned.
 
     \return A const iterator to the first character on the line.
     */
@@ -104,7 +104,8 @@ class InputReader {
     */
     vector<char>::const_iterator line_end(size_t line) const noexcept {
       // no next line info, ends at end of buffer
-      if (line == std::numeric_limits<size_t>::max() || line + 1 >= lineStartBuffer_.size()) {
+      if (line == std::numeric_limits<size_t>::max() ||
+          line + 1 >= lineStartBuffer_.size()) {
         return charBuffer_.cend();
       }
       // ends at beginning of next line
@@ -133,7 +134,7 @@ class InputReader {
     /**
     \brief Appends the character to the end of the buffer.
 
-    \param [in] c The character that is appended.
+    \param[in] c The character that is appended.
     */
     void append(int c) {
       if (c == eof) {
@@ -149,8 +150,8 @@ class InputReader {
     /**
     \brief Reads a character and moves a location to its next position.
 
-    \param [out] c The read character.
-    \param [in,out] location The next location to be read.
+    \param[out] c The read character.
+    \param[in,out] location The next location to be read.
 
     \return True if a character is present in the buffer or is eof. False
     otherwise.
@@ -171,7 +172,7 @@ class InputReader {
     /**
     \brief Returns a line of characters.
 
-    \param [in] row The row to be returned.
+    \param[in] row The row to be returned.
 
     \return A vector of all characters on that row.
     */
@@ -183,7 +184,7 @@ class InputReader {
     \brief Returns a line of characters. The line is extracted from the location
     parameter.
 
-    \param [in] location The location containing the row number.
+    \param[in] location The location containing the row number.
 
     \return A vector of all characters on the row in location.
     */
@@ -195,8 +196,8 @@ class InputReader {
     \brief Returns the location after n-character rollback from a previous
     location.
 
-    \param [in] location The location from which unget is called.
-    \param [in] rollback The number of characters by which the rollback is made.
+    \param[in] location The location from which unget is called.
+    \param[in] rollback The number of characters by which the rollback is made.
 
     \return Location after rollback.
 
@@ -222,8 +223,8 @@ class InputReader {
     /**
     \brief Returns the next location based on the read character.
 
-    \param [in] c The read character.
-    \param [in] location Previous location.
+    \param[in] c The read character.
+    \param[in] location Previous location.
 
     \return The next location after c has been read.
     */
@@ -263,8 +264,8 @@ class InputReader {
   /**
   \brief Constructs InputReader in a valid state.
 
-  \param [in] is The input stream to be used by InputReader.
-  \param [in] streamName The name of the input stream.
+  \param[in] is The input stream to be used by InputReader.
+  \param[in] streamName The name of the input stream.
   */
   InputReader(std::istream &is, const string &streamName = "") {
     set_stream(is, streamName);
@@ -286,8 +287,8 @@ class InputReader {
   /**
   \brief Sets the stream and resets the input buffer.
 
-  \param [in] is The input stream to be used by InputReader.
-  \param [in] streamName The name of the input stream.
+  \param[in] is The input stream to be used by InputReader.
+  \param[in] streamName The name of the input stream.
   */
   void set_stream(std::istream &is, const string &streamName = "") {
     is_ = &is;
@@ -313,7 +314,7 @@ class InputReader {
   /**
   \brief Gets the next character and its location.
 
-  \param [out] location The location of the read character.
+  \param[out] location The location of the read character.
 
   \return The next read character.
   */
@@ -324,7 +325,7 @@ class InputReader {
   /**
   \brief Moves the read head N characters back.
 
-  \param [in] rollback How many characters to roll back.
+  \param[in] rollback How many characters to roll back.
 
   \return The character N positions back.
   */
@@ -341,8 +342,8 @@ class InputReader {
   \brief Moves the read head N characters back and sets the rolled back
   location.
 
-  \param [out] location The location of the read character after rollback.
-  \param [in] rollback How many characters to roll back.
+  \param[out] location The location of the read character after rollback.
+  \param[in] rollback How many characters to roll back.
 
   \return The charater N positions back.
   */
@@ -357,8 +358,8 @@ class InputReader {
     return c;
   }
 
-  template<typename... Args>
-  string get_line(Args && ...args) {
+  template <typename... Args>
+  string get_line(Args &&... args) {
     return inputBuffer_.get_line(std::forward<Args>(args)...);
   }
 };

@@ -13,6 +13,9 @@
 
 namespace ctf {
 
+/**
+\brief Placeholder type for Attribute class.
+*/
 using Attribute = string;
 
 /**
@@ -29,25 +32,64 @@ Valid row and col numbers start at 1. Zero value row or col values are equal to
 the invalid() constant.
 **/
 struct Location {
+  /**
+  \brief Row number. The lowest valid row number is 1.
+  */
   uint64_t row;
+  /**
+  \brief Col number. The lowest valid col number is 1.
+  */
   uint64_t col;
-
+  /**
+  \brief The name of the source of the location.
+  */
   string fileName;
 
+  /**
+  \brief Basic constructor.
+
+  \param[in] _row The row of the created object.
+  \param[in] _col The col of the created object.
+  \param[in] _fileName The name of the source file.
+  */
   Location(uint64_t _row, uint64_t _col, string _fileName = "")
-      : row(_row), col(_col), fileName(_fileName) {}
+      : row(_row), col(_col), fileName(_fileName) {
+    if (row == 0 || col == 0) {
+      throw std::invalid_argument(
+          "ctf::Location constructed with row or col with value 0.");
+    }
+  }
+  /**
+  \brief Implicit first location constructor.
+
+  \param[in] _fileName The name of the source file.
+  */
   Location(string _fileName = "") : row(1), col(1), fileName(_fileName) {}
   Location(const Location &) = default;
   Location(Location &&) = default;
   ~Location() = default;
 
+  /**
+  \brief Static constant invalid location object.
+
+  \return A const reference to the single invalid Location object.
+  */
   static const Location &invalid() noexcept {
-    static const Location ns{0, 0};
+    static const Location ns{false};
     return ns;
   }
 
   Location &operator=(const Location &) = default;
   Location &operator=(Location &&) = default;
+  /**
+  \brief Compares two Location objects by row and col numbers.
+
+  \param[in] lhs The left-hand side Location.
+  \param[in] rhs The right-hand side Location.
+
+  \return True if both are invalid or when both have the same row and col. False
+  otherwise.
+  */
   friend bool operator==(const Location &lhs, const Location &rhs) {
     // Location::invalid comparison
     if ((lhs.row == 0 || lhs.col == 0) && (rhs.row == 0 || rhs.col == 0))
@@ -55,20 +97,41 @@ struct Location {
     // regular comparison
     return lhs.row == rhs.row && lhs.col == rhs.col;
   }
+  /**
+  \brief Compares two Location objects by row and col numbers.
+
+  \param[in] lhs The left-hand side Location.
+  \param[in] rhs The right-hand side Location.
+
+  \return False if both are invalid or when both have the same row and col. True
+  otherwise.
+  */
   friend bool operator!=(const Location &lhs, const Location &rhs) {
     return !(lhs == rhs);
   }
 
+  /**
+  \brief Creates a string from this Location.
+
+  \return A string in the format "fileName:row:col"
+  */
   string to_string() const {
-    if (row == 0) {
+    if (*this == Location::invalid()) {
       return "";
     }
     return fileName + ":" + std::to_string(row) + ":" + std::to_string(col);
   }
+
+ private:
+  /**
+  \brief Constructs an invalid Location.
+  */
+  Location(bool) : row(0), col(0) {}
 };
 
 /**
-\brief Symbol, may represent a Terminal, Nonterminal or end of input.
+\brief A single symbol in the translation process. May represent a Terminal,
+Nonterminal or end of input.
 */
 class Symbol {
  public:

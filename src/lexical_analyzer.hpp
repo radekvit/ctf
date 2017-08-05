@@ -85,7 +85,8 @@ class LexicalAnalyzer {
   int unget(size_t num = 1) { return reader_->unget(num); }
 
   /**
-  \brief Constructs a terminal symbol and inserts the current symbol location automatically.
+  \brief Constructs a terminal symbol and inserts the current symbol location
+  automatically.
   */
   virtual Token token(const string &name, const string &attr = "") {
     return Terminal(name, attr, location_);
@@ -131,7 +132,8 @@ class LexicalAnalyzer {
   */
   virtual string error_message() { return "Something went wrong.\n"; }
   /**
-  \brief Gets next Token from stream. Sets error flag on error. Resets symbol location.
+  \brief Gets next Token from stream. Sets error flag on error. Resets symbol
+  location.
   \returns A token from the input stream.
   */
   Token get_token() {
