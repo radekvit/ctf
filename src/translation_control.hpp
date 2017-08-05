@@ -3,8 +3,8 @@
 \brief Defines class TranslationControl and its methods.
 \author Radek Vít
 */
-#ifndef CTF_TRANSLATION_CONTROL
-#define CTF_TRANSLATION_CONTROL
+#ifndef CTF_TRANSLATION_CONTROL_H
+#define CTF_TRANSLATION_CONTROL_H
 
 #include "lexical_analyzer.hpp"
 #include "ll_table.hpp"

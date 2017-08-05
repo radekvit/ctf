@@ -3,8 +3,8 @@
 \brief Defines class LexicalAnalyzer used to supply tokens from input stream.
 \author Radek Vít
 */
-#ifndef CTF_LEXICAL_ANALYZER
-#define CTF_LEXICAL_ANALYZER
+#ifndef CTF_LEXICAL_ANALYZER_H
+#define CTF_LEXICAL_ANALYZER_H
 
 #include "base.hpp"
 #include "input_reader.hpp"

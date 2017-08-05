@@ -3,8 +3,8 @@
 \brief Defines class LLTable and its methods.
 \author Radek Vít
 */
-#ifndef CTF_LL_H
-#define CTF_LL_H
+#ifndef CTF_LL_TABLE_H
+#define CTF_LL_TABLE_H
 
 #include <stdexcept>
 #include <utility>

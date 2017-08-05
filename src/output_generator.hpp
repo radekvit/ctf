@@ -3,8 +3,8 @@
 \brief Defines class OutputGenerator, which transforms output tokens to output
 and outputs it into a stream.
 */
-#ifndef CTF_OUTPUT
-#define CTF_OUTPUT
+#ifndef CTF_OUTPUT_GENERATOR_H
+#define CTF_OUTPUT_GENERATOR_H
 
 #include <ostream>
 

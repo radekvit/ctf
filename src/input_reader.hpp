@@ -3,8 +3,8 @@
 \brief Contains the InputReader class.
 \author Radek Vit
 */
-#ifndef CTF_LINE_BUFFER_H_
-#define CTF_LINE_BUFFER_H_
+#ifndef CTF_INPUT_READER_H
+#define CTF_INPUT_READER_H
 
 #include <algorithm>
 #include <limits>

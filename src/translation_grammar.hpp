@@ -4,8 +4,8 @@
 methods.
 \author Radek Vít
 */
-#ifndef CTF_TG_H
-#define CTF_TG_H
+#ifndef CTF_TRANSLATION_GRAMMAR_H
+#define CTF_TRANSLATION_GRAMMAR_H
 
 #include <functional>
 #include <ostream>

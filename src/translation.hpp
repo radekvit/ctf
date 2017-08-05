@@ -3,8 +3,8 @@
 \brief Defines class Translation and its methods.
 \author Radek Vít
 */
-#ifndef CTF_TRANSLATION
-#define CTF_TRANSLATION
+#ifndef CTF_TRANSLATION_H
+#define CTF_TRANSLATION_H
 
 #include <istream>
 #include <memory>

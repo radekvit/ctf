@@ -3,8 +3,8 @@
 \brief Defines class LLTranslationControl and defines its methods.
 \author Radek Vít
 */
-#ifndef CTF_LL_TRANSLATION_CONTROL
-#define CTF_LL_TRANSLATION_CONTROL
+#ifndef CTF_LL_TRANSLATION_CONTROL_H
+#define CTF_LL_TRANSLATION_CONTROL_H
 
 #include "translation_control.hpp"
 
