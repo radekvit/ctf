@@ -43,7 +43,7 @@ class LLTranslationControl : public TranslationControl {
   string errorString_;
 
   /**
-  Creates all sets and creates a new LL table.
+  Creates all predictive sets and creates a new LL table.
   */
   void create_ll_table() {
     create_empty();
@@ -56,6 +56,9 @@ class LLTranslationControl : public TranslationControl {
 
   /**
   \brief Creates Empty set for each nonterminal.
+
+  Empty is true if a series of productions from the nonterminal can result in an
+  empty string.
   */
   void create_empty() {
     const TranslationGrammar &tg = *translationGrammar_;
@@ -97,6 +100,9 @@ class LLTranslationControl : public TranslationControl {
   }
   /**
   \brief Creates First set for each nonterminal.
+
+  First contains all characters that can be at the first position of any string
+  derived from this nonterminal.
   */
   void create_first() {
     const TranslationGrammar &tg = *translationGrammar_;
@@ -133,6 +139,9 @@ class LLTranslationControl : public TranslationControl {
   }
   /**
   \brief Creates Follow set for each nonterminal.
+
+  Follow contains all characters that may follow that nonterminal in a
+  sentential form from the starting nonterminal.
   */
   void create_follow() {
     const TranslationGrammar &tg = *translationGrammar_;
@@ -191,6 +200,9 @@ class LLTranslationControl : public TranslationControl {
   }
   /**
   \brief Creates Predict set for each nonterminal.
+
+  Predict contains all Terminals that may be the first terminal read in a
+  sentential form from that nonterminal.
   */
   void create_predict() {
     predict_.clear();
@@ -228,10 +240,13 @@ class LLTranslationControl : public TranslationControl {
 
   /**
   \brief Creates iterator attribute actions for incoming terminals.
+
   \param[in] obegin Iterator to the first Symbol of the output of the applied
   Rule.
   \param[in] targets Indices of the target actions for all input terminals.
   \param[out] attributeActions Targets to append incoming terminal's attributes.
+
+  The added iterators point to input terminal attribute targets.
   */
   void create_attibute_actions(
       tstack<Symbol>::iterator obegin, const vector<set<size_t>> &targets,
@@ -261,6 +276,7 @@ class LLTranslationControl : public TranslationControl {
   /**
   \brief Constructs LLTranslationControl with a LexicalAnalyzer and
   TranslationGrammar.
+
   \param[in] la A reference to the lexical analyzer to be used to get tokens.
   \param[in] tg The translation grammar for this translation.
   */
@@ -271,6 +287,7 @@ class LLTranslationControl : public TranslationControl {
 
   /**
   \brief Sets translation grammar.
+
   \param[in] tg The translation grammar for this translation.
   */
   virtual void set_grammar(const TranslationGrammar &tg) {
@@ -301,6 +318,7 @@ class LLTranslationControl : public TranslationControl {
     output_.push(translationGrammar_->starting_symbol());
 
     // iterator to the first symbol of the last inserted string
+    // used to speed up output_ linear search
     auto obegin = output_.begin();
 
     while (1) {
@@ -350,6 +368,13 @@ class LLTranslationControl : public TranslationControl {
     }
   }
 
+  /**
+  \brief Adds error message caused by a top symbol and incoming token
+  combination.
+
+  \param[in] top The current top symbol.
+  \param[in] token The incoming token.
+  */
   virtual void add_error(const Symbol &top, const Symbol &token) {
     using Type = Symbol::Type;
 
@@ -375,6 +400,11 @@ class LLTranslationControl : public TranslationControl {
     errorString_ += "\n";
   }
 
+  /**
+  \brief Get error message.
+
+  \returns The error message string.
+  */
   string error_message() { return errorString_; }
 };
 }  // namespace ctf

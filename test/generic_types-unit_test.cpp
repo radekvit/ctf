@@ -22,6 +22,7 @@ TEST_CASE("tstack construction", "[tstack]") {
 
 TEST_CASE("tstack basic", "[tstack]") {
   tstack<char> stack{'a', 'b', 'c', 'd', 'e'};
+  tstack<std::string> stack2;
 
   SECTION("Push, pop, top, empty.") {
     REQUIRE(stack.empty() == false);
@@ -40,6 +41,9 @@ TEST_CASE("tstack basic", "[tstack]") {
     REQUIRE(stack.size() == 1);
     REQUIRE(stack.pop() == 'e');
     REQUIRE(stack.empty() == true);
+
+    // interface testing; emplace push
+    stack2.push(156, 'x');
   }
 
   SECTION("Clearing stack makes it empty") {

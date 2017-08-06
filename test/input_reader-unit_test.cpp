@@ -42,7 +42,7 @@ TEST_CASE("Get line", "[InputReader]") {
   std::string in = "ab\ndef\n\nx";
   s << in;
   // including EOF
-  for (size_t i = 0; i < in.size(); ++i) {
+  for (size_t i = 0; i <= in.size(); ++i) {
     r.get();
   }
   REQUIRE(r.get() == std::char_traits<char>::eof());
@@ -50,6 +50,20 @@ TEST_CASE("Get line", "[InputReader]") {
   REQUIRE(r.get_line(Location(3, 54)) == "\n");
   REQUIRE(r.get_line(0) == "");
   REQUIRE(r.get_line(55) == "");
+}
+
+TEST_CASE("Get all", "[InputReader]") {
+  std::stringstream s;
+  InputReader r{s};
+  Location l{};
+  std::string in = "ab\ndef\n\nx";
+  s << in;
+  // including EOF
+  for (size_t i = 0; i <= in.size(); ++i) {
+    r.get();
+  }
+
+  REQUIRE(r.get_all() == in);
 }
 
 TEST_CASE("Unget", "[InputReader]") {

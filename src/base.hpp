@@ -72,7 +72,7 @@ struct Location {
   /**
   \brief Static constant invalid location object.
 
-  \return A const reference to the single invalid Location object.
+  \returns A const reference to the single invalid Location object.
   */
   static const Location &invalid() noexcept {
     static const Location ns{false};
@@ -87,7 +87,8 @@ struct Location {
   \param[in] lhs The left-hand side Location.
   \param[in] rhs The right-hand side Location.
 
-  \return True if both are invalid or when both have the same row and col. False
+  \returns True if both are invalid or when both have the same row and col.
+  False
   otherwise.
   */
   friend bool operator==(const Location &lhs, const Location &rhs) {
@@ -103,7 +104,8 @@ struct Location {
   \param[in] lhs The left-hand side Location.
   \param[in] rhs The right-hand side Location.
 
-  \return False if both are invalid or when both have the same row and col. True
+  \returns False if both are invalid or when both have the same row and col.
+  True
   otherwise.
   */
   friend bool operator!=(const Location &lhs, const Location &rhs) {
@@ -113,7 +115,7 @@ struct Location {
   /**
   \brief Creates a string from this Location.
 
-  \return A string in the format "fileName:row:col"
+  \returns A string in the format "fileName:row:col"
   */
   string to_string() const {
     if (*this == Location::invalid()) {
@@ -156,7 +158,7 @@ class Symbol {
     */
     EOI,
     /**
-    \brief Denotes a symbol with special meaning for the translation control or
+    \brief Denotes a symbol with special meaning for translation control or
     output generator.
     */
     SPECIAL,

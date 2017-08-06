@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 
-using ctf::Token;
+using ctf::Symbol;
 using ctf::Translation;
 using ctf::LexicalAnalyzer;
 using ctf::TranslationGrammar;
@@ -15,9 +15,9 @@ using namespace ctf::literals;
 class TestLexicalAnalyzer : public ctf::LexicalAnalyzer {
   using LexicalAnalyzer::LexicalAnalyzer;
 
-  virtual Token read_token() override {
+  virtual Symbol read_token() override {
     static char c = '1';
-    Token t = LexicalAnalyzer::read_token();
+    Symbol t = LexicalAnalyzer::read_token();
     if (t.name() == "i") {
       t.attribute() = {c};
       c++;

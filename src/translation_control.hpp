@@ -52,19 +52,31 @@ class TranslationControl {
   /**
   \brief Resets translation state.
   */
-  void reset() noexcept { clear_error(); }
+  virtual void reset() noexcept {
+    clear_error();
+    input_.clear();
+    output_.clear();
+  }
+  /**
+  \brief Get the error flag.
+
+  \returns The value of the error flag.
+  */
   virtual bool error() const { return errorFlag_; }
   /**
   \brief Clears the error flag.
   */
   virtual void clear_error() noexcept { errorFlag_ = false; }
   /**
+  \brief Get the error message.
+
   \returns String with appropriate error message. Is only to be called when
   error() is true.
   */
   virtual string error_message() { return "Something went wrong.\n"; }
   /**
   \brief Sets lexical analyzer.
+
   \param[in] la LexicalAnalyzer to be set.
   */
   virtual void set_lexical_analyzer(LexicalAnalyzer &la) {
@@ -72,17 +84,19 @@ class TranslationControl {
   }
   /**
   \brief Sets translation grammar.
+
   \param[in] tg Translation grammar to be set.
   */
   virtual void set_grammar(const TranslationGrammar &tg) {
     translationGrammar_ = &tg;
   }
   /**
-  \brief Runs translation.
+  \brief Runs translation. Translation output is stored in output_.
   */
   virtual void run() = 0;
   /**
   \brief Returns a constant reference to output symbols.
+
   \returns All output symbols.
   */
   virtual const tstack<Symbol> &output() const noexcept { return output_; }

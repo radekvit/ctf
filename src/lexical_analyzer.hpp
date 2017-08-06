@@ -15,13 +15,8 @@
 
 namespace ctf {
 /**
-\brief Alias for Symbol. Token and Symbol are interchangable.
-*/
-using Token = Symbol;
-
-/**
 \brief Extracts tokens from input stream. Tokens can be Symbols of any type,
-type is to be ignored. Abstract base class.
+type is to be ignored unless it is EOF. Abstract base class.
 
 Lexical errors are created by creating a token with an unused name. Then,
 attribute should be used as an error message.
@@ -42,7 +37,7 @@ class LexicalAnalyzer {
   Default implementation; reading a token name until a whitespace or EOF is
   read.
   */
-  virtual Token read_token() {
+  virtual Symbol read_token() {
     string name;
     // first character
     int c = get();
@@ -50,7 +45,7 @@ class LexicalAnalyzer {
       c = get();
     }
     if (c == std::char_traits<char>::eof()) {
-      return Token::eof();
+      return Symbol::eof();
     }
 
     while (!isspace(c) && c != std::char_traits<char>::eof()) {
@@ -73,7 +68,10 @@ class LexicalAnalyzer {
   Location location_ = Location::invalid();
 
   /**
-  \brief Helper method. Sets the current token location if not yet specified.
+  \brief Sets the current token location if not yet specified and reads a
+  character.
+
+  \returns The int value of the read character.
   */
   int get() {
     if (location_ == Location::invalid()) {
@@ -82,17 +80,33 @@ class LexicalAnalyzer {
     return reader_->get();
   }
 
+  /**
+  \brief Rolls back input.
+
+  \param[in] num How many positions to roll back.
+
+  \returns The integer value of the character num positions back.
+  */
   int unget(size_t num = 1) { return reader_->unget(num); }
 
   /**
   \brief Constructs a terminal symbol and inserts the current symbol location
   automatically.
+
+  \param[in] name The name of the created Terminal
+  \param[in] attr The attribute of the created Terminal
+
+  \returns A terminal Symbol with the current stored location_.
   */
-  virtual Token token(const string &name, const string &attr = "") {
+  virtual Symbol token(const string &name, const string &attr = "") {
     return Terminal(name, attr, location_);
   }
 
  public:
+  /**
+  \brief The implicit constructor. The lexical analyzer is in inoperable state,
+  an input reader must be set before it is.
+  */
   LexicalAnalyzer() : reader_(nullptr) {}
   LexicalAnalyzer(InputReader &reader) : reader_(&reader) {}
   virtual ~LexicalAnalyzer() = default;
@@ -108,10 +122,17 @@ class LexicalAnalyzer {
   }
   /**
   \brief Sets the reader.
+
+  \param[in] reader The reader to be assigned.
   */
   void set_reader(InputReader &reader) noexcept { reader_ = &reader; }
   /**
+  \brief Removes the assigned reader.
+  */
+  void remove_reader() noexcept { reader_ = nullptr; }
+  /**
   \brief Sets the input stream to a given stream.
+
   \param[in] s Stream to be set.
   */
   virtual void reset() {
@@ -119,6 +140,8 @@ class LexicalAnalyzer {
     location_ = Location::invalid();
   }
   /**
+  \brief Get the error flag.
+
   \returns True when an error has been encountered.
   */
   virtual bool error() noexcept { return errorFlag_; }
@@ -127,16 +150,17 @@ class LexicalAnalyzer {
   */
   virtual void clear_error() noexcept { errorFlag_ = false; }
   /**
-  \returns String with appropriate error message. Is only to be called when
-  error() is true.
+  \brief Get the set error message.
+
+  \returns String with an error message.
   */
   virtual string error_message() { return "Something went wrong.\n"; }
   /**
-  \brief Gets next Token from stream. Sets error flag on error. Resets symbol
-  location.
+  \brief Gets next Token from stream and resets symbol location.
+
   \returns A token from the input stream.
   */
-  Token get_token() {
+  Symbol get_token() {
     auto token = read_token();
     location_ = Location::invalid();
     return token;

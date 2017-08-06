@@ -101,6 +101,7 @@ class TranslationGrammar {
    public:
     /**
     \brief Constructs a rule.
+
     \param[in] nonterminal Starting symbol.
     \param[in] input Vector of input symbols. The nonterminals must match output
     in their count and order.
@@ -147,6 +148,7 @@ class TranslationGrammar {
     /**
     \brief Constructs a rule with same input and output with specified attribute
     actions.
+
     \param[in] nonterminal Starting symbol.
     \param[in] both Vector of input symbols and at the same time output symbols.
 
@@ -182,6 +184,7 @@ class TranslationGrammar {
     \name Comparison operators
     \brief Lexicographic comparison of the three elements of Rules. Nonterminals
     have the highest priority, then input.
+
     \returns True if the comparison is true. False otherwise.
     */
     ///@{
@@ -244,19 +247,21 @@ class TranslationGrammar {
   /**
   \brief Constructs a TranslationGrammar, takes terminals and nonterminals from
   the rules' inputs and starting symbol.
+
   \param[in] rules A vector of rules. Duplicates will be erased, even with
   different atttribute actions.
   \param[in] starting_symbol The starting symbol.
   */
   TranslationGrammar(const vector<Rule> &rules, const Symbol &starting_symbol)
       : rules_(rules), starting_symbol_(starting_symbol) {
-    // sort(rules_.begin(), rules_.end());
-    /* add nonterminals and terminals */
+    // the starting symbol must be a nonterminal
     if (starting_symbol_.type() != Symbol::Type::NONTERMINAL)
       throw std::invalid_argument(
           "Starting symbol is not a nonterminal when constructing "
           "TranslationGrammar.");
     nonterminals_.push_back(starting_symbol_);
+
+    // filling the terminal and nonterminal sets
     for (auto &r : rules_) {
       nonterminals_.push_back(r.nonterminal());
       for (auto &s : r.input()) {
@@ -278,6 +283,7 @@ class TranslationGrammar {
   }
   /**
   \brief Constructs a TranslationGrammar.
+
   \param[in] terminals A vector of all terminals. Duplicates will be erased.
   \param[in] nonterminals A vector of all nonterminals. Duplicates will be
   erased.
@@ -296,7 +302,7 @@ class TranslationGrammar {
         starting_symbol_(starting_symbol) {
     make_set(terminals_);
     make_set(nonterminals_);
-    // sort(rules_.begin(), rules_.end());
+
     for (auto &t : terminals_) {
       if (t == Symbol::eof())
         throw std::invalid_argument(
@@ -306,12 +312,14 @@ class TranslationGrammar {
             "Symbol with type other than TERMINAL in terminals when "
             "constructing TranslationGrammar.");
     }
+
     for (auto &nt : nonterminals_) {
       if (nt.type() != Symbol::Type::NONTERMINAL)
         throw std::invalid_argument(
             "Symbol with type other than NONTERMINAL in nonterminals when "
             "constructing TranslationGrammar.");
     }
+
     if (starting_symbol_.type() != Symbol::Type::NONTERMINAL)
       throw std::invalid_argument(
           "Starting symbol is not a nonterminal when constructing "
@@ -320,11 +328,13 @@ class TranslationGrammar {
       throw std::invalid_argument(
           "Starting symbol is not in nonterminals when constructing "
           "TranslationGrammar.");
+
     for (auto &r : rules_) {
       if (!is_in(nonterminals_, r.nonterminal()))
         throw std::invalid_argument("Rule with production from nonterminal " +
                                     r.nonterminal().name() +
                                     ", no such nonterminal.");
+
       for (auto &s : r.input()) {
         switch (s.type()) {
           case Symbol::Type::TERMINAL:
@@ -369,7 +379,9 @@ class TranslationGrammar {
 
   /**
   \brief Returns a nonterminal's index.
+
   \param[in] nt Nonterminal Symbol to be searched.
+
   \returns The index of the nonterminal.
 
   Undefined behavior if the nonterminal is not in nonterminals_.
@@ -380,7 +392,9 @@ class TranslationGrammar {
   }
   /**
   \brief Returns a terminal's index.
+
   \param[in] t Terminal Symbol to be searched.
+
   \returns The index of the terminal.
 
   Undefined behavior if the terminal in not in terminals_.

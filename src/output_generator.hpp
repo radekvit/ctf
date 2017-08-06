@@ -31,15 +31,19 @@ class OutputGenerator {
   virtual ~OutputGenerator() = default;
   /**
   \brief Returns true if an output stream has been set.
+
   \returns True if an output stream has been set. False otherwise.
   */
   virtual bool has_stream() const { return os_ != nullptr; }
   /**
   \brief Sets the output stream.
+
   \param[in] o Output stream.
   */
   virtual void set_stream(std::ostream &o) noexcept { os_ = &o; }
   /**
+  \brief Get the error flag.
+
   \returns True when an error has been encountered.
   */
   virtual bool error() noexcept { return errorFlag_; }
@@ -48,12 +52,14 @@ class OutputGenerator {
   */
   virtual void clear_error() noexcept { errorFlag_ = false; }
   /**
-  \returns String with appropriate error message. Is only to be called when
-  error() is true.
+  \brief Get the error message.
+
+  \returns The error message string.
   */
   virtual string error_message() { return "Something went wrong.\n"; }
   /**
   \brief Outputs a token to the given stream.
+
   \param[in] tokens Symbols to be output.
 
   The default output implementation.

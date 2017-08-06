@@ -51,7 +51,7 @@ class InputReader {
 
     \param[in] l The location of the retreived character.
 
-    \return A constant iterator to the character.	If the character is not
+    \returns A constant iterator to the character.	If the character is not
     in the line, the returned iterator is larger than the line's line_end()
     iterator.
     */
@@ -65,7 +65,7 @@ class InputReader {
     \param[in] l The location object used as the source of the returned line
     number.
 
-    \return The line number starting from 0.
+    \returns The line number starting from 0.
     */
     size_t line(const Location &l) const noexcept { return l.row - 1; }
     /**
@@ -74,7 +74,7 @@ class InputReader {
     \param[in] l The location object used as the source of the returned line
     number.
 
-    \return The column number starting from 0.
+    \returns The column number starting from 0.
     */
     size_t col(const Location &l) const noexcept { return l.col - 1; }
 
@@ -83,7 +83,7 @@ class InputReader {
 
     \param[in] line The begin of this line number is returned.
 
-    \return A const iterator to the first character on the line.
+    \returns A const iterator to the first character on the line.
     */
     vector<char>::const_iterator line_begin(size_t line) const noexcept {
       // line not read yet, begins at end
@@ -100,7 +100,7 @@ class InputReader {
 
     \param[in] line The end of this line is returned.
 
-    \return A const iterator to the first character beyond the line.
+    \returns A const iterator to the first character beyond the line.
     */
     vector<char>::const_iterator line_end(size_t line) const noexcept {
       // no next line info, ends at end of buffer
@@ -153,7 +153,7 @@ class InputReader {
     \param[out] c The read character.
     \param[in,out] location The next location to be read.
 
-    \return True if a character is present in the buffer or is eof. False
+    \returns True if a character is present in the buffer or is eof. False
     otherwise.
     */
     bool get(int &c, Location &location) const noexcept {
@@ -174,7 +174,7 @@ class InputReader {
 
     \param[in] row The row to be returned.
 
-    \return A vector of all characters on that row.
+    \returns A vector of all characters on that row.
     */
     string get_line(size_t row) const {
       return {line_begin(row - 1), line_end(row - 1)};
@@ -186,12 +186,19 @@ class InputReader {
 
     \param[in] location The location containing the row number.
 
-    \return A vector of all characters on the row in location.
+    \returns A vector of all characters on the row in location.
     */
     string get_line(const Location &location) const {
       return get_line(location.row);
     }
+    /**
+    \brief Get the whole input as a string.
 
+    \returns A string containing all read characters.
+    */
+    string get_all() const {
+      return transform<vector<char>, string>(charBuffer_);
+    }
     /**
     \brief Returns the location after n-character rollback from a previous
     location.
@@ -199,7 +206,7 @@ class InputReader {
     \param[in] location The location from which unget is called.
     \param[in] rollback The number of characters by which the rollback is made.
 
-    \return Location after rollback.
+    \returns Location after rollback.
 
     If the rollback is more characters than has been read, the location of the
     first character in the buffer is returned.
@@ -226,7 +233,7 @@ class InputReader {
     \param[in] c The read character.
     \param[in] location Previous location.
 
-    \return The next location after c has been read.
+    \returns The next location after c has been read.
     */
     Location next_location(int c, const Location &location) const noexcept {
       if (c == eof) {
@@ -274,13 +281,13 @@ class InputReader {
   /**
   \brief Returns a pointer to the assigned stream.
 
-  \return The pointer to the assigned stream.
+  \returns The pointer to the assigned stream.
   */
   std::istream *stream() const { return is_; }
   /**
   \brief Returns the assigned stream name.
 
-  \return The assigned stream name.
+  \returns The assigned stream name.
   */
   const string &stream_name() const noexcept { return streamName_; }
 
@@ -299,7 +306,7 @@ class InputReader {
   /**
   \brief Gets the next character.
 
-  \return The next read character.
+  \returns The next read character.
   */
   int get() {
     int c = 0;
@@ -316,7 +323,7 @@ class InputReader {
 
   \param[out] location The location of the read character.
 
-  \return The next read character.
+  \returns The next read character.
   */
   int get(Location &location) {
     location = currentLocation_;
@@ -327,7 +334,7 @@ class InputReader {
 
   \param[in] rollback How many characters to roll back.
 
-  \return The character N positions back.
+  \returns The character N positions back.
   */
   int unget(size_t rollback = 1) noexcept {
     int c = 0;
@@ -345,7 +352,7 @@ class InputReader {
   \param[out] location The location of the read character after rollback.
   \param[in] rollback How many characters to roll back.
 
-  \return The charater N positions back.
+  \returns The charater N positions back.
   */
   int unget(Location &location, size_t rollback = 1) noexcept {
     int c = 0;
@@ -358,10 +365,24 @@ class InputReader {
     return c;
   }
 
+  /**
+  \brief Obtain a line from the input.
+
+  \param[in] args Arguments for InputBuffer::get_line
+
+  \returns A string containing all characters on that line.
+  */
   template <typename... Args>
-  string get_line(Args &&... args) {
+  string get_line(Args &&... args) const {
     return inputBuffer_.get_line(std::forward<Args>(args)...);
   }
+
+  /**
+  \brief Get the whole input as a string.
+
+  \returns A string containing all read characters.
+  */
+  string get_all() const { return inputBuffer_.get_all(); }
 };
 
 }  // namespace ctf

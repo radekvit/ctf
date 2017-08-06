@@ -64,6 +64,13 @@ class tstack {
   */
   tstack() = default;
   /**
+  \brief Creates tstack from initializer list.
+
+  \param[in] ilist Initializer list containing all elements. The first element
+  is at top of the stack.
+  */
+  tstack(std::initializer_list<T> ilist) : list_(ilist) {}
+  /**
   \brief Creates tstack. All constructor variants of std::list are applicable.
   \param[in] args Arguments sent to the std::list constructor.
   */
@@ -86,14 +93,12 @@ class tstack {
   void clear() noexcept { list_.clear(); }
   /**
   \brief Pushes an element to the tstack.
-  \param[in] t A const reference to the element to be pushed to tstack.
+  \param[in] args Arguments for the construction of T.
   */
-  void push(const T &t) { list_.emplace_front(t); }
-  /**
-  \brief Pushes an element to the tstack.
-  \param[in] t An rvalue reference to the element to be pushed to tstack.
-  */
-  void push(const T &&t) { list_.emplace_front(t); }
+  template <typename... Args>
+  void push(Args &&... args) {
+    list_.emplace_front(std::forward<Args>(args)...);
+  }
   /**
   \brief Get a reference to the top element of the tstack.
   \returns A reference to the top element of the tstack.
@@ -438,6 +443,7 @@ class reverser {
   reverser() = delete;
   /**
   \brief Constructs a reverser.
+
   \param[in] _t Container that is to be reversed.
   */
   reverser(T &_t) : ref(_t) {}
@@ -462,6 +468,7 @@ class const_reverser {
   const_reverser() = delete;
   /**
   \brief Constructs a const_reverser.
+
   \param[in] _t Container to be reversed.
   */
   const_reverser(const T &_t) : ref(_t) {}
@@ -475,7 +482,9 @@ class const_reverser {
 
 /**
 \brief Reverses a container.
+
 \param[in] t Container to be reversed.
+
 \returns Container reversing adapter.
 */
 template <class T>
@@ -484,7 +493,9 @@ impl::reverser<T> reverse(T &t) {
 }
 /**
 \brief Reverses a const container.
+
 \param[in] t Container to be reversed.
+
 \returns Container reversing adapter.
 */
 template <class T>
@@ -494,7 +505,9 @@ const impl::const_reverser<T> reverse(const T &t) {
 
 /**
 \brief Constructs STL from different STL using iterators.
+
 \param[in] it Container from which the target container is constructed.
+
 \returns A container with all elements of the first container.
 
 The source container must provide begin() and end() operations and the target
