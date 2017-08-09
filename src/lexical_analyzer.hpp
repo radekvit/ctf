@@ -58,7 +58,7 @@ class LexicalAnalyzer {
   }
 
   /**
-  \brief Error flag.
+  \brief Error flag. This flag should be set by subclasses on invalid input.
   */
   bool errorFlag_ = false;
 
@@ -98,7 +98,7 @@ class LexicalAnalyzer {
 
   \returns A terminal Symbol with the current stored location_.
   */
-  virtual Symbol token(const string &name, const string &attr = "") {
+  virtual Symbol token(const string &name, const Attribute &attr = Attribute{}) {
     return Terminal(name, attr, location_);
   }
 
@@ -161,9 +161,8 @@ class LexicalAnalyzer {
   \returns A token from the input stream.
   */
   Symbol get_token() {
-    auto token = read_token();
     location_ = Location::invalid();
-    return token;
+    return read_token();
   }
 };
 }  // namespace ctf

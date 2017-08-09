@@ -20,39 +20,61 @@ We will go through them in order in the following sections.
 
 ## Creating a lexical analyzer
 
-A lexical analyzer is anything which can be called with the signature `Token foo(const std::istream &)`. At the end of input, it should return `Symbol::eof()` and reset itself. When a lexical error is encountered, it should throw `LexicalError`.
-You can make your own callable class, use a lambda expression or a function pointer. As an example, we define a lexical analyzer which creates a token from each nonempty input line. The string before the optional `.` is the token name, and the string behind it is the token's attribute. If the file doesn't end in a newline or if a token's name would be empty, a lexical error is thrown.
+A lexical analyzer transforms the binary input to a string of terminal symbols.
+
+The base class LexicalAnalyzer provides the basic interface and we will create a simple subclass to implement our own simple lexical analyzer.
+
+The two methods we should override in our subclass are `read_token` and `error_message`.
+The first one provides the desired functionality of our class: transforming the input into terminals.
+The second lets us define our own error messages.
+
+In our example lexical analyzer `ExampleLex`, the string before an optional `.` is the token name, and the remaining characters before a newline are token's attribute. If the file doesn't end in a newline or if a token's name would be empty, a lexical error is thrown.
 
 ```c++
 #include <ctf.h>
-#include <string>
 
-Token analyzer(std::istream &is) {
-  string name;
-  string attribute;
+class ExampleLex : public LexicalAnalyzer {
+ protected:
 
-  int c = is.get();
-  if (c == std::char_traits<char>::eof())
-    return Symbol::eof();
-  if (c == '.')
-    throw LexicalError("Token with empty name.");
-  while (c != '.' && c != '\n') {
-    if (c == std::char_traits<char>::eof())
-      throw LexicalError("Unexpected EOF.");
-    name += string{static_cast<char>(c)};
+  Token read_token(std::istream &is) {
+    string name;
+    Attribute attribute;
+    const int eof = std::char_traits<char>::eof();
 
-    c = is.get();
+    int c = get();
+    if (c == eof)
+      return Symbol::eof();
+    if (c == '.') {
+      errorFlag_ = true;
+      return Symbol::eof();
+    }
+    while (c != '.' && c != '\n') {
+      if (c == eof) {
+        errorFlag_ = true;
+        return Symbol::eof();
+      }
+      name += static_cast<char>(c);
+
+      c = get();
+    }
+    if(c == '.')
+      c = get();
+    while (c != '\n') {
+      if (c == eof)
+        break;
+      attribute += string{static_cast<char>(c)};
+      c = get();
+    }
+    return token(name, attribute);
   }
-  if(c == '.')
-    c = is.get();
-  while (c != '\n') {
-    if (c == std::char_traits<char>::eof())
-      break;
-    attribute += string{static_cast<char>(c)};
-    c = is.get();
+ public:
+  string error_message() {
+    return "Custom error message. A string member variable is usually a good idea.";
   }
-  return Terminal(name, attribute);
-}
+
+  // we will use the parent class' constuctors
+  using LexicalAnalyzer::LexicalAnalyzer;
+};
 ```
 
 ## Defining a translation grammar
@@ -74,12 +96,12 @@ In this example, we define a translation grammar that takes simple infix express
 TranslationGrammar grammar{
   // The vector of rules
   {
-	// this rule has an identical input and output
+	  // this rule has identical input and output
     {"E"_nt, {"T"_nt, "E'"_nt}},
     {"E'"_nt, {}},
     {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
     {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
-	// this rule defines the attribute action for terminal i
+	  // this rule defines the attribute action for terminal i
     {"F"_nt, {"i"_t}, {"i"_t}, {{0}}},
     {"T"_nt, {"F"_nt, "T'"_nt}},
     {"T'"_nt, {}},
@@ -92,21 +114,23 @@ TranslationGrammar grammar{
 
 ## Creating an output generator
 
-The output generator transforms the outgoing tokens to the output string. It can be any callable with the signature `void bar(std::ostream &os, const Symbol &s)`. Semantic checks are made, and on semantic error SemanticError should be thrown.
+The output generator transforms the output terminal and special symbols to text or binary format.
 
-In this example, we accept the output from the translation grammar above and output it in the same way the lexical analyzer reads them. In this example, any identifiers with the name "PHP" are considered a semantic error.
+In this example, we accept the output from the translation grammar above and output it in the same way the lexical analyzer reads them. In this example, any symbols `i` with the attribute `"null"` are considered a semantic error.
 
 ```c++
 #include <ctf.h>
 
-void generator(std::ostream &os, const Symbol &s) {
-  if(s.name() == "i" && s.attribute() == "PHP")
-  throw SemanticError("Identifier with name 'PHP'.");
+class ExampleGnr: public OutputGenerator {
+  void generator(std::ostream &os, const Symbol &s) {
+    if(s.name() == "i" && s.attribute() == "NULL")
+    throw SemanticError("Identifier with name 'PHP'.");
 
-  out << s.name();
-  if (s.attribute() != "")
-    out << '.' << s.attribute();
-  out << '\n';
+    out << s.name();
+    if (s.attribute() != "")
+      out << '.' << s.attribute();
+    out << '\n';
+  }
 }
 ```
 

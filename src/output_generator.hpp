@@ -70,8 +70,18 @@ class OutputGenerator {
       if (t == Symbol::eof())
         return;
       os << t.name();
-      if (t.attribute() != "")
-        os << "." << t.attribute();
+      if (!t.attribute().empty()) {
+        os << ".";
+        auto &type = t.attribute().type();
+        if (type ==  typeid(string))
+            os << t.attribute().get<string>();
+        else if (type == typeid(char))
+            os << t.attribute().get<char>();
+        else if (type == typeid(double))
+            os << t.attribute().get<double>();
+        else if (type == typeid(size_t))
+            os << t.attribute().get<size_t>();
+      }
       os << "\n";
     }
   }

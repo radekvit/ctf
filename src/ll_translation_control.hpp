@@ -336,7 +336,7 @@ class LLTranslationControl : public TranslationControl {
         case Type::TERMINAL:
           if (top == token) {
             for (auto it : attributeActions.pop()) {
-              it->add_attribute(token);
+              it->set_attribute(token);
             }
             input_.pop();
             token = next_token();

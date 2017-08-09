@@ -2,7 +2,7 @@ APPNAME=ctf_test
 INCLUDE=../src
 SRC=.
 CATCH = ../lib/Catch/single_include
-CXXFLAGS += -std=c++14 -Wall -Wextra -pedantic -I. -I $(CATCH) -I $(INCLUDE)
+CXXFLAGS += -std=c++17 -Wall -Wextra -pedantic -I. -I $(CATCH) -I $(INCLUDE)
 OBJ=obj
 $(shell mkdir -p $(OBJ))
 

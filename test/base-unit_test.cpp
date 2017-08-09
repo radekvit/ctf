@@ -7,32 +7,34 @@ TEST_CASE("TranslationException") {
                     ctf::TranslationException &);
   REQUIRE_THROWS_WITH(throw ctf::TranslationException("m"), "m");
 }
+using namespace std::string_literals;
 
 TEST_CASE("Symbol Construction", "[Symbol]") {
   using ctf::Symbol;
-  Symbol s(Symbol::Type::UNKNOWN, "name", "a");
+  Symbol s(Symbol::Type::UNKNOWN, "name", "a"s);
   REQUIRE(s.type() == Symbol::Type::UNKNOWN);
   REQUIRE(s.name() == "name");
-  REQUIRE(s.attribute() == "a");
+  REQUIRE(s.attribute() == "a"s);
 
   REQUIRE_THROWS_AS(s = Symbol(""), std::invalid_argument &);
 
   using namespace ctf::literals;
+  using ctf::Attribute;
 
   s = "ter"_t;
   REQUIRE(s.type() == Symbol::Type::TERMINAL);
   REQUIRE(s.name() == "ter");
-  REQUIRE(s.attribute() == "");
+  REQUIRE(s.attribute().empty());
 
   s = "nter"_nt;
   REQUIRE(s.type() == Symbol::Type::NONTERMINAL);
   REQUIRE(s.name() == "nter");
-  REQUIRE(s.attribute() == "");
+  REQUIRE(s.attribute().empty());
 
   s = "spec"_s;
   REQUIRE(s.type() == Symbol::Type::SPECIAL);
   REQUIRE(s.name() == "spec");
-  REQUIRE(s.attribute() == "");
+  REQUIRE(s.attribute().empty());
 
   s = Symbol::eof();
   REQUIRE(s.type() == Symbol::Type::EOI);

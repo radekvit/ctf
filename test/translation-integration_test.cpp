@@ -19,7 +19,7 @@ class TestLexicalAnalyzer : public ctf::LexicalAnalyzer {
     static char c = '1';
     Symbol t = LexicalAnalyzer::read_token();
     if (t.name() == "i") {
-      t.attribute() = {c};
+      t.attribute() = ctf::string{c};
       c++;
     }
     return t;
