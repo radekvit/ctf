@@ -1,3 +1,4 @@
 *.so
 *.json
 *.o
+.vscode
