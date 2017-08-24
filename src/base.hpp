@@ -34,18 +34,16 @@ class Attribute {
 
   \tparam T The type of stored object.
   */
-  template <typename T>
-  Attribute(const T &arg) {
-    storage_.emplace(arg);
+  template<typename T>
+  Attribute(const T &arg): storage_(arg) {
   }
   /**
   \brief Constructs Attribute from a rvalue reference.
 
   \tparam T The type of stored object.
   */
-  template <typename T>
-  Attribute(T &&arg) {
-    storage_ = arg;
+  template<typename T>
+  Attribute(T &&arg): storage_(arg) {
   }
   /**
   \brief Constructs Attribute by passing constructor arguments to std::any.
@@ -141,7 +139,9 @@ class Attribute {
   /**
   \brief Resets the stored value.
   */
-  void reset() noexcept { storage_.reset(); }
+  void clear() noexcept {
+    storage_.reset();
+  }
   /**
   \brief Staps the contents of an Attribute with another.
 
