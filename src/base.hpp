@@ -6,9 +6,9 @@
 #ifndef CTF_BASE_H
 #define CTF_BASE_H
 
+#include <any>
 #include <ostream>
 #include <stdexcept>
-#include <any>
 
 #include "generic_types.hpp"
 
@@ -23,6 +23,7 @@ class Attribute {
   \brief Stores any value.
   */
   std::any storage_;
+
  public:
   /**
   \brief Default copy constructor.
@@ -33,7 +34,7 @@ class Attribute {
 
   \tparam T The type of stored object.
   */
-  template<typename T>
+  template <typename T>
   Attribute(const T &arg) {
     storage_.emplace(arg);
   }
@@ -42,7 +43,7 @@ class Attribute {
 
   \tparam T The type of stored object.
   */
-  template<typename T>
+  template <typename T>
   Attribute(T &&arg) {
     storage_ = arg;
   }
@@ -51,8 +52,8 @@ class Attribute {
 
   \tparam Args Variadic arguments type to be passed to std::any constuctor.
   */
-  template<typename ...Args>
-  Attribute(Args &&...args): storage_(std::forward(args)...) {}
+  template <typename... Args>
+  Attribute(Args &&... args) : storage_(std::forward(args)...) {}
 
   /**
   \brief Default assignment operator.
@@ -67,7 +68,7 @@ class Attribute {
 
   \tparam T The type of the assigned object.
   */
-  template<typename T>
+  template <typename T>
   Attribute &operator=(T &rhs) {
     storage_ = rhs;
     return *this;
@@ -77,7 +78,7 @@ class Attribute {
 
   \tparam T The type of the assigned object.
   */
-  template<typename T>
+  template <typename T>
   Attribute &operator=(T &&rhs) {
     storage_ = rhs;
     return *this;
@@ -95,7 +96,7 @@ class Attribute {
 
   \return The stored value.
   */
-  template<typename T>
+  template <typename T>
   T get() const {
     return std::any_cast<T>(storage_);
   }
@@ -106,7 +107,7 @@ class Attribute {
 
   \param[in] value A constant reference to the stored value.
   */
-  template<typename T>
+  template <typename T>
   void set(const T &value) {
     storage_.emplace(value);
   }
@@ -117,7 +118,7 @@ class Attribute {
 
   \param[in] value A rvalue reference to the stored value.
   */
-  template<typename T>
+  template <typename T>
   void set(T &&value) {
     storage_.emplace(value);
   }
@@ -132,7 +133,7 @@ class Attribute {
 
   \returns A reference to the emplaced object.
   */
-  template<typename T, typename ...Args>
+  template <typename T, typename... Args>
   auto emplace(Args &&... args) {
     return storage_.emplace<T>(std::forward(args)...);
   }
@@ -140,50 +141,43 @@ class Attribute {
   /**
   \brief Resets the stored value.
   */
-  void reset() noexcept {
-    storage_.reset();
-  }
+  void reset() noexcept { storage_.reset(); }
   /**
   \brief Staps the contents of an Attribute with another.
 
   \param[in/out] other The other Attribute to be swapped.
   */
-  void swap(Attribute &other) {
-    storage_.swap(other.storage_);
-  }
+  void swap(Attribute &other) { storage_.swap(other.storage_); }
 
   /**
   \brief Returns true if there is no value stored.
 
   \returns True when no value is stored in the Attribute.
   */
-  bool empty() const noexcept {
-    return !storage_.has_value();
-  }
+  bool empty() const noexcept { return !storage_.has_value(); }
 
   /**
   \brief Get the type info of the stored object.
   */
-  const std::type_info &type() const noexcept {
-    return storage_.type();
-  }
+  const std::type_info &type() const noexcept { return storage_.type(); }
 
   /**
   \name Comparison operators
-  \brief If compared to the same type, it compares the contents of Attribute to the other value.
+  \brief If compared to the same type, it compares the contents of Attribute to
+  the other value.
 
   \returns True when the operands are of the same type and they are equal.
   */
   ///@{
-  template<typename T>
-  friend bool operator== (const Attribute &lhs, const T &rhs) {
+  template <typename T>
+  friend bool operator==(const Attribute &lhs, const T &rhs) {
     if (lhs.type() != typeid(rhs))
       return false;
     return lhs.get<T>() == rhs;
   }
 
-  template<typename T>
-  friend bool operator== (const T &lhs, const Attribute &rhs) {
+  template <typename T>
+  friend bool operator==(const T &lhs, const Attribute &rhs) {
     if (lhs.type() != typeid(rhs))
       return false;
     return lhs == rhs.get<T>();
@@ -473,7 +467,8 @@ class Symbol {
 \param[in] attribute Attribute of returned Symbol. Defaults to "".
 \returns A Symbol with type Terminal, given name and given attribute.
 */
-inline Symbol Terminal(const string &name, const Attribute &attribute = Attribute{},
+inline Symbol Terminal(const string &name,
+                       const Attribute &attribute = Attribute{},
                        const Location &loc = Location::invalid()) {
   return Symbol(Symbol::Type::TERMINAL, name, attribute, loc);
 }
@@ -513,10 +508,10 @@ inline Symbol operator""_s(const char *s, size_t) {
 }  // namespace ctf
 
 namespace std {
-  inline void swap(ctf::Attribute &lhs, ctf::Attribute &rhs) noexcept {
-    lhs.swap(rhs);
-  }
-} // namespace std
+inline void swap(ctf::Attribute &lhs, ctf::Attribute &rhs) noexcept {
+  lhs.swap(rhs);
+}
+}  // namespace std
 
 #endif
 /*** End of file base.hpp ***/

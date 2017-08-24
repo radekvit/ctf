@@ -25,6 +25,13 @@ class OutputGenerator {
   */
   bool errorFlag_ = false;
 
+  /**
+  \brief Get a reference to the error flag.
+
+  \returns A reference to the error flag.
+  */
+  void set_error() noexcept { errorFlag_ = true; }
+
  public:
   OutputGenerator() = default;
   OutputGenerator(std::ostream &os) : os_(&os) {}
@@ -34,19 +41,19 @@ class OutputGenerator {
 
   \returns True if an output stream has been set. False otherwise.
   */
-  virtual bool has_stream() const { return os_ != nullptr; }
+  bool has_stream() const { return os_ != nullptr; }
   /**
   \brief Sets the output stream.
 
   \param[in] o Output stream.
   */
-  virtual void set_stream(std::ostream &o) noexcept { os_ = &o; }
+  void set_stream(std::ostream &o) noexcept { os_ = &o; }
   /**
   \brief Get the error flag.
 
   \returns True when an error has been encountered.
   */
-  virtual bool error() noexcept { return errorFlag_; }
+  bool error() const noexcept { return errorFlag_; }
   /**
   \brief Clears the error flag.
   */
@@ -73,14 +80,14 @@ class OutputGenerator {
       if (!t.attribute().empty()) {
         os << ".";
         auto &type = t.attribute().type();
-        if (type ==  typeid(string))
-            os << t.attribute().get<string>();
+        if (type == typeid(string))
+          os << t.attribute().get<string>();
         else if (type == typeid(char))
-            os << t.attribute().get<char>();
+          os << t.attribute().get<char>();
         else if (type == typeid(double))
-            os << t.attribute().get<double>();
+          os << t.attribute().get<double>();
         else if (type == typeid(size_t))
-            os << t.attribute().get<size_t>();
+          os << t.attribute().get<size_t>();
       }
       os << "\n";
     }

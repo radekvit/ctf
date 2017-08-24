@@ -2,7 +2,7 @@
 
 # CTF ain't a Translation Framework
 
-CTF is a framework for rapid translation definition. Translations are defined with lexical analyzers, translation grammars and output generators. The API is subject to change in the future slightly to allow a more rigid way to define custom error messages and to provide a solid API for future translation methods.
+CTF is a C++17 framework for rapid translation definition. Translations are defined with lexical analyzers, translation grammars and output generators. The API is subject to change in the future slightly to allow a more rigid way to define custom error messages and to provide a solid API for future translation methods.
 
 ## Getting started
 
@@ -30,4 +30,3 @@ speeding up development greatly.
 ## Future translation methods
 
 * LR bottom-up translation - "lr"
-* operator precedence - "op"

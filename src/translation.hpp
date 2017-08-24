@@ -19,17 +19,12 @@
 
 namespace ctf {
 /**
-\brief Exception class for syntax errors.
+\brief The potential results of a translation.
 */
-class TranslationError : public TranslationException {
-  using TranslationException::TranslationException;
-};
-/**
-\brief An exception class for semantic errors.
-*/
-class SemanticError : public TranslationException {
- public:
-  using TranslationException::TranslationException;
+enum class TranslationResult {
+  SUCCESS = 0,
+  TRANSLATION_ERROR,  // lexical and syntax errors
+  SEMANTIC_ERROR,
 };
 /**
 \brief Defines a translation. Can be used multiple times for different inputs
@@ -121,9 +116,12 @@ class Translation {
   \brief Translates input from istream and outputs the translation to ostream.
   \param[in] input Input stream.
   \param[out] output Output stream.
+
+  \returns True when no errors were encountered.
   */
-  void run(std::istream &input, std::ostream &output,
-           const string &inputName = "") {
+  TranslationResult run(std::istream &input, std::ostream &output,
+                        std::ostream &error,
+                        const std::string &inputName = "") {
     // extra output buffer
     std::stringstream ss;
     // setup
@@ -136,22 +134,29 @@ class Translation {
     // lexical analysis, syntax analysis and translation
     translationControl_.run();
 
-    // translation error
+    // translation errors
+    if (lexicalAnalyzer_.error()) {
+      error << lexicalAnalyzer_.error_message();
+    }
+    if (translationControl_.error()) {
+      error << translationControl_.error_message();
+    }
     if (lexicalAnalyzer_.error() || translationControl_.error()) {
-      throw TranslationError{lexicalAnalyzer_.error_message() +
-                             translationControl_.error_message()};
+      return TranslationResult::TRANSLATION_ERROR;
     }
 
     // semantic analysis and code generation
-    auto &outputTokens = translationControl_.output();
+    auto &&outputTokens = translationControl_.output();
     outputGenerator_.output(outputTokens);
 
     // semantic error
     if (outputGenerator_.error()) {
-      throw SemanticError{outputGenerator_.error_message()};
+      error << outputGenerator_.error_message();
+      return TranslationResult::SEMANTIC_ERROR;
     }
 
     output << ss.str();
+    return TranslationResult::SUCCESS;
   }
 
   /**

@@ -27,7 +27,25 @@ class LexicalAnalyzer {
   \brief Input manager. The managing object is responsible for setting up the
   reader object.
   */
-  InputReader *reader_;
+  InputReader *reader_ = nullptr;
+
+  /**
+  \brief Error flag. This flag should be set by subclasses on invalid input.
+  */
+  bool errorFlag_ = false;
+  /**
+  \brief Warning flag. This flag should be set if a recoverable error was encountered.
+  */
+  bool warningFlag_ = false;
+
+  /**
+  \brief Current token location.
+  */
+  Location location_ = Location::invalid();
+
+  virtual void reset_private() noexcept {}
+
+  virtual void clear_message() noexcept {}
 
  protected:
   /**
@@ -35,9 +53,10 @@ class LexicalAnalyzer {
   \returns A token from the input stream.
 
   Default implementation; reading a token name until a whitespace or EOF is
-  read.
+  read. Adds a size_t attribute to each token denoting its number.
   */
   virtual Symbol read_token() {
+    static size_t attribute = 0;
     string name;
     // first character
     int c = get();
@@ -54,18 +73,8 @@ class LexicalAnalyzer {
     }
     reader_->unget();
 
-    return token(name);
+    return token(name, attribute++);
   }
-
-  /**
-  \brief Error flag. This flag should be set by subclasses on invalid input.
-  */
-  bool errorFlag_ = false;
-
-  /**
-  \brief Current token location.
-  */
-  Location location_ = Location::invalid();
 
   /**
   \brief Sets the current token location if not yet specified and reads a
@@ -98,16 +107,21 @@ class LexicalAnalyzer {
 
   \returns A terminal Symbol with the current stored location_.
   */
-  virtual Symbol token(const string &name, const Attribute &attr = Attribute{}) {
+  Symbol token(const string &name, const Attribute &attr = Attribute{}) {
     return Terminal(name, attr, location_);
   }
+
+  /**
+  \brief Returns a reference to the error flag.
+  */
+  void set_error() noexcept { errorFlag_ = true; }
 
  public:
   /**
   \brief The implicit constructor. The lexical analyzer is in inoperable state,
   an input reader must be set before it is.
   */
-  LexicalAnalyzer() : reader_(nullptr) {}
+  LexicalAnalyzer() {}
   LexicalAnalyzer(InputReader &reader) : reader_(&reader) {}
   virtual ~LexicalAnalyzer() = default;
 
@@ -131,24 +145,37 @@ class LexicalAnalyzer {
   */
   void remove_reader() noexcept { reader_ = nullptr; }
   /**
-  \brief Sets the input stream to a given stream.
-
-  \param[in] s Stream to be set.
+  \brief Resets the internal state.
   */
-  virtual void reset() {
+  virtual void reset() noexcept {
     clear_error();
     location_ = Location::invalid();
+    if (reader_) {
+      reader_->reset();
+    }
+    reset_private();
   }
   /**
   \brief Get the error flag.
 
   \returns True when an error has been encountered.
   */
-  virtual bool error() noexcept { return errorFlag_; }
+  bool error() const noexcept { return errorFlag_; }
   /**
-  \brief Clears the error flag.
+  \brief Get the warning flag.
+
+  \returns True when a warning was issued.
   */
-  virtual void clear_error() noexcept { errorFlag_ = false; }
+  bool warning() const noexcept { return warningFlag_; }
+  /**
+  \brief Clears the error flag and resets all error messages.
+  */
+  void clear_error() noexcept {
+    errorFlag_ = false;
+    warningFlag_ = false;
+    clear_message();
+  }
+
   /**
   \brief Get the set error message.
 

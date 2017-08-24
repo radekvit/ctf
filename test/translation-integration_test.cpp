@@ -6,25 +6,12 @@
 
 using ctf::Symbol;
 using ctf::Translation;
+using ctf::TranslationResult;
 using ctf::LexicalAnalyzer;
 using ctf::TranslationGrammar;
 using ctf::OutputGenerator;
 
 using namespace ctf::literals;
-
-class TestLexicalAnalyzer : public ctf::LexicalAnalyzer {
-  using LexicalAnalyzer::LexicalAnalyzer;
-
-  virtual Symbol read_token() override {
-    static char c = '1';
-    Symbol t = LexicalAnalyzer::read_token();
-    if (t.name() == "i") {
-      t.attribute() = ctf::string{c};
-      c++;
-    }
-    return t;
-  }
-};
 
 TEST_CASE("Constructing translation", "[Translation]") {
   TranslationGrammar tg{
@@ -66,16 +53,17 @@ TEST_CASE("Running translation", "[Translation]") {
             {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
         },
         "E"_nt};
-    Translation tr(std::make_unique<TestLexicalAnalyzer>(), "ll", tg,
+    Translation tr(std::make_unique<LexicalAnalyzer>(), "ll", tg,
                    std::make_unique<OutputGenerator>());
     std::stringstream expected;
     std::stringstream out;
+    std::stringstream error;
     std::ifstream in("media/in");
     std::ifstream ex("media/expected");
     if (in.fail() || ex.fail())
       throw std::runtime_error("Files not present");
     expected << ex.rdbuf();
-    tr.run(in, out);
+    REQUIRE(tr.run(in, out, error) == TranslationResult::SUCCESS);
     REQUIRE(out.str() == expected.str());
   }
   SECTION("translation with empty output") {
@@ -94,10 +82,11 @@ TEST_CASE("Running translation", "[Translation]") {
     Translation tr(std::make_unique<LexicalAnalyzer>(), "ll", tg,
                    std::make_unique<OutputGenerator>());
     std::stringstream out;
+    std::stringstream error;
     std::ifstream in("media/in");
     if (in.fail())
       throw std::runtime_error("Files not present");
-    tr.run(in, out);
+    REQUIRE(tr.run(in, out, error) == TranslationResult::SUCCESS);
     REQUIRE(out.str() == "");
   }
 }

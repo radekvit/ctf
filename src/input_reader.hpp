@@ -383,6 +383,11 @@ class InputReader {
   \returns A string containing all read characters.
   */
   string get_all() const { return inputBuffer_.get_all(); }
+
+  /**
+  \brief Reset the reader state. This operation resets the internal position.
+  */
+  void reset() { currentLocation_ = {currentLocation_.fileName}; }
 };
 
 }  // namespace ctf
