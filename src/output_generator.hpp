@@ -15,27 +15,43 @@ namespace ctf {
 Outputs tokens to output stream. Base class.
 */
 class OutputGenerator {
- protected:
-  /**
-  \brief Pointer to the output stream tokens will be output to.
-  */
-  std::ostream *os_;
   /**
   \brief
   */
   bool errorFlag_ = false;
 
   /**
-  \brief Get a reference to the error flag.
+  \brief Pointer to the output stream tokens will be output to.
+  */
+  std::ostream *os_;
 
-  \returns A reference to the error flag.
+  /**
+  \brief Clears the inner state and errors.
+  */
+  virtual void reset_private() noexcept {}
+
+ protected:
+  /**
+  \brief Get the output stream.
+
+  \returns A reference to the output stream if set.
+  */
+  std::ostream &os() const {
+    if (!os_) {
+      throw std::runtime_error(
+          "ctf::OutputGenerator::os() output stream not set.");
+    }
+    return *os_;
+  }
+  /**
+  \brief Set the error flag.
   */
   void set_error() noexcept { errorFlag_ = true; }
 
  public:
   OutputGenerator() = default;
   OutputGenerator(std::ostream &os) : os_(&os) {}
-  virtual ~OutputGenerator() = default;
+  virtual ~OutputGenerator() noexcept = default;
   /**
   \brief Returns true if an output stream has been set.
 
@@ -47,7 +63,10 @@ class OutputGenerator {
 
   \param[in] o Output stream.
   */
-  void set_stream(std::ostream &o) noexcept { os_ = &o; }
+  void set_stream(std::ostream &o) noexcept {
+    os_ = &o;
+    reset();
+  }
   /**
   \brief Get the error flag.
 
@@ -57,13 +76,16 @@ class OutputGenerator {
   /**
   \brief Clears the error flag.
   */
-  virtual void clear_error() noexcept { errorFlag_ = false; }
+  void reset() noexcept {
+    errorFlag_ = false;
+    reset_private();
+  }
   /**
   \brief Get the error message.
 
   \returns The error message string.
   */
-  virtual string error_message() { return "Something went wrong.\n"; }
+  virtual string error_message() { return ""; }
   /**
   \brief Outputs a token to the given stream.
 
@@ -72,7 +94,7 @@ class OutputGenerator {
   The default output implementation.
   */
   virtual void output(const tstack<Symbol> &terminals) {
-    auto &os = *os_;
+    auto &os = this->os();
     for (auto &t : terminals) {
       if (t == Symbol::eof())
         return;

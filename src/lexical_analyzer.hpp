@@ -33,15 +33,16 @@ class LexicalAnalyzer {
   \brief Error flag. This flag should be set by subclasses on invalid input.
   */
   bool errorFlag_ = false;
-  /**
-  \brief Warning flag. This flag should be set if a recoverable error was encountered.
-  */
-  bool warningFlag_ = false;
 
   /**
   \brief Current token location.
   */
   Location location_ = Location::invalid();
+
+  /**
+  \brief Clears the error flag and resets all error messages.
+  */
+  void clear_error() noexcept { errorFlag_ = false; }
 
   virtual void reset_private() noexcept {}
 
@@ -123,7 +124,7 @@ class LexicalAnalyzer {
   */
   LexicalAnalyzer() {}
   LexicalAnalyzer(InputReader &reader) : reader_(&reader) {}
-  virtual ~LexicalAnalyzer() = default;
+  virtual ~LexicalAnalyzer() noexcept = default;
 
   /**
   \brief Returns true when a reader has been set and the reader has a stream
@@ -161,27 +162,13 @@ class LexicalAnalyzer {
   \returns True when an error has been encountered.
   */
   bool error() const noexcept { return errorFlag_; }
-  /**
-  \brief Get the warning flag.
-
-  \returns True when a warning was issued.
-  */
-  bool warning() const noexcept { return warningFlag_; }
-  /**
-  \brief Clears the error flag and resets all error messages.
-  */
-  void clear_error() noexcept {
-    errorFlag_ = false;
-    warningFlag_ = false;
-    clear_message();
-  }
 
   /**
   \brief Get the set error message.
 
   \returns String with an error message.
   */
-  virtual string error_message() { return "Something went wrong.\n"; }
+  virtual string error_message() { return ""; }
   /**
   \brief Gets next Token from stream and resets symbol location.
 

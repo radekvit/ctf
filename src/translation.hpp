@@ -23,7 +23,8 @@ namespace ctf {
 */
 enum class TranslationResult {
   SUCCESS = 0,
-  TRANSLATION_ERROR,  // lexical and syntax errors
+  LEXICAL_ERROR,
+  TRANSLATION_ERROR,  // syntax errors
   SEMANTIC_ERROR,
 };
 /**
@@ -135,13 +136,11 @@ class Translation {
     translationControl_.run();
 
     // translation errors
+    error << lexicalAnalyzer_.error_message();
+    error << translationControl_.error_message();
     if (lexicalAnalyzer_.error()) {
-      error << lexicalAnalyzer_.error_message();
-    }
-    if (translationControl_.error()) {
-      error << translationControl_.error_message();
-    }
-    if (lexicalAnalyzer_.error() || translationControl_.error()) {
+      return TranslationResult::LEXICAL_ERROR;
+    } else if (translationControl_.error()) {
       return TranslationResult::TRANSLATION_ERROR;
     }
 
@@ -150,8 +149,8 @@ class Translation {
     outputGenerator_.output(outputTokens);
 
     // semantic error
+    error << outputGenerator_.error_message();
     if (outputGenerator_.error()) {
-      error << outputGenerator_.error_message();
       return TranslationResult::SEMANTIC_ERROR;
     }
 

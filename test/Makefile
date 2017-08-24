@@ -35,4 +35,4 @@ format:
 
 test: debug
 test:
-	./$(APPNAME) && make clean
+	./$(APPNAME)
