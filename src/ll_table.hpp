@@ -112,7 +112,7 @@ class LLTable {
 
   If no rule is applicable, returns the index beyond the last rule.
   */
-  size_t rule_index(const Symbol &nt, const Symbol &t) {
+  size_t rule_index(const Symbol &nt, const Symbol &t) noexcept {
     // iterator to nonterminal index
     auto ntit = nonterminalMap_.find(nt);
     // iterator to terminal index;

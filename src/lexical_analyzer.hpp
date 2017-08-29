@@ -100,6 +100,13 @@ class LexicalAnalyzer {
   int unget(size_t num = 1) { return reader_->unget(num); }
 
   /**
+  \brief Get the current stored location.
+
+  \returns A const reference to the current location.
+  */
+  const Location &location() const noexcept { return location_; }
+
+  /**
   \brief Constructs a terminal symbol and inserts the current symbol location
   automatically.
 

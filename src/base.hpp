@@ -233,7 +233,7 @@ struct Location {
   */
   Location(string _fileName = "") : row(1), col(1), fileName(_fileName) {}
   Location(const Location &) = default;
-  Location(Location &&) = default;
+  Location(Location &&) noexcept = default;
   ~Location() = default;
 
   /**
@@ -247,7 +247,7 @@ struct Location {
   }
 
   Location &operator=(const Location &) = default;
-  Location &operator=(Location &&) = default;
+  Location &operator=(Location &&) noexcept = default;
   /**
   \brief Compares two Location objects by row and col numbers.
 
