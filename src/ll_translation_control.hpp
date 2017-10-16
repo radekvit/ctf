@@ -338,7 +338,7 @@ class LLTranslationControl : public TranslationControl {
             return;
           }
           break;
-        case Symbol::Type::TERMINAL:
+        case Type::TERMINAL:
           if (top == token) {
             for (auto it : attributeActions.pop()) {
               it->set_attribute(token);
@@ -351,7 +351,7 @@ class LLTranslationControl : public TranslationControl {
               return;
           }
           break;
-        case Symbol::Type::NONTERMINAL:
+        case Type::NONTERMINAL:
           lastNonterminal_ = top;
           ruleIndex = llTable_.rule_index(top, token);
           if (ruleIndex < translationGrammar_->rules().size()) {
@@ -413,6 +413,8 @@ class LLTranslationControl : public TranslationControl {
   \returns True if the error recovery succeeded.
   */
   virtual bool error_recovery(Symbol& token) {
+    using Type = Symbol::Type;
+
     size_t ruleIndex = 0;
     size_t ntIndex = translationGrammar_->nonterminal_index(lastNonterminal_);
     auto& ntFollow = follow_[ntIndex];
