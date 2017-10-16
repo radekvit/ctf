@@ -412,27 +412,27 @@ class LLTranslationControl : public TranslationControl {
   \param[out] token The next valid token.
   \returns True if the error recovery succeeded.
   */
-  virtual bool error_recovery(Symbol& token) {
+  virtual bool error_recovery(Symbol &token) {
     using Type = Symbol::Type;
 
     size_t ruleIndex = 0;
     size_t ntIndex = translationGrammar_->nonterminal_index(lastNonterminal_);
-    auto& ntFollow = follow_[ntIndex];
+    auto &ntFollow = follow_[ntIndex];
     // get a token from follow(lastNonterminal_)
-    while(!is_in(ntFollow, token)) {
+    while (!is_in(ntFollow, token)) {
       token = next_token();
     }
     // pop stack until a rule is applicable or the same token is on top
-    while(true) {
-      Symbol& top = input_.top();
-      switch(top.type()) {
+    while (true) {
+      Symbol &top = input_.top();
+      switch (top.type()) {
         case Type::EOI:
           return true;
         case Type::TERMINAL:
           if (top == token)
             return true;
-          break;
-        case Type::NONTERMINAL: 
+          attributeActions.pop() break;
+        case Type::NONTERMINAL:
           ruleIndex = llTable_.rule_index(top, token);
           if (ruleIndex < translationGrammar_->rules().size()) {
             return true;
@@ -443,7 +443,6 @@ class LLTranslationControl : public TranslationControl {
       }
       input_.pop();
     }
-
   }
   /**
   \brief Get error message.
