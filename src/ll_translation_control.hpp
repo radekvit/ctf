@@ -330,7 +330,7 @@ class LLTranslationControl : public TranslationControl {
       Symbol &top = input_.top();
       size_t ruleIndex;
       switch (top.type()) {
-        case Type::EOI:
+        case Symbol::Type::EOI:
           if (token == Symbol::eof()) {
             return;
           } else {
@@ -338,7 +338,7 @@ class LLTranslationControl : public TranslationControl {
             return;
           }
           break;
-        case Type::TERMINAL:
+        case Symbol::Type::TERMINAL:
           if (top == token) {
             for (auto it : attributeActions.pop()) {
               it->set_attribute(token);
@@ -351,7 +351,7 @@ class LLTranslationControl : public TranslationControl {
               return;
           }
           break;
-        case Type::NONTERMINAL:
+        case Symbol::Type::NONTERMINAL:
           lastNonterminal_ = top;
           ruleIndex = llTable_.rule_index(top, token);
           if (ruleIndex < translationGrammar_->rules().size()) {
@@ -414,7 +414,7 @@ class LLTranslationControl : public TranslationControl {
   */
   virtual bool error_recovery(Symbol& token) {
     size_t ruleIndex = 0;
-    size_t ntIndex = translationGrammar_.nonterminal_index(lastNonterminal_);
+    size_t ntIndex = translationGrammar_->nonterminal_index(lastNonterminal_);
     auto& ntFollow = follow_[ntIndex];
     // get a token from follow(lastNonterminal_)
     while(!is_in(ntFollow, token)) {
