@@ -15,7 +15,13 @@
 
 namespace ctf {
 /**
-\brief Extracts tokens from input stream. Tokens can be Symbols of any type,
+ * \brief Lexical analysis exception for when error recovery is impossible.
+ */
+class LexicalException : public TranslationException {
+  using TranslationException::TranslationException;
+};
+/**
+\brief Extracts tokens from input stream. Symbols can be Symbols of any type,
 type is to be ignored unless it is EOF. Abstract base class.
 
 Lexical errors are created by creating a token with an unused name. Then,
@@ -50,7 +56,7 @@ class LexicalAnalyzer {
 
  protected:
   /**
-  \brief Gets next Token from stream. Sets error flag on error.
+  \brief Gets next Symbol from stream. Sets error flag on error.
   \returns A token from the input stream.
 
   Default implementation; reading a token name until a whitespace or EOF is
@@ -177,7 +183,7 @@ class LexicalAnalyzer {
   */
   virtual string error_message() { return ""; }
   /**
-  \brief Gets next Token from stream and resets symbol location.
+  \brief Gets next Symbol from stream and resets symbol location.
 
   \returns A token from the input stream.
   */

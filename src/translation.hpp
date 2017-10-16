@@ -125,22 +125,30 @@ class Translation {
                         const std::string &inputName = "") {
     // extra output buffer
     std::stringstream ss;
+    // error flags
+    bool lexError = false;
+    bool synError = false;
     // setup
     translationControl_.reset();
     lexicalAnalyzer_.reset();
     lexicalAnalyzer_.set_reader(reader_);
     reader_.set_stream(input, inputName);
     outputGenerator_.set_stream(ss);
+    try {
+      // lexical analysis, syntax analysis and translation
+      translationControl_.run();
+    } catch (LexicalException &le) {
+      lexError = true;
+    } catch (SyntaxException &se) {
+      synError = true;
+    }
 
-    // lexical analysis, syntax analysis and translation
-    translationControl_.run();
-
-    // translation errors
+    // translation errors and warnings
     error << lexicalAnalyzer_.error_message();
     error << translationControl_.error_message();
-    if (lexicalAnalyzer_.error()) {
+    if (lexicalAnalyzer_.error() || lexError) {
       return TranslationResult::LEXICAL_ERROR;
-    } else if (translationControl_.error()) {
+    } else if (translationControl_.error() || synError) {
       return TranslationResult::TRANSLATION_ERROR;
     }
 

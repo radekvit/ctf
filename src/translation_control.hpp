@@ -12,6 +12,12 @@
 
 namespace ctf {
 /**
+ * \brief Syntax exception when error recovery is impossible.
+ */
+class SyntaxException : public TranslationException {
+  using TranslationException::TranslationException;
+};
+/**
 \brief Abstract class for syntax driven translation control.
 */
 class TranslationControl {
