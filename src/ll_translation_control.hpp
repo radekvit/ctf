@@ -43,6 +43,11 @@ class LLTranslationControl : public TranslationControl {
   string errorString_;
 
   /**
+  \brief The last expanded nonterminal.
+  */
+  Symbol lastNonterminal_ = Symbol::eof();
+
+  /**
   Creates all predictive sets and creates a new LL table.
   */
   void create_ll_table() {
@@ -342,11 +347,12 @@ class LLTranslationControl : public TranslationControl {
             token = next_token();
           } else {
             add_error(top, token);
-            // TODO error recovery
-            return;
+            if (!error_recovery(token))
+              return;
           }
           break;
         case Type::NONTERMINAL:
+          lastNonterminal_ = top;
           ruleIndex = llTable_.rule_index(top, token);
           if (ruleIndex < translationGrammar_->rules().size()) {
             auto &rule = translationGrammar_->rules()[ruleIndex];
@@ -356,8 +362,8 @@ class LLTranslationControl : public TranslationControl {
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
             add_error(top, token);
-            // TODO error recovery
-            return;
+            if (!error_recovery(token))
+              return;
           }
           break;
         default:
@@ -400,9 +406,43 @@ class LLTranslationControl : public TranslationControl {
     errorString_ += "\n";
   }
 
-  // TODO error recovery:
-  // skip to next input token in follow of last encountered nonterminal.
+  /**
+  \brief Hartmann error recovery.
 
+  \param[out] token The next valid token.
+  \returns True if the error recovery succeeded.
+  */
+  virtual bool error_recovery(Symbol& token) {
+    size_t ruleIndex = 0;
+    size_t ntIndex = translationGrammar_.nonterminal_index(lastNonterminal_);
+    auto& ntFollow = follow_[ntIndex];
+    // get a token from follow(lastNonterminal_)
+    while(!is_in(ntFollow, token)) {
+      token = next_token();
+    }
+    // pop stack until a rule is applicable or the same token is on top
+    while(true) {
+      Symbol& top = input_.top();
+      switch(top.type()) {
+        case Type::EOI:
+          return true;
+        case Type::TERMINAL:
+          if (top == token)
+            return true;
+          break;
+        case Type::NONTERMINAL: 
+          ruleIndex = llTable_.rule_index(top, token);
+          if (ruleIndex < translationGrammar_->rules().size()) {
+            return true;
+          }
+          break;
+        default:
+          break;
+      }
+      input_.pop();
+    }
+
+  }
   /**
   \brief Get error message.
 
