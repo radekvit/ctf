@@ -344,7 +344,7 @@ class LLTranslationControl : public TranslationControl {
             token = next_token();
           } else {
             add_error(top, token);
-            if (!error_recovery(lastDerivedNonterminal, token))
+            if (!error_recovery(lastDerivedNonterminal, token, attributeActions))
               return;
           }
           break;
@@ -358,7 +358,7 @@ class LLTranslationControl : public TranslationControl {
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
             add_error(top, token);
-            if (!error_recovery(lastDerivedNonterminal, token))
+            if (!error_recovery(lastDerivedNonterminal, token, attributeActions))
               return;
           }
           lastDerivedNonterminal = top;
@@ -409,7 +409,7 @@ class LLTranslationControl : public TranslationControl {
   \param[out] token The next valid token.
   \returns True if the error recovery succeeded.
   */
-  virtual bool error_recovery(const Symbol& lastDerivedNonterminal, Symbol& token) {
+  virtual bool error_recovery(const Symbol& lastDerivedNonterminal, Symbol& token, tstack<vector<tstack<Symbol>::iterator>>& attributeActions) {
     using Type = Symbol::Type;
 
     size_t ruleIndex = 0;
