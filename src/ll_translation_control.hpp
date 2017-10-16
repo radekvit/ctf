@@ -43,11 +43,6 @@ class LLTranslationControl : public TranslationControl {
   string errorString_;
 
   /**
-  \brief The last expanded nonterminal.
-  */
-  Symbol lastNonterminal_ = Symbol::eof();
-
-  /**
   Creates all predictive sets and creates a new LL table.
   */
   void create_ll_table() {
@@ -316,6 +311,8 @@ class LLTranslationControl : public TranslationControl {
     tstack<vector<tstack<Symbol>::iterator>> attributeActions;
 
     Symbol token = next_token();
+    // last derived nonterminal
+    Symbol lastDerivedNonterminal = translationGrammar_->starting_symbol();
 
     input_.push(Symbol::eof());
     output_.push(Symbol::eof());
@@ -347,12 +344,11 @@ class LLTranslationControl : public TranslationControl {
             token = next_token();
           } else {
             add_error(top, token);
-            if (!error_recovery(token))
+            if (!error_recovery(lastDerivedNonterminal, token))
               return;
           }
           break;
         case Type::NONTERMINAL:
-          lastNonterminal_ = top;
           ruleIndex = llTable_.rule_index(top, token);
           if (ruleIndex < translationGrammar_->rules().size()) {
             auto &rule = translationGrammar_->rules()[ruleIndex];
@@ -362,9 +358,10 @@ class LLTranslationControl : public TranslationControl {
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
             add_error(top, token);
-            if (!error_recovery(token))
+            if (!error_recovery(lastDerivedNonterminal, token))
               return;
           }
+          lastDerivedNonterminal = top;
           break;
         default:
           // unexpected symbol type on input stack
@@ -412,11 +409,11 @@ class LLTranslationControl : public TranslationControl {
   \param[out] token The next valid token.
   \returns True if the error recovery succeeded.
   */
-  virtual bool error_recovery(Symbol &token) {
+  virtual bool error_recovery(const Symbol& lastDerivedNonterminal, Symbol& token) {
     using Type = Symbol::Type;
 
     size_t ruleIndex = 0;
-    size_t ntIndex = translationGrammar_->nonterminal_index(lastNonterminal_);
+    size_t ntIndex = translationGrammar_->nonterminal_index(lastDerivedNonterminal);
     auto &ntFollow = follow_[ntIndex];
     // get a token from follow(lastNonterminal_)
     while (!is_in(ntFollow, token)) {
@@ -431,7 +428,8 @@ class LLTranslationControl : public TranslationControl {
         case Type::TERMINAL:
           if (top == token)
             return true;
-          attributeActions.pop() break;
+          attributeActions.pop();
+          break;
         case Type::NONTERMINAL:
           ruleIndex = llTable_.rule_index(top, token);
           if (ruleIndex < translationGrammar_->rules().size()) {
@@ -443,6 +441,9 @@ class LLTranslationControl : public TranslationControl {
       }
       input_.pop();
     }
+
+    // this should never happen
+    return true;
   }
   /**
   \brief Get error message.
