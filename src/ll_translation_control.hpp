@@ -400,6 +400,9 @@ class LLTranslationControl : public TranslationControl {
     errorString_ += "\n";
   }
 
+  // TODO error recovery:
+  // skip to next input token in follow of last encountered nonterminal.
+
   /**
   \brief Get error message.
 
