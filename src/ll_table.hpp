@@ -48,7 +48,7 @@ class DecisionTable {
   */
   size_t index(size_t y, size_t x) const { return terminalMap_.size() * y + x; }
 
-  virtual void initialize_invalid(const TranslationGrammar &) { return; }
+  virtual void initialize_invalid(const TranslationGrammar&) { return; }
 
   virtual void insert_rule(const size_t insertedRule, const size_t i) {
     table_[i] = {insertedRule};
@@ -56,8 +56,8 @@ class DecisionTable {
 
   void initialize() {}
 
-  void initialize(const TranslationGrammar &tg,
-                  const vector<vector<Symbol>> &predict) {
+  void initialize(const TranslationGrammar& tg,
+                  const vector<vector<Symbol>>& predict) {
     initialize_invalid(tg);
     table_ =
         row(tg.nonterminals().size() * (tg.terminals().size() + 1), invalid_);
@@ -77,11 +77,11 @@ class DecisionTable {
 
     /* fill table */
     for (size_t i = 0; i < tg.rules().size(); ++i) {
-      auto &terminals = predict[i];
+      auto& terminals = predict[i];
       // TranslationGrammar requires this to be always found
       size_t ni = nonterminalMap_.at(tg.rules()[i].nonterminal());
 
-      for (auto &t : terminals) {
+      for (auto& t : terminals) {
         auto tit = terminalMap_.find(t);
         if (tit == terminalMap_.end())
           throw std::invalid_argument(
@@ -107,8 +107,8 @@ class DecisionTable {
   their respective indices. Rule indices are stored in the decision table.
   \param[in] predict Predict set for table construction.
   */
-  DecisionTable(const TranslationGrammar &tg,
-                const vector<vector<Symbol>> &predict) {
+  DecisionTable(const TranslationGrammar& tg,
+                const vector<vector<Symbol>>& predict) {
     initialize(tg, predict);
   }
   /**
@@ -122,7 +122,7 @@ class DecisionTable {
 
   If no rule is applicable, returns the index beyond the last rule.
   */
-  size_t rule_index(const Symbol &nt, const Symbol &t) noexcept {
+  size_t rule_index(const Symbol& nt, const Symbol& t) noexcept {
     // iterator to nonterminal index
     auto ntit = nonterminalMap_.find(nt);
     // iterator to terminal index;
@@ -139,7 +139,7 @@ class DecisionTable {
 \brief Class containing rule indices to be used in a LL controlled translation.
 */
 class LLTable : public DecisionTable<size_t> {
-  void initialize_invalid(const TranslationGrammar &tg) override {
+  void initialize_invalid(const TranslationGrammar& tg) override {
     invalid_ = tg.rules().size();
   }
 
@@ -153,7 +153,7 @@ class LLTable : public DecisionTable<size_t> {
   }
 
  public:
-  LLTable(const TranslationGrammar &tg, const vector<vector<Symbol>> &predict) {
+  LLTable(const TranslationGrammar& tg, const vector<vector<Symbol>>& predict) {
     initialize(tg, predict);
   }
 
@@ -169,13 +169,11 @@ class GeneralLLTable : public DecisionTable<vector<size_t>> {
     std::swap(table_[i], newTable);
   }
 
-  void initialize_invalid(const TranslationGrammar &) override {
-    invalid_ = {};
-  }
+  void initialize_invalid(const TranslationGrammar&) override { invalid_ = {}; }
 
  public:
-  GeneralLLTable(const TranslationGrammar &tg,
-                 const vector<vector<Symbol>> &predict) {
+  GeneralLLTable(const TranslationGrammar& tg,
+                 const vector<vector<Symbol>>& predict) {
     initialize(tg, predict);
   }
 

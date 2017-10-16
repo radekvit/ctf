@@ -55,7 +55,7 @@ class InputReader {
     in the line, the returned iterator is larger than the line's line_end()
     iterator.
     */
-    vector<char>::const_iterator character(const Location &l) const noexcept {
+    vector<char>::const_iterator character(const Location& l) const noexcept {
       return line_begin(line(l)) + col(l);
     }
 
@@ -67,7 +67,7 @@ class InputReader {
 
     \returns The line number starting from 0.
     */
-    size_t line(const Location &l) const noexcept { return l.row - 1; }
+    size_t line(const Location& l) const noexcept { return l.row - 1; }
     /**
     \brief Transforms Location col to column index.
 
@@ -76,7 +76,7 @@ class InputReader {
 
     \returns The column number starting from 0.
     */
-    size_t col(const Location &l) const noexcept { return l.col - 1; }
+    size_t col(const Location& l) const noexcept { return l.col - 1; }
 
     /**
     \brief Get a constant iterator to the first character on a line.
@@ -156,7 +156,7 @@ class InputReader {
     \returns True if a character is present in the buffer or is eof. False
     otherwise.
     */
-    bool get(int &c, Location &location) const noexcept {
+    bool get(int& c, Location& location) const noexcept {
       auto it = character(location);
       if (it == charBuffer_.end() && charBuffer_.size() == eofLocation_) {
         c = eof;
@@ -188,7 +188,7 @@ class InputReader {
 
     \returns A vector of all characters on the row in location.
     */
-    string get_line(const Location &location) const {
+    string get_line(const Location& location) const {
       return get_line(location.row);
     }
     /**
@@ -211,7 +211,7 @@ class InputReader {
     If the rollback is more characters than has been read, the location of the
     first character in the buffer is returned.
     */
-    Location unget(const Location &location, size_t rollback = 1) const
+    Location unget(const Location& location, size_t rollback = 1) const
         noexcept {
       const auto begin = lineStartBuffer_.begin();
       // index of rolled back character
@@ -235,7 +235,7 @@ class InputReader {
 
     \returns The next location after c has been read.
     */
-    Location next_location(int c, const Location &location) const noexcept {
+    Location next_location(int c, const Location& location) const noexcept {
       if (c == eof) {
         return location;
       } else if (c == '\n') {
@@ -248,7 +248,7 @@ class InputReader {
   /**
   \brief Input stream address. Is mutable via change_stream().
   */
-  std::istream *is_ = nullptr;
+  std::istream* is_ = nullptr;
   /**
   \brief The name of the string stored in is_.
   */
@@ -274,7 +274,7 @@ class InputReader {
   \param[in] is The input stream to be used by InputReader.
   \param[in] streamName The name of the input stream.
   */
-  InputReader(std::istream &is, const string &streamName = "") {
+  InputReader(std::istream& is, const string& streamName = "") {
     set_stream(is, streamName);
   }
 
@@ -283,13 +283,13 @@ class InputReader {
 
   \returns The pointer to the assigned stream.
   */
-  std::istream *stream() const { return is_; }
+  std::istream* stream() const { return is_; }
   /**
   \brief Returns the assigned stream name.
 
   \returns The assigned stream name.
   */
-  const string &stream_name() const noexcept { return streamName_; }
+  const string& stream_name() const noexcept { return streamName_; }
 
   /**
   \brief Sets the stream and resets the input buffer.
@@ -297,7 +297,7 @@ class InputReader {
   \param[in] is The input stream to be used by InputReader.
   \param[in] streamName The name of the input stream.
   */
-  void set_stream(std::istream &is, const string &streamName = "") {
+  void set_stream(std::istream& is, const string& streamName = "") {
     is_ = &is;
     streamName_ = streamName;
     inputBuffer_.reset();
@@ -325,7 +325,7 @@ class InputReader {
 
   \returns The next read character.
   */
-  int get(Location &location) {
+  int get(Location& location) {
     location = currentLocation_;
     return get();
   }
@@ -354,7 +354,7 @@ class InputReader {
 
   \returns The charater N positions back.
   */
-  int unget(Location &location, size_t rollback = 1) noexcept {
+  int unget(Location& location, size_t rollback = 1) noexcept {
     int c = 0;
     // rollback one more and read
     currentLocation_ = inputBuffer_.unget(currentLocation_, rollback + 1);
@@ -373,7 +373,7 @@ class InputReader {
   \returns A string containing all characters on that line.
   */
   template <typename... Args>
-  string get_line(Args &&... args) const {
+  string get_line(Args&&... args) const {
     return inputBuffer_.get_line(std::forward<Args>(args)...);
   }
 

@@ -33,7 +33,7 @@ class LexicalAnalyzer {
   \brief Input manager. The managing object is responsible for setting up the
   reader object.
   */
-  InputReader *reader_ = nullptr;
+  InputReader* reader_ = nullptr;
 
   /**
   \brief Error flag. This flag should be set by subclasses on invalid input.
@@ -110,7 +110,7 @@ class LexicalAnalyzer {
 
   \returns A const reference to the current location.
   */
-  const Location &location() const noexcept { return location_; }
+  const Location& location() const noexcept { return location_; }
 
   /**
   \brief Constructs a terminal symbol and inserts the current symbol location
@@ -121,7 +121,7 @@ class LexicalAnalyzer {
 
   \returns A terminal Symbol with the current stored location_.
   */
-  Symbol token(const string &name, const Attribute &attr = Attribute{}) {
+  Symbol token(const string& name, const Attribute& attr = Attribute{}) {
     return Terminal(name, attr, location_);
   }
 
@@ -136,7 +136,7 @@ class LexicalAnalyzer {
   an input reader must be set before it is.
   */
   LexicalAnalyzer() {}
-  LexicalAnalyzer(InputReader &reader) : reader_(&reader) {}
+  LexicalAnalyzer(InputReader& reader) : reader_(&reader) {}
   virtual ~LexicalAnalyzer() noexcept = default;
 
   /**
@@ -153,7 +153,7 @@ class LexicalAnalyzer {
 
   \param[in] reader The reader to be assigned.
   */
-  void set_reader(InputReader &reader) noexcept { reader_ = &reader; }
+  void set_reader(InputReader& reader) noexcept { reader_ = &reader; }
   /**
   \brief Removes the assigned reader.
   */

@@ -30,11 +30,11 @@ class TranslationControl {
   /**
   \brief Lexical analyzer for getting tokens from input.
   */
-  LexicalAnalyzer *lexicalAnalyzer_ = nullptr;
+  LexicalAnalyzer* lexicalAnalyzer_ = nullptr;
   /**
   \brief Translation grammar defining the input and output languages.
   */
-  const TranslationGrammar *translationGrammar_ = nullptr;
+  const TranslationGrammar* translationGrammar_ = nullptr;
   /**
   \brief Tstack of input symbols.
   */
@@ -85,7 +85,7 @@ class TranslationControl {
 
   \param[in] la LexicalAnalyzer to be set.
   */
-  virtual void set_lexical_analyzer(LexicalAnalyzer &la) {
+  virtual void set_lexical_analyzer(LexicalAnalyzer& la) {
     lexicalAnalyzer_ = &la;
   }
   /**
@@ -93,7 +93,7 @@ class TranslationControl {
 
   \param[in] tg Translation grammar to be set.
   */
-  virtual void set_grammar(const TranslationGrammar &tg) {
+  virtual void set_grammar(const TranslationGrammar& tg) {
     translationGrammar_ = &tg;
   }
   /**
@@ -105,7 +105,7 @@ class TranslationControl {
 
   \returns All output symbols.
   */
-  virtual const tstack<Symbol> &output() const noexcept { return output_; }
+  virtual const tstack<Symbol>& output() const noexcept { return output_; }
 };
 }  // namespace ctf
 #endif

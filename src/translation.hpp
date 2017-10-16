@@ -44,7 +44,7 @@ class Translation {
   /**
   \brief Provides input terminals from istream.
   */
-  LexicalAnalyzer &lexicalAnalyzer_;
+  LexicalAnalyzer& lexicalAnalyzer_;
   /**
   \brief Holds standard control when generated with Translation::control().
   */
@@ -52,7 +52,7 @@ class Translation {
   /**
   \brief Reference to TranslationControl to be used.
   */
-  TranslationControl &translationControl_;
+  TranslationControl& translationControl_;
   /**
   \brief Translation grammar that defines accepted language and output
   language.
@@ -65,7 +65,7 @@ class Translation {
   /**
   \brief Outputs output terminals to ostream.
   */
-  OutputGenerator &outputGenerator_;
+  OutputGenerator& outputGenerator_;
 
  public:
   /**
@@ -77,9 +77,9 @@ class Translation {
   A copy is made.
   \param[in] og A callable to perform output generation.
   */
-  Translation(std::unique_ptr<LexicalAnalyzer> &&la, TranslationControl &tc,
-              const TranslationGrammar &tg,
-              std::unique_ptr<OutputGenerator> &&og)
+  Translation(std::unique_ptr<LexicalAnalyzer>&& la, TranslationControl& tc,
+              const TranslationGrammar& tg,
+              std::unique_ptr<OutputGenerator>&& og)
       : lexer_(std::move(la)),
         lexicalAnalyzer_(*lexer_),
         translationControl_(tc),
@@ -98,9 +98,9 @@ class Translation {
   languages.
    \param[in] og A callable to perform output generation.
   */
-  Translation(std::unique_ptr<LexicalAnalyzer> &&la, const string &tcName,
-              const TranslationGrammar &tg,
-              std::unique_ptr<OutputGenerator> &&og)
+  Translation(std::unique_ptr<LexicalAnalyzer>&& la, const string& tcName,
+              const TranslationGrammar& tg,
+              std::unique_ptr<OutputGenerator>&& og)
       : lexer_(std::move(la)),
         lexicalAnalyzer_(*lexer_),
         control_(Translation::control(tcName)),
@@ -120,9 +120,9 @@ class Translation {
 
   \returns True when no errors were encountered.
   */
-  TranslationResult run(std::istream &input, std::ostream &output,
-                        std::ostream &error,
-                        const std::string &inputName = "") {
+  TranslationResult run(std::istream& input, std::ostream& output,
+                        std::ostream& error,
+                        const std::string& inputName = "") {
     // extra output buffer
     std::stringstream ss;
     // error flags
@@ -137,9 +137,9 @@ class Translation {
     try {
       // lexical analysis, syntax analysis and translation
       translationControl_.run();
-    } catch (LexicalException &le) {
+    } catch (LexicalException& le) {
       lexError = true;
-    } catch (SyntaxException &se) {
+    } catch (SyntaxException& se) {
       synError = true;
     }
 
@@ -153,7 +153,7 @@ class Translation {
     }
 
     // semantic analysis and code generation
-    auto &&outputTokens = translationControl_.output();
+    auto&& outputTokens = translationControl_.output();
     outputGenerator_.output(outputTokens);
 
     // semantic error
@@ -172,7 +172,7 @@ class Translation {
   "ll".
   \returns A std::unique_ptr containing a new translation control.
   */
-  static std::unique_ptr<TranslationControl> control(const string &name) {
+  static std::unique_ptr<TranslationControl> control(const string& name) {
     const static map<string,
                      std::function<std::unique_ptr<TranslationControl>()>>
         controls{

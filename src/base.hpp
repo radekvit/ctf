@@ -28,44 +28,44 @@ class Attribute {
   /**
   \brief Default copy constructor.
   */
-  Attribute(const Attribute &) = default;
+  Attribute(const Attribute&) = default;
   /**
   \brief Constructs Attribute from a reference to any type.
 
   \tparam T The type of stored object.
   */
   template <typename T>
-  Attribute(const T &arg) : storage_(arg) {}
+  Attribute(const T& arg) : storage_(arg) {}
   /**
   \brief Constructs Attribute from a rvalue reference.
 
   \tparam T The type of stored object.
   */
   template <typename T>
-  Attribute(T &&arg) : storage_(arg) {}
+  Attribute(T&& arg) : storage_(arg) {}
   /**
   \brief Constructs Attribute by passing constructor arguments to std::any.
 
   \tparam Args Variadic arguments type to be passed to std::any constuctor.
   */
   template <typename... Args>
-  Attribute(Args &&... args) : storage_(std::forward(args)...) {}
+  Attribute(Args&&... args) : storage_(std::forward(args)...) {}
 
   /**
   \brief Default assignment operator.
   */
-  Attribute &operator=(const Attribute &) = default;
+  Attribute& operator=(const Attribute&) = default;
   /**
   \brief Default assignment operator.
   */
-  Attribute &operator=(Attribute &&) = default;
+  Attribute& operator=(Attribute&&) = default;
   /**
   \brief Assigns rhs to the Attribute object.
 
   \tparam T The type of the assigned object.
   */
   template <typename T>
-  Attribute &operator=(T &rhs) {
+  Attribute& operator=(T& rhs) {
     storage_ = rhs;
     return *this;
   }
@@ -75,7 +75,7 @@ class Attribute {
   \tparam T The type of the assigned object.
   */
   template <typename T>
-  Attribute &operator=(T &&rhs) {
+  Attribute& operator=(T&& rhs) {
     storage_ = rhs;
     return *this;
   }
@@ -104,7 +104,7 @@ class Attribute {
   \param[in] value A constant reference to the stored value.
   */
   template <typename T>
-  void set(const T &value) {
+  void set(const T& value) {
     storage_.emplace(value);
   }
   /**
@@ -115,7 +115,7 @@ class Attribute {
   \param[in] value A rvalue reference to the stored value.
   */
   template <typename T>
-  void set(T &&value) {
+  void set(T&& value) {
     storage_.emplace(value);
   }
 
@@ -130,7 +130,7 @@ class Attribute {
   \returns A reference to the emplaced object.
   */
   template <typename T, typename... Args>
-  auto emplace(Args &&... args) {
+  auto emplace(Args&&... args) {
     return storage_.emplace<T>(std::forward(args)...);
   }
 
@@ -143,7 +143,7 @@ class Attribute {
 
   \param[in/out] other The other Attribute to be swapped.
   */
-  void swap(Attribute &other) { storage_.swap(other.storage_); }
+  void swap(Attribute& other) { storage_.swap(other.storage_); }
 
   /**
   \brief Returns true if there is no value stored.
@@ -155,7 +155,7 @@ class Attribute {
   /**
   \brief Get the type info of the stored object.
   */
-  const std::type_info &type() const noexcept { return storage_.type(); }
+  const std::type_info& type() const noexcept { return storage_.type(); }
 
   /**
   \name Comparison operators
@@ -166,14 +166,14 @@ class Attribute {
   */
   ///@{
   template <typename T>
-  friend bool operator==(const Attribute &lhs, const T &rhs) {
+  friend bool operator==(const Attribute& lhs, const T& rhs) {
     if (lhs.type() != typeid(rhs))
       return false;
     return lhs.get<T>() == rhs;
   }
 
   template <typename T>
-  friend bool operator==(const T &lhs, const Attribute &rhs) {
+  friend bool operator==(const T& lhs, const Attribute& rhs) {
     if (lhs.type() != typeid(rhs))
       return false;
     return lhs == rhs.get<T>();
@@ -228,8 +228,8 @@ struct Location {
   \param[in] _fileName The name of the source file.
   */
   Location(string _fileName = "") : row(1), col(1), fileName(_fileName) {}
-  Location(const Location &) = default;
-  Location(Location &&) noexcept = default;
+  Location(const Location&) = default;
+  Location(Location&&) noexcept = default;
   ~Location() = default;
 
   /**
@@ -237,13 +237,13 @@ struct Location {
 
   \returns A const reference to the single invalid Location object.
   */
-  static const Location &invalid() noexcept {
+  static const Location& invalid() noexcept {
     static const Location ns{false};
     return ns;
   }
 
-  Location &operator=(const Location &) = default;
-  Location &operator=(Location &&) noexcept = default;
+  Location& operator=(const Location&) = default;
+  Location& operator=(Location&&) noexcept = default;
   /**
   \brief Compares two Location objects by row and col numbers.
 
@@ -254,7 +254,7 @@ struct Location {
   False
   otherwise.
   */
-  friend bool operator==(const Location &lhs, const Location &rhs) {
+  friend bool operator==(const Location& lhs, const Location& rhs) {
     // Location::invalid comparison
     if ((lhs.row == 0 || lhs.col == 0) && (rhs.row == 0 || rhs.col == 0))
       return true;
@@ -271,7 +271,7 @@ struct Location {
   True
   otherwise.
   */
-  friend bool operator!=(const Location &lhs, const Location &rhs) {
+  friend bool operator!=(const Location& lhs, const Location& rhs) {
     return !(lhs == rhs);
   }
 
@@ -354,8 +354,8 @@ class Symbol {
   for Type::EOI.
   \param[in] atr Attribute of constructed Symbol.
   */
-  Symbol(Type type, const string &name = "", const Attribute &atr = Attribute{},
-         const Location &loc = Location::invalid())
+  Symbol(Type type, const string& name = "", const Attribute& atr = Attribute{},
+         const Location& loc = Location::invalid())
       : type_(type), name_(name), attribute_(atr), location_(loc) {
     if (type != Symbol::Type::EOI && name == "")
       throw std::invalid_argument(
@@ -367,8 +367,8 @@ class Symbol {
   \param[in] name Name of constructed Symbol.
   \param[in] atr Attribute of constructed Symbol. Defaults to "".
   */
-  Symbol(const string &name, const Attribute &atr = Attribute{},
-         const Location &loc = Location::invalid())
+  Symbol(const string& name, const Attribute& atr = Attribute{},
+         const Location& loc = Location::invalid())
       : Symbol(Type::UNKNOWN, name, atr, loc) {}
   /**
   \brief Default destructor.
@@ -385,37 +385,37 @@ class Symbol {
   \brief Returns a reference to name.
   \returns A reference to name.
   */
-  string &name() { return name_; }
+  string& name() { return name_; }
   /**
   \brief Returns a const reference to name.
   \returns A const reference to name.
   */
-  const string &name() const { return name_; }
+  const string& name() const { return name_; }
   /**
   \brief Returns a reference to attribute.
   \returns A reference to attribute.
   */
-  Attribute &attribute() { return attribute_; }
+  Attribute& attribute() { return attribute_; }
   /**
   \brief Returns a const reference to attribute.
   \returns A const reference to attribute.
   */
-  const Attribute &attribute() const { return attribute_; }
+  const Attribute& attribute() const { return attribute_; }
   /**
   \brief Returns a const reference to type.
   \returns A const reference to type.
   */
-  const Type &type() const { return type_; }
+  const Type& type() const { return type_; }
   /**
   \brief Returns the Symbol's location.
   \returns The Symbol's original location.
   */
-  const Location &location() const { return location_; }
+  const Location& location() const { return location_; }
 
   /**
   \brief Merges symbol's attribute and sets location if not set.
   */
-  void set_attribute(const Symbol &other) {
+  void set_attribute(const Symbol& other) {
     // TODO change for future Attribute type
     attribute_ = other.attribute();
     if (location_ == Location::invalid())
@@ -431,28 +431,28 @@ class Symbol {
   \returns True when the lexicographic comparison is true.
   */
   ///@{
-  friend bool operator<(const Symbol &lhs, const Symbol &rhs) {
+  friend bool operator<(const Symbol& lhs, const Symbol& rhs) {
     return lhs.type_ < rhs.type_ ||
            (lhs.type_ == rhs.type_ && lhs.name_ < rhs.name_);
   }
 
-  friend bool operator==(const Symbol &lhs, const Symbol &rhs) {
+  friend bool operator==(const Symbol& lhs, const Symbol& rhs) {
     return lhs.type_ == rhs.type_ && lhs.name_ == rhs.name_;
   }
 
-  friend bool operator!=(const Symbol &lhs, const Symbol &rhs) {
+  friend bool operator!=(const Symbol& lhs, const Symbol& rhs) {
     return !(lhs == rhs);
   }
 
-  friend bool operator>(const Symbol &lhs, const Symbol &rhs) {
+  friend bool operator>(const Symbol& lhs, const Symbol& rhs) {
     return rhs < lhs;
   }
 
-  friend bool operator<=(const Symbol &lhs, const Symbol &rhs) {
+  friend bool operator<=(const Symbol& lhs, const Symbol& rhs) {
     return lhs == rhs || lhs < rhs;
   }
 
-  friend bool operator>=(const Symbol &lhs, const Symbol &rhs) {
+  friend bool operator>=(const Symbol& lhs, const Symbol& rhs) {
     return rhs <= lhs;
   }
   ///@}
@@ -463,9 +463,9 @@ class Symbol {
 \param[in] attribute Attribute of returned Symbol. Defaults to "".
 \returns A Symbol with type Terminal, given name and given attribute.
 */
-inline Symbol Terminal(const string &name,
-                       const Attribute &attribute = Attribute{},
-                       const Location &loc = Location::invalid()) {
+inline Symbol Terminal(const string& name,
+                       const Attribute& attribute = Attribute{},
+                       const Location& loc = Location::invalid()) {
   return Symbol(Symbol::Type::TERMINAL, name, attribute, loc);
 }
 /**
@@ -473,7 +473,7 @@ inline Symbol Terminal(const string &name,
 \param[in] name Name of returned symbol.
 \returns A Symbol with type Nonterminal and given name.
 */
-inline Symbol Nonterminal(const string &name) {
+inline Symbol Nonterminal(const string& name) {
   return Symbol(Symbol::Type::NONTERMINAL, name);
 }
 #ifndef CTF_NO_QUOTE_OPERATORS
@@ -483,19 +483,19 @@ inline namespace literals {
 \param[in] s C string representing the name of the returned Symbol.
 \returns Symbol with type Terminal and given name.
 */
-inline Symbol operator""_t(const char *s, size_t) { return Terminal({s}); }
+inline Symbol operator""_t(const char* s, size_t) { return Terminal({s}); }
 /**
 \brief Returns a Symbol of Type::Nonterminal with given name.
 \param[in] s C string representing the name of the returned Symbol.
 \returns Symbol with type Terminal and given name.
 */
-inline Symbol operator""_nt(const char *s, size_t) { return Nonterminal({s}); }
+inline Symbol operator""_nt(const char* s, size_t) { return Nonterminal({s}); }
 /**
 \brief Returns a Symbol of Type::Special with given name.
 \param[in] s C string representing the name of the returned Symbol.
 \returns Symbol with type Special and given name.
 */
-inline Symbol operator""_s(const char *s, size_t) {
+inline Symbol operator""_s(const char* s, size_t) {
   return Symbol(Symbol::Type::SPECIAL, {s});
 }
 }  // inline namespace literals
@@ -504,7 +504,7 @@ inline Symbol operator""_s(const char *s, size_t) {
 }  // namespace ctf
 
 namespace std {
-inline void swap(ctf::Attribute &lhs, ctf::Attribute &rhs) noexcept {
+inline void swap(ctf::Attribute& lhs, ctf::Attribute& rhs) noexcept {
   lhs.swap(rhs);
 }
 }  // namespace std

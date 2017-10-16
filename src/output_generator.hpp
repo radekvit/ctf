@@ -23,7 +23,7 @@ class OutputGenerator {
   /**
   \brief Pointer to the output stream tokens will be output to.
   */
-  std::ostream *os_;
+  std::ostream* os_;
 
   /**
   \brief Clears the inner state and errors.
@@ -36,7 +36,7 @@ class OutputGenerator {
 
   \returns A reference to the output stream if set.
   */
-  std::ostream &os() const {
+  std::ostream& os() const {
     if (!os_) {
       throw std::runtime_error(
           "ctf::OutputGenerator::os() output stream not set.");
@@ -50,7 +50,7 @@ class OutputGenerator {
 
  public:
   OutputGenerator() = default;
-  OutputGenerator(std::ostream &os) : os_(&os) {}
+  OutputGenerator(std::ostream& os) : os_(&os) {}
   virtual ~OutputGenerator() noexcept = default;
   /**
   \brief Returns true if an output stream has been set.
@@ -63,7 +63,7 @@ class OutputGenerator {
 
   \param[in] o Output stream.
   */
-  void set_stream(std::ostream &o) noexcept {
+  void set_stream(std::ostream& o) noexcept {
     os_ = &o;
     reset();
   }
@@ -93,15 +93,15 @@ class OutputGenerator {
 
   The default output implementation.
   */
-  virtual void output(const tstack<Symbol> &terminals) {
-    auto &os = this->os();
-    for (auto &t : terminals) {
+  virtual void output(const tstack<Symbol>& terminals) {
+    auto& os = this->os();
+    for (auto& t : terminals) {
       if (t == Symbol::eof())
         return;
       os << t.name();
       if (!t.attribute().empty()) {
         os << ".";
-        auto &type = t.attribute().type();
+        auto& type = t.attribute().type();
         if (type == typeid(string))
           os << t.attribute().get<string>();
         else if (type == typeid(char))

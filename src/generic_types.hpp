@@ -51,8 +51,8 @@ class tstack {
   using container_type = tstack<T>;
   using value_type = T;
   using size_type = typename list<T>::size_type;
-  using reference = tstack<T> &;
-  using const_reference = const tstack<T> &;
+  using reference = tstack<T>&;
+  using const_reference = const tstack<T>&;
 
   using iterator = typename list<T>::iterator;
   using const_iterator = typename list<T>::const_iterator;
@@ -75,7 +75,7 @@ class tstack {
   \param[in] args Arguments sent to the std::list constructor.
   */
   template <typename... Args>
-  tstack(Args &&... args) : list_(std::forward<Args>(args)...) {}
+  tstack(Args&&... args) : list_(std::forward<Args>(args)...) {}
 
   /**
   \brief Is the tstack empty predicate.
@@ -96,19 +96,19 @@ class tstack {
   \param[in] args Arguments for the construction of T.
   */
   template <typename... Args>
-  void push(Args &&... args) {
+  void push(Args&&... args) {
     list_.emplace_front(std::forward<Args>(args)...);
   }
   /**
   \brief Get a reference to the top element of the tstack.
   \returns A reference to the top element of the tstack.
   */
-  T &top() noexcept { return list_.front(); }
+  T& top() noexcept { return list_.front(); }
   /**
   \brief Get a constant reference to the top element of the tstack.
   \returns A const reference to the top element of the tstack.
   */
-  const T &top() const noexcept { return list_.front(); }
+  const T& top() const noexcept { return list_.front(); }
   /**
   \brief Pops the top element from the tstack and returns it.
   \returns The element that was on the top of the tstack before its removal.
@@ -129,9 +129,9 @@ class tstack {
   predicate. If no element fits the criteria, the returned iterator is
   equal to tstack::end().
   */
-  iterator search(const T &target, iterator from,
-                  std::function<bool(const T &, const T &)> predicate =
-                      [](auto &lhs, auto &rhs) { return lhs == rhs; }) {
+  iterator search(const T& target, iterator from,
+                  std::function<bool(const T&, const T&)> predicate =
+                      [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
     iterator it;
     for (it = from; it != list_.end(); ++it) {
       if (predicate(*it, target))
@@ -150,9 +150,9 @@ class tstack {
   predicate. If no element fits the criteria, the returned iterator is
   equal to tstack::cend().
   */
-  const_iterator search(const T &target, const_iterator from,
-                        std::function<bool(const T &, const T &)> predicate =
-                            [](auto &lhs, auto &rhs) {
+  const_iterator search(const T& target, const_iterator from,
+                        std::function<bool(const T&, const T&)> predicate =
+                            [](auto& lhs, auto& rhs) {
                               return lhs == rhs;
                             }) const {
     const_iterator it;
@@ -172,9 +172,9 @@ class tstack {
   predicate. If no element fits the criteria, the returned iterator is
   equal to tstack::end().
   */
-  iterator search(const T &target,
-                  std::function<bool(const T &, const T &)> predicate =
-                      [](auto &lhs, auto &rhs) { return lhs == rhs; }) {
+  iterator search(const T& target,
+                  std::function<bool(const T&, const T&)> predicate =
+                      [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
     return search(target, begin(), predicate);
   }
   /**
@@ -187,9 +187,9 @@ class tstack {
   predicate. If no element fits the criteria, the returned iterator is
   equal to tstack::cend().
   */
-  const_iterator search(const T &target,
-                        std::function<bool(const T &, const T &)> predicate =
-                            [](auto &lhs, auto &rhs) {
+  const_iterator search(const T& target,
+                        std::function<bool(const T&, const T&)> predicate =
+                            [](auto& lhs, auto& rhs) {
                               return lhs == rhs;
                             }) const {
     return search(target, begin(), predicate);
@@ -208,12 +208,12 @@ class tstack {
   The first element in the string will be closest to top of the tstack.
   */
   template <class TS>
-  iterator replace(iterator it, const TS &string) {
+  iterator replace(iterator it, const TS& string) {
     if (it == list_.end())
       return it;
     auto insert = it;
     ++insert;
-    for (auto &t : string) {
+    for (auto& t : string) {
       list_.insert(insert, t);
     }
     list_.erase(it++);
@@ -237,9 +237,9 @@ class tstack {
   tstack after this operation.
   */
   template <class TS>
-  iterator replace(const T &target, const TS &string, iterator from,
-                   std::function<bool(const T &, const T &)> predicate =
-                       [](auto &lhs, auto &rhs) { return lhs == rhs; }) {
+  iterator replace(const T& target, const TS& string, iterator from,
+                   std::function<bool(const T&, const T&)> predicate =
+                       [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
     return replace(search(target, from, predicate), string);
   }
   /**
@@ -260,9 +260,9 @@ class tstack {
   tstack after this operation.
   */
   template <class TS>
-  iterator replace(const T &target, const TS &string,
-                   std::function<bool(const T &, const T &)> predicate =
-                       [](auto &lhs, auto &rhs) { return lhs == rhs; }) {
+  iterator replace(const T& target, const TS& string,
+                   std::function<bool(const T&, const T&)> predicate =
+                       [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
     return replace(search(target, predicate), string);
   }
   /**
@@ -270,7 +270,7 @@ class tstack {
 
   \param[in] other The other tstack to be swapped.
   */
-  void swap(tstack &other) noexcept { std::swap(list_, other.list_); }
+  void swap(tstack& other) noexcept { std::swap(list_, other.list_); }
 
   ///@{
   /**
@@ -336,22 +336,22 @@ class tstack {
   \returns True if the lexicographic comparison of the two tstacks is true.
   */
   ///@{
-  friend bool operator==(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
+  friend bool operator==(const tstack<T>& lhs, const tstack<T>& rhs) noexcept {
     return lhs.list_ == rhs.list_;
   }
-  friend bool operator!=(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
+  friend bool operator!=(const tstack<T>& lhs, const tstack<T>& rhs) noexcept {
     return !(lhs == rhs);
   }
-  friend bool operator<(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
+  friend bool operator<(const tstack<T>& lhs, const tstack<T>& rhs) noexcept {
     return lhs.list_ < rhs.list_;
   }
-  friend bool operator>(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
+  friend bool operator>(const tstack<T>& lhs, const tstack<T>& rhs) noexcept {
     return rhs.list_ < lhs.list_;
   }
-  friend bool operator<=(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
+  friend bool operator<=(const tstack<T>& lhs, const tstack<T>& rhs) noexcept {
     return lhs == rhs || lhs < rhs;
   }
-  friend bool operator>=(const tstack<T> &lhs, const tstack<T> &rhs) noexcept {
+  friend bool operator>=(const tstack<T>& lhs, const tstack<T>& rhs) noexcept {
     return rhs <= lhs;
   }
   ///@}
@@ -376,7 +376,7 @@ FUNCTIONS
 Sorts the container and removes duplicates.
 */
 template <class T>
-void make_set(T &container) {
+void make_set(T& container) {
   // sort the contents
   sort(container.begin(), container.end());
   // remove duplicates
@@ -389,7 +389,7 @@ void make_set(T &container) {
 \returns True if element e is contained in sorted container c. False otherwise.
 */
 template <class T, class CT>
-bool is_in(const CT &c, const T &e) {
+bool is_in(const CT& c, const T& e) {
   auto it = std::lower_bound(c.begin(), c.end(), e);
   return it != c.end() && *it == e;
 }
@@ -400,7 +400,7 @@ bool is_in(const CT &c, const T &e) {
 \returns A set union of the two containers.
 */
 template <class T>
-T set_union(const T &lhs, const T &rhs) {
+T set_union(const T& lhs, const T& rhs) {
   T r;
   std::set_union(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(),
                  back_inserter(r));
@@ -418,7 +418,7 @@ sorted.
 target container. False otherwise.
 */
 template <class CT>
-bool modify_set(CT &target, const CT &addition) {
+bool modify_set(CT& target, const CT& addition) {
   auto before = target.size();
   target = set_union(target, addition);
   return before != target.size();
@@ -437,7 +437,7 @@ class reverser {
   /**
   \brief Reference to the reversed container.
   */
-  T &ref;
+  T& ref;
 
  public:
   reverser() = delete;
@@ -446,7 +446,7 @@ class reverser {
 
   \param[in] _t Container that is to be reversed.
   */
-  reverser(T &_t) : ref(_t) {}
+  reverser(T& _t) : ref(_t) {}
 
   auto begin() { return ref.rbegin(); }
   auto end() { return ref.rend(); }
@@ -462,7 +462,7 @@ class const_reverser {
   /**
   \brief Const reference to the reversed containter.
   */
-  const T &ref;
+  const T& ref;
 
  public:
   const_reverser() = delete;
@@ -471,7 +471,7 @@ class const_reverser {
 
   \param[in] _t Container to be reversed.
   */
-  const_reverser(const T &_t) : ref(_t) {}
+  const_reverser(const T& _t) : ref(_t) {}
 
   auto begin() const { return ref.rbegin(); }
   auto end() const { return ref.rend(); }
@@ -488,7 +488,7 @@ class const_reverser {
 \returns Container reversing adapter.
 */
 template <class T>
-impl::reverser<T> reverse(T &t) {
+impl::reverser<T> reverse(T& t) {
   return impl::reverser<T>(t);
 }
 /**
@@ -499,7 +499,7 @@ impl::reverser<T> reverse(T &t) {
 \returns Container reversing adapter.
 */
 template <class T>
-const impl::const_reverser<T> reverse(const T &t) {
+const impl::const_reverser<T> reverse(const T& t) {
   return impl::const_reverser<T>(t);
 }
 
@@ -514,7 +514,7 @@ The source container must provide begin() and end() operations and the target
 container must be constructible from an iterator range.
 */
 template <class IT, class OT>
-OT transform(const IT &it) {
+OT transform(const IT& it) {
   return OT{begin(it), end(it)};
 }
 

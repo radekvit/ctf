@@ -61,14 +61,14 @@ class TranslationGrammar {
     void check_nonterminals() {
       vector<Symbol> inputNonterminals;
       vector<Symbol> outputNonterminals;
-      for (auto &s : input_) {
+      for (auto& s : input_) {
         if (s.type() == Symbol::Type::NONTERMINAL)
           inputNonterminals.push_back(s);
         else if (s.type() != Symbol::Type::TERMINAL &&
                  s.type() != Symbol::Type::SPECIAL)
           throw std::invalid_argument("Unknown symbol type in Rule input.");
       }
-      for (auto &s : output_) {
+      for (auto& s : output_) {
         if (s.type() == Symbol::Type::NONTERMINAL)
           outputNonterminals.push_back(s);
         else if (s.type() != Symbol::Type::TERMINAL &&
@@ -84,7 +84,7 @@ class TranslationGrammar {
     */
     size_t count_input_terminals() const {
       size_t count = 0;
-      for (auto &s : input_) {
+      for (auto& s : input_) {
         if (s.type() == Symbol::Type::TERMINAL)
           count++;
       }
@@ -112,9 +112,9 @@ class TranslationGrammar {
     The numbers say which output symbols are the targets for each input token's
     attribute.
     */
-    Rule(const Symbol &nonterminal, const vector<Symbol> &input,
-         const vector<Symbol> &output,
-         const vector<set<size_t>> &attributeActions = {})
+    Rule(const Symbol& nonterminal, const vector<Symbol>& input,
+         const vector<Symbol>& output,
+         const vector<set<size_t>>& attributeActions = {})
         : nonterminal_(nonterminal),
           input_(input),
           output_(output),
@@ -132,7 +132,7 @@ class TranslationGrammar {
             "Invalid attributeActions_ when "
             "constructing class "
             "TranslationGrammar::Rule.");
-      for (auto &target : attributeActions_) {
+      for (auto& target : attributeActions_) {
         if (target.size() > output_.size())
           throw std::invalid_argument(
               "More assigned actions than symbols in output when "
@@ -154,7 +154,7 @@ class TranslationGrammar {
 
     Attribute targets are created to match all terminals to themselves.
     */
-    Rule(const Symbol &nonterminal, const vector<Symbol> &both)
+    Rule(const Symbol& nonterminal, const vector<Symbol>& both)
         : Rule(nonterminal, both, both) {
       // implicit target for each terminal is the identical output terminal
       size_t target = 0;
@@ -168,17 +168,17 @@ class TranslationGrammar {
 
     ~Rule() = default;
 
-    Symbol &nonterminal() { return nonterminal_; }
-    const Symbol &nonterminal() const { return nonterminal_; }
+    Symbol& nonterminal() { return nonterminal_; }
+    const Symbol& nonterminal() const { return nonterminal_; }
 
-    vector<Symbol> &input() { return input_; }
-    const vector<Symbol> &input() const { return input_; }
+    vector<Symbol>& input() { return input_; }
+    const vector<Symbol>& input() const { return input_; }
 
-    vector<Symbol> &output() { return output_; }
-    const vector<Symbol> &output() const { return output_; }
+    vector<Symbol>& output() { return output_; }
+    const vector<Symbol>& output() const { return output_; }
 
-    vector<set<size_t>> &actions() { return attributeActions_; }
-    const vector<set<size_t>> &actions() const { return attributeActions_; }
+    vector<set<size_t>>& actions() { return attributeActions_; }
+    const vector<set<size_t>>& actions() const { return attributeActions_; }
 
     /**
     \name Comparison operators
@@ -188,7 +188,7 @@ class TranslationGrammar {
     \returns True if the comparison is true. False otherwise.
     */
     ///@{
-    friend bool operator<(const Rule &lhs, const Rule &rhs) {
+    friend bool operator<(const Rule& lhs, const Rule& rhs) {
       if (lhs.nonterminal_ < rhs.nonterminal_) {
         return true;
       } else if (lhs.nonterminal_ == rhs.nonterminal_) {
@@ -201,20 +201,20 @@ class TranslationGrammar {
       } else
         return false;
     }
-    friend bool operator==(const Rule &lhs, const Rule &rhs) {
+    friend bool operator==(const Rule& lhs, const Rule& rhs) {
       return lhs.nonterminal() == rhs.nonterminal() &&
              lhs.input() == rhs.input() && lhs.output() == rhs.output();
     }
-    friend bool operator!=(const Rule &lhs, const Rule &rhs) {
+    friend bool operator!=(const Rule& lhs, const Rule& rhs) {
       return !(lhs == rhs);
     }
-    friend bool operator>(const Rule &lhs, const Rule &rhs) {
+    friend bool operator>(const Rule& lhs, const Rule& rhs) {
       return rhs < lhs;
     }
-    friend bool operator<=(const Rule &lhs, const Rule &rhs) {
+    friend bool operator<=(const Rule& lhs, const Rule& rhs) {
       return lhs < rhs || lhs == rhs;
     }
-    friend bool operator>=(const Rule &lhs, const Rule &rhs) {
+    friend bool operator>=(const Rule& lhs, const Rule& rhs) {
       return rhs <= lhs;
     }
     ///@}
@@ -252,7 +252,7 @@ class TranslationGrammar {
   different atttribute actions.
   \param[in] starting_symbol The starting symbol.
   */
-  TranslationGrammar(const vector<Rule> &rules, const Symbol &starting_symbol)
+  TranslationGrammar(const vector<Rule>& rules, const Symbol& starting_symbol)
       : rules_(rules), starting_symbol_(starting_symbol) {
     // the starting symbol must be a nonterminal
     if (starting_symbol_.type() != Symbol::Type::NONTERMINAL)
@@ -262,9 +262,9 @@ class TranslationGrammar {
     nonterminals_.push_back(starting_symbol_);
 
     // filling the terminal and nonterminal sets
-    for (auto &r : rules_) {
+    for (auto& r : rules_) {
       nonterminals_.push_back(r.nonterminal());
-      for (auto &s : r.input()) {
+      for (auto& s : r.input()) {
         switch (s.type()) {
           case Symbol::Type::NONTERMINAL:
             nonterminals_.push_back(s);
@@ -293,9 +293,9 @@ class TranslationGrammar {
 
   Checks rules for validity with supplied terminals and nonterminals.
   */
-  TranslationGrammar(const vector<Symbol> &nonterminals,
-                     const vector<Symbol> &terminals, const vector<Rule> &rules,
-                     const Symbol &starting_symbol)
+  TranslationGrammar(const vector<Symbol>& nonterminals,
+                     const vector<Symbol>& terminals, const vector<Rule>& rules,
+                     const Symbol& starting_symbol)
       : terminals_(terminals),
         nonterminals_(nonterminals),
         rules_(rules),
@@ -303,7 +303,7 @@ class TranslationGrammar {
     make_set(terminals_);
     make_set(nonterminals_);
 
-    for (auto &t : terminals_) {
+    for (auto& t : terminals_) {
       if (t == Symbol::eof())
         throw std::invalid_argument(
             "EOF in terminals when constructing TranslationGrammar.");
@@ -313,7 +313,7 @@ class TranslationGrammar {
             "constructing TranslationGrammar.");
     }
 
-    for (auto &nt : nonterminals_) {
+    for (auto& nt : nonterminals_) {
       if (nt.type() != Symbol::Type::NONTERMINAL)
         throw std::invalid_argument(
             "Symbol with type other than NONTERMINAL in nonterminals when "
@@ -329,13 +329,13 @@ class TranslationGrammar {
           "Starting symbol is not in nonterminals when constructing "
           "TranslationGrammar.");
 
-    for (auto &r : rules_) {
+    for (auto& r : rules_) {
       if (!is_in(nonterminals_, r.nonterminal()))
         throw std::invalid_argument("Rule with production from nonterminal " +
                                     r.nonterminal().name() +
                                     ", no such nonterminal.");
 
-      for (auto &s : r.input()) {
+      for (auto& s : r.input()) {
         switch (s.type()) {
           case Symbol::Type::TERMINAL:
             if (!is_in(terminals_, s))
@@ -360,22 +360,22 @@ class TranslationGrammar {
   /**
   \brief Returns an empty string of symbols.
   */
-  static const vector<Symbol> &EPSILON_STRING() {
+  static const vector<Symbol>& EPSILON_STRING() {
     static vector<Symbol> es{};
     return es;
   };
 
-  vector<Symbol> &terminals() { return terminals_; }
-  const vector<Symbol> &terminals() const { return terminals_; }
+  vector<Symbol>& terminals() { return terminals_; }
+  const vector<Symbol>& terminals() const { return terminals_; }
 
-  vector<Symbol> &nonterminals() { return nonterminals_; }
-  const vector<Symbol> &nonterminals() const { return nonterminals_; }
+  vector<Symbol>& nonterminals() { return nonterminals_; }
+  const vector<Symbol>& nonterminals() const { return nonterminals_; }
 
-  vector<Rule> &rules() { return rules_; }
-  const vector<Rule> &rules() const { return rules_; }
+  vector<Rule>& rules() { return rules_; }
+  const vector<Rule>& rules() const { return rules_; }
 
-  Symbol &starting_symbol() { return starting_symbol_; }
-  const Symbol &starting_symbol() const { return starting_symbol_; }
+  Symbol& starting_symbol() { return starting_symbol_; }
+  const Symbol& starting_symbol() const { return starting_symbol_; }
 
   /**
   \brief Returns a nonterminal's index.
@@ -386,7 +386,7 @@ class TranslationGrammar {
 
   Undefined behavior if the nonterminal is not in nonterminals_.
   */
-  size_t nonterminal_index(const Symbol &nt) const {
+  size_t nonterminal_index(const Symbol& nt) const {
     return std::lower_bound(nonterminals_.begin(), nonterminals_.end(), nt) -
            nonterminals_.begin();
   }
@@ -399,7 +399,7 @@ class TranslationGrammar {
 
   Undefined behavior if the terminal in not in terminals_.
   */
-  size_t terminal_index(const Symbol &t) const {
+  size_t terminal_index(const Symbol& t) const {
     return std::lower_bound(terminals_.begin(), terminals_.end(), t) -
            terminals_.begin();
   }
