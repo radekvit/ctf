@@ -6,21 +6,21 @@
 #ifndef CTF_LL_TABLE_H
 #define CTF_LL_TABLE_H
 
+#include <algorithm>
 #include <stdexcept>
 #include <utility>
 
 #include "translation_grammar.hpp"
 
 namespace ctf {
-/**
-\brief Class containing rule indices to be used in a LL controlled translation.
-*/
-class LLTable {
+
+template <typename T>
+class DecisionTable {
  public:
   /**
   \brief Type of cells.
   */
-  using cell = size_t;
+  using cell = T;
   /**
   \brief Type of rows.
   */
@@ -32,42 +32,39 @@ class LLTable {
   */
   row table_;
   /**
-  \brief Mapping nonterminals to indices to table_.
+  \brief Mapping nonterminals to table_ indices.
   */
   map<Symbol, size_t> nonterminalMap_;
   /**
-  \brief Mapping terminals to indices to table_ rows.
+  \brief Mapping terminals to table_ row indices.
   */
   map<Symbol, size_t> terminalMap_;
   /**
-  \brief Stores invalid rule index.
+  \brief Stores invalid value.
   */
-  size_t invalidRuleIndex_;
+  cell invalid_;
   /**
   \brief Maps 2D indices to 1D indices.
   */
   size_t index(size_t y, size_t x) const { return terminalMap_.size() * y + x; }
 
- public:
-  /**
-  \brief Constructs an empty LL table.
-  */
-  LLTable() = default;
-  /**
-  \brief Constructs a LLtable from a translation grammar and a predict set.
+  virtual void initialize_invalid(const TranslationGrammar &) { return; }
 
-  \param[in] tg TranslationGrammar. Terminals and Nonterminals are mapped to
-  their respective indices. Rule indices are stored in LLTable.
-  \param[in] predict Predict set for table construction.
-  */
-  LLTable(const TranslationGrammar &tg, const vector<vector<Symbol>> &predict)
-      : table_(tg.nonterminals().size() * (tg.terminals().size() + 1),
-               tg.rules().size()),
-        invalidRuleIndex_(tg.rules().size()) {
+  virtual void insert_rule(const size_t insertedRule, const size_t i) {
+    table_[i] = {insertedRule};
+  }
+
+  void initialize() {}
+
+  void initialize(const TranslationGrammar &tg,
+                  const vector<vector<Symbol>> &predict) {
+    initialize_invalid(tg);
+    table_ =
+        row(tg.nonterminals().size() * (tg.terminals().size() + 1), invalid_);
     if (predict.size() != tg.rules().size())
       throw std::invalid_argument(
           "Mismatched predict and TranslationGrammar.rules "
-          "sizes when constructing LLTable.");
+          "sizes when constructing a decision table.");
 
     // create index maps for terminals and nonterminals
     for (size_t i = 0; i < tg.nonterminals().size(); ++i) {
@@ -89,17 +86,30 @@ class LLTable {
         if (tit == terminalMap_.end())
           throw std::invalid_argument(
               "Terminal in predict not a terminal in translation grammar when "
-              "constructing LLTable.");
+              "constructing a decision table.");
 
         size_t ti = tit->second;
-        // a rule is already present
-        if (table_[index(ni, ti)] != invalidRuleIndex_) {
-          throw std::invalid_argument(
-              "Constructing LLTable from a non-LL TranslationGrammar.");
-        }
-        table_[index(ni, terminalMap_.at(t))] = i;
+        insert_rule(i, index(ni, ti));
       }  // for all terminals
     }    // for all i
+  }
+
+ public:
+  /**
+  \brief Constructs an empty LL table.
+  */
+  DecisionTable() = default;
+  /**
+  \brief Constructs a decision table from a translation grammar and a predict
+  set.
+
+  \param[in] tg TranslationGrammar. Terminals and Nonterminals are mapped to
+  their respective indices. Rule indices are stored in the decision table.
+  \param[in] predict Predict set for table construction.
+  */
+  DecisionTable(const TranslationGrammar &tg,
+                const vector<vector<Symbol>> &predict) {
+    initialize(tg, predict);
   }
   /**
   \brief Returns an index of the rule to be used when t is the current token
@@ -119,10 +129,57 @@ class LLTable {
     auto tit = terminalMap_.find(t);
     // either of the arguments not found
     if (ntit == nonterminalMap_.end() || tit == terminalMap_.end())
-      return invalidRuleIndex_;
+      return invalid_;
     // returning from LL table
     return table_[index(ntit->second, tit->second)];
   }
+};
+
+/**
+\brief Class containing rule indices to be used in a LL controlled translation.
+*/
+class LLTable : public DecisionTable<size_t> {
+  void initialize_invalid(const TranslationGrammar &tg) override {
+    invalid_ = tg.rules().size();
+  }
+
+  void insert_rule(const size_t insertedRule, const size_t i) override {
+    // a rule is already present
+    if (table_[i] != invalid_) {
+      throw std::invalid_argument(
+          "Constructing LLTable from a non-LL TranslationGrammar.");
+    }
+    table_[i] = insertedRule;
+  }
+
+ public:
+  LLTable(const TranslationGrammar &tg, const vector<vector<Symbol>> &predict) {
+    initialize(tg, predict);
+  }
+
+  LLTable() { invalid_ = 0; };
+};
+
+class GeneralLLTable : public DecisionTable<vector<size_t>> {
+  void insert_rule(const size_t insertedRule, const size_t i) override {
+    cell inserted{insertedRule};
+    cell newTable{};
+    std::set_union(table_[i].begin(), table_[i].end(), inserted.begin(),
+                   inserted.end(), std::back_inserter(newTable));
+    std::swap(table_[i], newTable);
+  }
+
+  void initialize_invalid(const TranslationGrammar &) override {
+    invalid_ = {};
+  }
+
+ public:
+  GeneralLLTable(const TranslationGrammar &tg,
+                 const vector<vector<Symbol>> &predict) {
+    initialize(tg, predict);
+  }
+
+  GeneralLLTable() { initialize(); };
 };
 }  // namespace ctf
 
