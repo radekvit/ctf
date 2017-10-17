@@ -380,9 +380,10 @@ class LLTranslationControl : public TranslationControl {
   \param[in] top The current top symbol.
   \param[in] token The incoming token.
   */
-  virtual void add_error(const Symbol& top, const Symbol& token, [[maybe_unused]] const Symbol& lastDerivedNonterminal) {
+  virtual void add_error(
+      const Symbol& top, const Symbol& token,
+      [[maybe_unused]] const Symbol& lastDerivedNonterminal) {
     using Type = Symbol::Type;
-    
 
     errorFlag_ = true;
     errorString_ += token.location().to_string() + ": ";
@@ -422,7 +423,7 @@ class LLTranslationControl : public TranslationControl {
         translationGrammar_->nonterminal_index(lastDerivedNonterminal);
     auto& ntFollow = follow_[ntIndex];
     // get a token from follow(lastNonterminal_)
-    while (!is_in(ntFollow, token)) {
+    while (!is_in(ntFollow, token) && token != Symbol::eof()) {
       token = next_token();
     }
     // pop stack until a rule is applicable or the same token is on top
