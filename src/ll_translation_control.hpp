@@ -331,7 +331,7 @@ class LLTranslationControl : public TranslationControl {
           if (token == Symbol::eof()) {
             return;
           } else {
-            add_error(top, token);
+            add_error(top, token, lastDerivedNonterminal);
             return;
           }
           break;
@@ -343,7 +343,7 @@ class LLTranslationControl : public TranslationControl {
             input_.pop();
             token = next_token();
           } else {
-            add_error(top, token);
+            add_error(top, token, lastDerivedNonterminal);
             if (!error_recovery(lastDerivedNonterminal, token,
                                 attributeActions))
               return;
@@ -358,7 +358,7 @@ class LLTranslationControl : public TranslationControl {
             input_.replace(input_.begin(), rule.input());
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
-            add_error(top, token);
+            add_error(top, token, lastDerivedNonterminal);
             if (!error_recovery(lastDerivedNonterminal, token,
                                 attributeActions))
               return;
@@ -380,8 +380,9 @@ class LLTranslationControl : public TranslationControl {
   \param[in] top The current top symbol.
   \param[in] token The incoming token.
   */
-  virtual void add_error(const Symbol& top, const Symbol& token) {
+  virtual void add_error(const Symbol& top, const Symbol& token, [[maybe_unused]] const Symbol& lastDerivedNonterminal) {
     using Type = Symbol::Type;
+    
 
     errorFlag_ = true;
     errorString_ += token.location().to_string() + ": ";

@@ -106,6 +106,10 @@ class LexicalAnalyzer {
   int unget(size_t num = 1) { return reader_->unget(num); }
 
   /**
+  \brief Resets the current token's location. 
+  */
+  void reset_location() { location_ = Location::invalid(); }
+  /**
   \brief Get the current stored location.
 
   \returns A const reference to the current location.
