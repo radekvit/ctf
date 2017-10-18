@@ -333,36 +333,22 @@ class InputReader {
   \brief Moves the read head N characters back.
 
   \param[in] rollback How many characters to roll back.
-
-  \returns The character N positions back.
   */
-  int unget(size_t rollback = 1) noexcept {
-    int c = 0;
-    // rollback one more and read
-    currentLocation_ = inputBuffer_.unget(currentLocation_, rollback + 1);
-    // will always succeed
-    inputBuffer_.get(c, currentLocation_);
-
-    return c;
+  void unget(size_t rollback = 1) noexcept {
+    // rollback
+    currentLocation_ = inputBuffer_.unget(currentLocation_, rollback);
   }
   /**
   \brief Moves the read head N characters back and sets the rolled back
   location.
 
-  \param[out] location The location of the read character after rollback.
+  \param[out] location The current location after rollback.
   \param[in] rollback How many characters to roll back.
-
-  \returns The charater N positions back.
   */
-  int unget(Location& location, size_t rollback = 1) noexcept {
-    int c = 0;
-    // rollback one more and read
-    currentLocation_ = inputBuffer_.unget(currentLocation_, rollback + 1);
+  void unget(Location& location, size_t rollback = 1) noexcept {
+    // rollback
+    currentLocation_ = inputBuffer_.unget(currentLocation_, rollback);
     location = currentLocation_;
-    // will always succeed
-    inputBuffer_.get(c, currentLocation_);
-
-    return c;
   }
 
   /**

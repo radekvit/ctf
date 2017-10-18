@@ -103,7 +103,7 @@ class LexicalAnalyzer {
 
   \returns The integer value of the character num positions back.
   */
-  int unget(size_t num = 1) { return reader_->unget(num); }
+  void unget(size_t num = 1) { reader_->unget(num); }
 
   /**
   \brief Resets the current token's location.
