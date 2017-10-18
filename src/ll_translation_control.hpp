@@ -13,7 +13,8 @@ namespace ctf {
 /**
 \brief Implements LL top down translation control.
 */
-class LLTranslationControl : public TranslationControl {
+template <typename LLTableType>
+class LLTranslationControlTemplate : public TranslationControl {
  protected:
   /**
   \brief Empty set for each nonterminal.
@@ -35,7 +36,7 @@ class LLTranslationControl : public TranslationControl {
   /**
   \brief LL table used to control the translation.
   */
-  LLTable llTable_;
+  LLTableType llTable_;
 
   /**
   \brief Error message string.
@@ -51,7 +52,7 @@ class LLTranslationControl : public TranslationControl {
     create_follow();
     create_predict();
 
-    llTable_ = LLTable(*translationGrammar_, predict_);
+    llTable_ = LLTableType(*translationGrammar_, predict_);
   }
 
   /**
@@ -266,21 +267,21 @@ class LLTranslationControl : public TranslationControl {
 
  public:
   /**
-  \brief Constructs a LLTranslationControl.
+  \brief Constructs a LLTranslationControlTemplate.
   */
-  LLTranslationControl() = default;
+  LLTranslationControlTemplate() = default;
   /**
   \brief Default destructor.
   */
-  virtual ~LLTranslationControl() = default;
+  virtual ~LLTranslationControlTemplate() = default;
   /**
-  \brief Constructs LLTranslationControl with a LexicalAnalyzer and
+  \brief Constructs LLTranslationControlTemplate with a LexicalAnalyzer and
   TranslationGrammar.
 
   \param[in] la A reference to the lexical analyzer to be used to get tokens.
   \param[in] tg The translation grammar for this translation.
   */
-  LLTranslationControl(LexicalAnalyzer& la, TranslationGrammar& tg) {
+  LLTranslationControlTemplate(LexicalAnalyzer& la, TranslationGrammar& tg) {
     set_grammar(tg);
     set_lexical_analyzer(la);
   }
@@ -331,6 +332,7 @@ class LLTranslationControl : public TranslationControl {
           if (token == Symbol::eof()) {
             return;
           } else {
+            set_error();
             add_error(top, token, lastDerivedNonterminal);
             return;
           }
@@ -343,6 +345,7 @@ class LLTranslationControl : public TranslationControl {
             input_.pop();
             token = next_token();
           } else {
+            set_error();
             add_error(top, token, lastDerivedNonterminal);
             if (!error_recovery(lastDerivedNonterminal, token,
                                 attributeActions))
@@ -358,6 +361,7 @@ class LLTranslationControl : public TranslationControl {
             input_.replace(input_.begin(), rule.input());
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
+            set_error();
             add_error(top, token, lastDerivedNonterminal);
             if (!error_recovery(lastDerivedNonterminal, token,
                                 attributeActions))
@@ -373,6 +377,10 @@ class LLTranslationControl : public TranslationControl {
     }
   }
 
+  void set_error() {
+    errorFlag_ = true;
+  }
+
   /**
   \brief Adds error message caused by a top symbol and incoming token
   combination.
@@ -385,7 +393,6 @@ class LLTranslationControl : public TranslationControl {
       [[maybe_unused]] const Symbol& lastDerivedNonterminal) {
     using Type = Symbol::Type;
 
-    errorFlag_ = true;
     errorString_ += token.location().to_string() + ": ";
     switch (top.type()) {
       case Type::EOI:
@@ -459,6 +466,9 @@ class LLTranslationControl : public TranslationControl {
   */
   string error_message() { return errorString_; }
 };
+
+using LLTranslationControl = LLTranslationControlTemplate<LLTable>;
+using PriorityLLTranslationControl = LLTranslationControlTemplate<PriorityLLTable>;
 }  // namespace ctf
 #endif
 /*** End of file ll_translation_control.hpp ***/

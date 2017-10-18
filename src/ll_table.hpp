@@ -157,7 +157,23 @@ class LLTable : public DecisionTable<size_t> {
     initialize(tg, predict);
   }
 
-  LLTable() { invalid_ = 0; };
+  LLTable() { invalid_ = 0; }
+};
+
+class PriorityLLTable: public LLTable {
+  void insert_rule(const size_t insertedRule, const size_t i) override {
+    // insert high priority rule
+    if (table_[i] == invalid_ || table_[i] > insertedRule) {
+      table_[i] = insertedRule;
+    }
+  }
+
+public:
+  PriorityLLTable(const TranslationGrammar& tg, const vector<vector<Symbol>>& predict) {
+    initialize(tg, predict);
+  }
+
+  PriorityLLTable() { invalid_ = 0; }
 };
 
 class GeneralLLTable : public DecisionTable<vector<size_t>> {
