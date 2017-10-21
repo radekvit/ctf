@@ -173,8 +173,8 @@ class Translation {
   \returns A std::unique_ptr containing a new translation control.
   */
   static std::unique_ptr<TranslationControl> control(const string& name) {
-    const static unordered_map<string,
-                     std::function<std::unique_ptr<TranslationControl>()>>
+    const static unordered_map<
+        string, std::function<std::unique_ptr<TranslationControl>()>>
         controls{
             {"ll",
              []() -> std::unique_ptr<TranslationControl> {

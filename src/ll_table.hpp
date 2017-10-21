@@ -160,7 +160,7 @@ class LLTable : public DecisionTable<size_t> {
   LLTable() { invalid_ = 0; }
 };
 
-class PriorityLLTable: public LLTable {
+class PriorityLLTable : public LLTable {
   void insert_rule(const size_t insertedRule, const size_t i) override {
     // insert high priority rule
     if (table_[i] == invalid_ || table_[i] > insertedRule) {
@@ -168,8 +168,9 @@ class PriorityLLTable: public LLTable {
     }
   }
 
-public:
-  PriorityLLTable(const TranslationGrammar& tg, const vector<vector<Symbol>>& predict) {
+ public:
+  PriorityLLTable(const TranslationGrammar& tg,
+                  const vector<vector<Symbol>>& predict) {
     initialize(tg, predict);
   }
 

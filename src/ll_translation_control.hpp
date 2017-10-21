@@ -377,9 +377,7 @@ class LLTranslationControlTemplate : public TranslationControl {
     }
   }
 
-  void set_error() {
-    errorFlag_ = true;
-  }
+  void set_error() { errorFlag_ = true; }
 
   /**
   \brief Adds error message caused by a top symbol and incoming token
@@ -429,7 +427,7 @@ class LLTranslationControlTemplate : public TranslationControl {
     size_t ntIndex =
         translationGrammar_->nonterminal_index(lastDerivedNonterminal);
     if (ntIndex >= translationGrammar_->nonterminals().size())
-        return false;
+      return false;
     auto& ntFollow = follow_[ntIndex];
     // get a token from follow(lastNonterminal_)
     while (!is_in(ntFollow, token) && token != Symbol::eof()) {
@@ -470,7 +468,8 @@ class LLTranslationControlTemplate : public TranslationControl {
 };
 
 using LLTranslationControl = LLTranslationControlTemplate<LLTable>;
-using PriorityLLTranslationControl = LLTranslationControlTemplate<PriorityLLTable>;
+using PriorityLLTranslationControl =
+    LLTranslationControlTemplate<PriorityLLTable>;
 }  // namespace ctf
 #endif
 /*** End of file ll_translation_control.hpp ***/
