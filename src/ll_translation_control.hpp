@@ -355,6 +355,9 @@ class LLTranslationControlTemplate : public TranslationControl {
         case Type::NONTERMINAL:
           ruleIndex = llTable_.rule_index(top, token);
           if (ruleIndex < translationGrammar_->rules().size()) {
+            // we derive this terminal
+            lastDerivedNonterminal = top;
+
             auto& rule = translationGrammar_->rules()[ruleIndex];
 
             obegin = output_.replace(top, rule.output(), obegin);
@@ -367,7 +370,6 @@ class LLTranslationControlTemplate : public TranslationControl {
                                 attributeActions))
               return;
           }
-          lastDerivedNonterminal = top;
           break;
         default:
           // unexpected symbol type on input stack
