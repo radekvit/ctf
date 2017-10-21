@@ -507,6 +507,15 @@ namespace std {
 inline void swap(ctf::Attribute& lhs, ctf::Attribute& rhs) noexcept {
   lhs.swap(rhs);
 }
+
+template<> struct hash<ctf::Symbol> {
+  using argument_type = ctf::Symbol;
+  using result_type = size_t;
+  result_type operator()(argument_type const& s) const noexcept
+  {
+      return std::hash<std::string>{}(s.name());
+  }
+};
 }  // namespace std
 
 #endif

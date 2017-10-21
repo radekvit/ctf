@@ -34,11 +34,11 @@ class DecisionTable {
   /**
   \brief Mapping nonterminals to table_ indices.
   */
-  map<Symbol, size_t> nonterminalMap_;
+  unordered_map<Symbol, size_t> nonterminalMap_;
   /**
   \brief Mapping terminals to table_ row indices.
   */
-  map<Symbol, size_t> terminalMap_;
+  unordered_map<Symbol, size_t> terminalMap_;
   /**
   \brief Stores invalid value.
   */

@@ -428,6 +428,8 @@ class LLTranslationControlTemplate : public TranslationControl {
     size_t ruleIndex = 0;
     size_t ntIndex =
         translationGrammar_->nonterminal_index(lastDerivedNonterminal);
+    if (ntIndex >= translationGrammar_->nonterminals().size())
+        return false;
     auto& ntFollow = follow_[ntIndex];
     // get a token from follow(lastNonterminal_)
     while (!is_in(ntFollow, token) && token != Symbol::eof()) {

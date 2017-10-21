@@ -77,13 +77,13 @@ TEST_CASE("Unget", "[InputReader]") {
     r.get(l);
   }
   // Location: starting from {2,3}
-  REQUIRE(char(r.unget(2)) == 'd');
+  r.unget(2);
   // {2,1}
-  REQUIRE(char(r.unget(l, 1)) == '\n');
+  r.unget(l, 1);
   // {1, 3}
-  REQUIRE(l == Location(1, 3));
-  REQUIRE(char(r.unget(50)) == 'a');
+  REQUIRE(l == Location(2, 1));
+  r.unget(50);
   // {1,1}
-  REQUIRE(char(r.get()) == 'b');
+  REQUIRE(char(r.get()) == 'a');
   // {1, 2}
 }
