@@ -299,6 +299,9 @@ struct Location {
 Nonterminal or end of input.
 */
 class Symbol {
+  inline static unordered_map<string, size_t> reverseNameMap;
+  inline static vector<string> nameMap;
+
  public:
   /**
   \brief Type of the Symbol.
@@ -333,9 +336,9 @@ class Symbol {
   */
   Type type_;
   /**
-  \brief Name of this Symbol.
+  \brief Id of this Symbol.
   */
-  string name_;
+  size_t id_;
   /**
   \brief Attribute of this Symbol. Only valid for some types.
   */
@@ -344,6 +347,17 @@ class Symbol {
   \brief Location of the origin of this Symbol.
   */
   Location location_;
+
+  static size_t name_index(const string& name) {
+    auto it = reverseNameMap.find(name);
+    if (it == reverseNameMap.end()) {
+      size_t result = nameMap.size();
+      reverseNameMap[name] = result;
+      nameMap.push_back(name);
+      return result;
+    }
+    return it->second;
+  }
 
  public:
   /**
@@ -356,7 +370,7 @@ class Symbol {
   */
   Symbol(Type type, const string& name = "", const Attribute& atr = Attribute{},
          const Location& loc = Location::invalid())
-      : type_(type), name_(name), attribute_(atr), location_(loc) {
+      : type_(type), id_(name_index(name)), attribute_(atr), location_(loc) {
     if (type != Symbol::Type::EOI && name == "")
       throw std::invalid_argument(
           "Empty name when constructing non-EOI Symbol.");
@@ -381,16 +395,14 @@ class Symbol {
   */
   static Symbol eof() { return Symbol(Type::EOI); }
 
-  /**
-  \brief Returns a reference to name.
-  \returns A reference to name.
-  */
-  string& name() { return name_; }
+  size_t id() const { return id_; }
   /**
   \brief Returns a const reference to name.
   \returns A const reference to name.
+
+  May be invalidated by constructing a Symbol with a previously unused name.
   */
-  const string& name() const { return name_; }
+  const string& name() const { return nameMap[id_]; }
   /**
   \brief Returns a reference to attribute.
   \returns A reference to attribute.
@@ -433,11 +445,11 @@ class Symbol {
   ///@{
   friend bool operator<(const Symbol& lhs, const Symbol& rhs) {
     return lhs.type_ < rhs.type_ ||
-           (lhs.type_ == rhs.type_ && lhs.name_ < rhs.name_);
+           (lhs.type_ == rhs.type_ && lhs.id_ < rhs.id_);
   }
 
   friend bool operator==(const Symbol& lhs, const Symbol& rhs) {
-    return lhs.type_ == rhs.type_ && lhs.name_ == rhs.name_;
+    return lhs.type_ == rhs.type_ && lhs.id_ == rhs.id_;
   }
 
   friend bool operator!=(const Symbol& lhs, const Symbol& rhs) {
@@ -513,7 +525,7 @@ struct hash<ctf::Symbol> {
   using argument_type = ctf::Symbol;
   using result_type = size_t;
   result_type operator()(argument_type const& s) const noexcept {
-    return std::hash<std::string>{}(s.name());
+    return std::hash<size_t>{}(s.id());
   }
 };
 }  // namespace std
