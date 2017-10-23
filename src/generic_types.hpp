@@ -12,7 +12,6 @@ this project.
 #include <list>
 #include <map>
 #include <queue>
-#include <set>
 #include <stack>
 #include <string>
 #include <unordered_map>
@@ -33,9 +32,230 @@ using std::vector;
 using std::list;
 using std::map;
 using std::unordered_map;
-using std::set;
 using std::queue;
 using std::stack;
+
+/**
+\brief Simple set class.
+*/
+template <typename T, class Compare = std::less<T>>
+class set {
+  vector<T> elements_;
+
+  Compare compare_;
+
+  set(vector<T>& vec, Compare compare): elements_(vec), compare_(compare) {}
+  set(vector<T>&& vec, Compare&& compare): elements_(vec), compare_(compare) {}
+
+  bool equals(const T& lhs, const T& rhs) const {
+    return !compare_(lhs, rhs) && !compare_(rhs, lhs);
+  }
+ public:
+  using value_type = T;
+  using size_type = size_t;
+  using difference_type = ptrdiff_t;
+
+  using reference = T&;
+  using const_reference = const T&;
+  using pointer = T*;
+  using const_pointer = const T*;
+
+  using iterator = typename vector<T>::iterator;
+  using const_iterator = typename vector<T>::const_iterator;
+  using reverse_iterator = typename vector<T>::reverse_iterator;
+  using const_reverse_iterator = typename vector<T>::const_reverse_iterator;
+
+  struct insert_return_type {
+    bool inserted;
+    iterator it;
+  };
+
+  set(): compare_(Compare()) {}
+  explicit set(const Compare& compare): compare_(compare) {}
+  set(std::initializer_list<T> il, const Compare& compare = Compare()): elements_(il), compare_(compare) {
+    std::sort(elements_.begin(), elements_.end(), Compare());
+    auto newEnd = std::unique(elements_.begin(), elements_.end());
+    elements_.erase(newEnd, elements_.end());
+  }
+
+  set(const set&) = default;
+  set(set&&) = default;
+
+  set& operator=(const set&) = default;
+  //set& operator=(const set&&) noexcept = default;
+  set& operator=(std::initializer_list<T> il) {
+    elements_ = il;
+    std::sort(elements_.begin(), elements_.end(), Compare());
+    auto newEnd = std::unique(elements_.begin(), elements_.end());
+    elements_.erase(newEnd, elements_.end());
+
+    return *this;
+  }
+
+  iterator begin() {
+    return elements_.begin();
+  }
+  const_iterator begin() const {
+    return elements_.cbegin();
+  }
+  const_iterator cbegin() const {
+    return elements_.cbegin();
+  }
+
+  iterator end() {
+    return elements_.end();
+  }
+  const_iterator end() const {
+    return elements_.cend();
+  }
+  const_iterator cend() const {
+    return elements_.cend();
+  }
+
+  reverse_iterator rbegin() {
+    return elements_.rbegin();
+  }
+  const_reverse_iterator rbegin() const {
+    return elements_.crbegin();
+  }
+  const_reverse_iterator crbegin() const {
+    return elements_.crbegin();
+  }
+
+  reverse_iterator rend() {
+    return elements_.rend();
+  }
+  const_reverse_iterator rend() const {
+    return elements_.crend();
+  }
+  const_reverse_iterator crend() const {
+    return elements_.crend();
+  }
+
+  bool empty() const noexcept { return elements_.empty(); }
+  size_type size() const noexcept { return elements_.size(); }
+  size_type max_size() const noexcept { return elements_.max_size(); }
+
+  void clear() noexcept { elements_.clear(); }
+
+  insert_return_type insert(const T& element) {
+    auto it = lower_bound(element);
+    if (it == elements_.end() || !equals(*it, element)) {
+      return {true, elements_.insert(it, element)};
+    }
+    return {false, elements_.end()};
+  }
+
+  insert_return_type insert(T&& element) {
+    auto it = lower_bound(element);
+    if (it == elements_.end() || !equals(*it, element)) {
+      return {true, elements_.insert(it, element)};
+    }
+    return {false, elements_.end()};
+  }
+
+  bool remove(const T& element) noexcept {
+    auto it = lower_bound(element);
+    if (it == elements_.end() || !equals(*it, element)) {
+      return false;
+    }
+    elements_.erase(it);
+    return true;
+  }
+
+  void swap(set& other) {
+    elements_.swap(other.elements_);
+    std::swap(compare_, other.compare_);
+  }
+
+  bool contains(const T& element) const noexcept {
+    auto it = lower_bound(element);
+    return it != elements_.end() && equals(*it, element);
+  }
+
+  iterator find(const T& element) noexcept {
+    auto it = lower_bound(element);
+    if (it != end() && equals(*it, element))
+      return it;
+    return end();
+  }
+
+  const_iterator find(const T& element) const noexcept {
+    auto it = lower_bound(element);
+    if (it != end() && equals(*it, element))
+      return it;
+    return end();
+  }
+
+  iterator lower_bound(const T& element) noexcept {
+    return std::lower_bound(begin(), end(), element);
+  }
+
+  const_iterator lower_bound(const T& element) const noexcept {
+    return std::lower_bound(begin(), end(), element);
+  }
+
+  iterator upper_bound(const T& element) noexcept {
+    return std::upper_bound(begin(), end(), element);
+  }
+
+  const_iterator upper_bound(const T& element) const noexcept {
+    return std::upper_bound(begin(), end(), element);
+  }
+
+  Compare& compare() { return compare_; }
+
+  friend bool operator==(const set& lhs, const set& rhs) {
+    return lhs.elements_ == rhs.elements_;
+  }
+  friend bool operator!=(const set& lhs, const set& rhs) {
+    return !(lhs == rhs);
+  }
+  friend bool operator<=(const set&lhs, const set& rhs) {
+    for(auto&& e: lhs.elements_) {
+      if (!rhs.contains(e))
+        return false;
+    }
+    return true;
+  }
+  friend bool operator>=(const set& lhs, const set&rhs) {
+    return rhs <= lhs;
+  }
+  friend bool operator<(const set& lhs, const set& rhs) {
+    return lhs <= rhs && lhs != rhs;
+  }
+  friend bool operator>(const set& lhs, const set& rhs) {
+    return rhs < lhs;
+  }
+
+  friend bool subset(const set&lhs, const set& rhs) {
+    return lhs <= rhs;
+  }
+  friend bool proper_subset(const set& lhs, const set& rhs) {
+    return lhs < rhs;
+  }
+  friend bool disjoint(const set& lhs, const set& rhs) {
+    return !(lhs <= rhs) && !(lhs >= rhs);
+  }
+
+  friend set set_union(const set&lhs, const set& rhs) {
+    vector<T> vec;
+    std::set_union(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), std::back_inserter<vector<T>>(vec));
+    return set(vec, lhs.compare_);
+  }
+
+  friend set set_intersection(const set&lhs, const set& rhs) {
+    vector<T> vec;
+    std::set_intersection(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), std::back_inserter<vector<T>>(vec));
+    return set(vec, lhs.compare_);
+  }
+
+  bool modify_set_union(const set& other) {
+    size_type oldSize = size();
+    *this = set_union(*this, other);
+    return oldSize != size();
+  }
+};
 
 /**
  \brief Translation stack. Similar to STL stack with extra search and replace

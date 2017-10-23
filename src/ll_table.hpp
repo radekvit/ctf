@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
+#include "table_sets.hpp"
 
 #include "translation_grammar.hpp"
 
@@ -56,8 +57,7 @@ class DecisionTable {
 
   void initialize() {}
 
-  void initialize(const TranslationGrammar& tg,
-                  const vector<vector<Symbol>>& predict) {
+  void initialize(const TranslationGrammar& tg, const predict_type& predict) {
     initialize_invalid(tg);
     table_ =
         row(tg.nonterminals().size() * (tg.terminals().size() + 1), invalid_);
@@ -107,8 +107,7 @@ class DecisionTable {
   their respective indices. Rule indices are stored in the decision table.
   \param[in] predict Predict set for table construction.
   */
-  DecisionTable(const TranslationGrammar& tg,
-                const vector<vector<Symbol>>& predict) {
+  DecisionTable(const TranslationGrammar& tg, const predict_type& predict) {
     initialize(tg, predict);
   }
   /**
@@ -153,7 +152,7 @@ class LLTable : public DecisionTable<size_t> {
   }
 
  public:
-  LLTable(const TranslationGrammar& tg, const vector<vector<Symbol>>& predict) {
+  LLTable(const TranslationGrammar& tg, const predict_type& predict) {
     initialize(tg, predict);
   }
 
@@ -169,8 +168,7 @@ class PriorityLLTable : public LLTable {
   }
 
  public:
-  PriorityLLTable(const TranslationGrammar& tg,
-                  const vector<vector<Symbol>>& predict) {
+  PriorityLLTable(const TranslationGrammar& tg, const predict_type& predict) {
     initialize(tg, predict);
   }
 
@@ -189,8 +187,7 @@ class GeneralLLTable : public DecisionTable<vector<size_t>> {
   void initialize_invalid(const TranslationGrammar&) override { invalid_ = {}; }
 
  public:
-  GeneralLLTable(const TranslationGrammar& tg,
-                 const vector<vector<Symbol>>& predict) {
+  GeneralLLTable(const TranslationGrammar& tg, const predict_type& predict) {
     initialize(tg, predict);
   }
 

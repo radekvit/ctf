@@ -6,32 +6,69 @@
 #ifndef CTF_LL_TRANSLATION_CONTROL_H
 #define CTF_LL_TRANSLATION_CONTROL_H
 
+#include "table_sets.hpp"
 #include "translation_control.hpp"
 
 namespace ctf {
+
+/**
+\brief Adds error message caused by a top symbol and incoming token
+combination.
+
+\param[in] top The current top symbol.
+\param[in] token The incoming token.
+*/
+inline void default_LL_error_message(
+    string& errorString, const Symbol& top, const Symbol& token,
+    [[maybe_unused]] const Symbol& lastDerivedNonterminal) {
+  using Type = Symbol::Type;
+
+  errorString += token.location().to_string() + ": ";
+  switch (top.type()) {
+    case Type::EOI:
+      errorString += "Unexpected token '" + token.name() +
+                     "' after translation has finished.";
+      break;
+    case Type::TERMINAL:
+      errorString += "Unexpected token '" + token.name() + "'; expected '" +
+                     top.name() + "'";
+      break;
+    case Type::NONTERMINAL:
+      errorString += "Unexpected token '" + token.name() + "', nonterminal '" +
+                     top.name() + "'";
+      break;
+    default:
+      break;
+  }
+  errorString += "\n";
+}
 
 /**
 \brief Implements LL top down translation control.
 */
 template <typename LLTableType>
 class LLTranslationControlTemplate : public TranslationControl {
+ public:
+  using error_message_function =
+      std::function<void(string&, const Symbol&, const Symbol&, const Symbol&)>;
+
  protected:
   /**
   \brief Empty set for each nonterminal.
   */
-  vector<bool> empty_;
+  empty_type empty_;
   /**
   \brief First set for each nonterminal.
   */
-  vector<vector<Symbol>> first_;
+  first_type first_;
   /**
   \brief Follow set for each nonterminal.
   */
-  vector<vector<Symbol>> follow_;
+  follow_type follow_;
   /**
   \brief Predict set for each nonterminal.
   */
-  vector<vector<Symbol>> predict_;
+  predict_type predict_;
 
   /**
   \brief LL table used to control the translation.
@@ -44,199 +81,26 @@ class LLTranslationControlTemplate : public TranslationControl {
   string errorString_;
 
   /**
+  \brief The error message adding function
+  */
+  error_message_function add_error;
+  /**
   Creates all predictive sets and creates a new LL table.
   */
   void create_ll_table() {
-    create_empty();
-    create_first();
-    create_follow();
-    create_predict();
+    create_predictive_sets();
 
     llTable_ = LLTableType(*translationGrammar_, predict_);
   }
 
   /**
-  \brief Creates Empty set for each nonterminal.
-
-  Empty is true if a series of productions from the nonterminal can result in an
-  empty string.
+  \brief Creates all predictive sets.
   */
-  void create_empty() {
-    const TranslationGrammar& tg = *translationGrammar_;
-    empty_ = vector<bool>(tg.nonterminals().size(), false);
-
-    for (auto& r : tg.rules()) {
-      if (r.input().size() == 0) {
-        empty_[tg.nonterminal_index(r.nonterminal())] = true;
-      }
-    }
-
-    bool changed = false;
-    do {
-      changed = false;
-      for (auto& r : tg.rules()) {
-        bool isempty = true;
-        for (auto& s : r.input()) {
-          switch (s.type()) {
-            case Symbol::Type::TERMINAL:
-              isempty = false;
-              break;
-            case Symbol::Type::NONTERMINAL:
-              if (empty_[tg.nonterminal_index(s)] == false) {
-                isempty = false;
-              }
-              break;
-            default:
-              break;
-          }
-        }
-        if (isempty) {
-          if (!empty_[tg.nonterminal_index(r.nonterminal())]) {
-            changed = true;
-            empty_[tg.nonterminal_index(r.nonterminal())] = true;
-          }
-        }
-      }
-    } while (changed);
-  }
-  /**
-  \brief Creates First set for each nonterminal.
-
-  First contains all characters that can be at the first position of any string
-  derived from this nonterminal.
-  */
-  void create_first() {
-    const TranslationGrammar& tg = *translationGrammar_;
-    first_ = {tg.nonterminals().size(), vector<Symbol>{}};
-
-    bool changed = false;
-    do {
-      changed = false;
-      for (auto& r : tg.rules()) {
-        size_t i = tg.nonterminal_index(r.nonterminal());
-        bool empty = true;
-        for (auto& symbol : r.input()) {
-          if (!empty)
-            break;
-          size_t nonterm_i;
-          switch (symbol.type()) {
-            case Symbol::Type::NONTERMINAL:
-              nonterm_i = tg.nonterminal_index(symbol);
-              if (modify_set(first_[i], first_[nonterm_i]))
-                changed = true;
-              empty = empty_[nonterm_i];
-              break;
-            case Symbol::Type::TERMINAL:
-              if (modify_set(first_[i], vector<Symbol>({symbol})))
-                changed = true;
-              empty = false;
-              break;
-            default:
-              break;
-          }
-        }
-      }
-    } while (changed);
-  }
-  /**
-  \brief Creates Follow set for each nonterminal.
-
-  Follow contains all characters that may follow that nonterminal in a
-  sentential form from the starting nonterminal.
-  */
-  void create_follow() {
-    const TranslationGrammar& tg = *translationGrammar_;
-    follow_ = {tg.nonterminals().size(), vector<Symbol>{}};
-    follow_[tg.nonterminal_index(tg.starting_symbol())].push_back(
-        Symbol::eof());
-
-    bool changed = false;
-    do {
-      changed = false;
-      for (auto& r : tg.rules()) {
-        // index of origin nonterminal
-        size_t i = tg.nonterminal_index(r.nonterminal());
-        /* empty set of all symbols to the right of the current one */
-        bool compoundEmpty = true;
-        /* first set of all symbols to the right of the current symbol */
-        vector<Symbol> compoundFirst;
-        /* track symbols from back */
-        for (auto& s : reverse(r.input())) {
-          // index of nonterminal in input string, only valid with
-          // nonterminal symbol
-          size_t ti = 0;
-          switch (s.type()) {
-            case Symbol::Type::NONTERMINAL:
-              ti = tg.nonterminal_index(s);
-              if (modify_set(follow_[ti], compoundFirst))
-                changed = true;
-              if (compoundEmpty && modify_set(follow_[ti], follow_[i]))
-                changed = true;
-              break;
-            default:
-              break;
-          }
-          /* if empty = false */
-          if (s.type() != Symbol::Type::NONTERMINAL ||
-              !empty_[tg.nonterminal_index(s)]) {
-            compoundEmpty = false;
-            switch (s.type()) {
-              case Symbol::Type::NONTERMINAL:
-                compoundFirst = first_[ti];
-                break;
-              case Symbol::Type::TERMINAL:
-                compoundFirst = {s};
-                break;
-              default:
-                break;
-            }
-          }
-          /* empty = true, nonterminal*/
-          else {
-            modify_set(compoundFirst, first_[ti]);
-          }
-        }  // for all reverse input
-      }    // for all rules
-    } while (changed);
-  }
-  /**
-  \brief Creates Predict set for each nonterminal.
-
-  Predict contains all Terminals that may be the first terminal read in a
-  sentential form from that nonterminal.
-  */
-  void create_predict() {
-    predict_.clear();
-    const TranslationGrammar& tg = *translationGrammar_;
-    for (auto& r : tg.rules()) {
-      vector<Symbol> compoundFirst;
-      vector<Symbol> rfollow = follow_[tg.nonterminal_index(r.nonterminal())];
-      bool compoundEmpty = true;
-      for (auto& s : reverse(r.input())) {
-        size_t i;
-        switch (s.type()) {
-          case Symbol::Type::TERMINAL:
-            compoundEmpty = false;
-            compoundFirst = vector<Symbol>({s});
-            break;
-          case Symbol::Type::NONTERMINAL:
-            i = tg.nonterminal_index(s);
-            if (!empty_[i]) {
-              compoundEmpty = false;
-              compoundFirst = first_[i];
-            } else {
-              modify_set(compoundFirst, first_[i]);
-            }
-          default:
-            break;
-        }
-      }
-      predict_.push_back(compoundFirst);
-
-      if (compoundEmpty) {
-        modify_set(predict_.back(), rfollow);
-      }
-    }  // for all rules
+  void create_predictive_sets() {
+    empty_ = create_empty(*translationGrammar_);
+    first_ = create_first(*translationGrammar_, empty_);
+    follow_ = create_follow(*translationGrammar_, empty_, first_);
+    predict_ = create_predict(*translationGrammar_, empty_, first_, follow_);
   }
 
   /**
@@ -269,7 +133,9 @@ class LLTranslationControlTemplate : public TranslationControl {
   /**
   \brief Constructs a LLTranslationControlTemplate.
   */
-  LLTranslationControlTemplate() = default;
+  explicit LLTranslationControlTemplate(
+      error_message_function error_message = default_LL_error_message)
+      : add_error(error_message) {}
   /**
   \brief Default destructor.
   */
@@ -281,7 +147,10 @@ class LLTranslationControlTemplate : public TranslationControl {
   \param[in] la A reference to the lexical analyzer to be used to get tokens.
   \param[in] tg The translation grammar for this translation.
   */
-  LLTranslationControlTemplate(LexicalAnalyzer& la, TranslationGrammar& tg) {
+  LLTranslationControlTemplate(
+      LexicalAnalyzer& la, TranslationGrammar& tg,
+      error_message_function error_message = default_LL_error_message)
+      : add_error(error_message) {
     set_grammar(tg);
     set_lexical_analyzer(la);
   }
@@ -294,6 +163,10 @@ class LLTranslationControlTemplate : public TranslationControl {
   virtual void set_grammar(const TranslationGrammar& tg) {
     translationGrammar_ = &tg;
     create_ll_table();
+  }
+
+  void set_error_message(error_message_function error_message) {
+    add_error = error_message;
   }
 
   /**
@@ -333,7 +206,7 @@ class LLTranslationControlTemplate : public TranslationControl {
             return;
           } else {
             set_error();
-            add_error(top, token, lastDerivedNonterminal);
+            add_error(errorString_, top, token, lastDerivedNonterminal);
             return;
           }
           break;
@@ -346,7 +219,7 @@ class LLTranslationControlTemplate : public TranslationControl {
             token = next_token();
           } else {
             set_error();
-            add_error(top, token, lastDerivedNonterminal);
+            add_error(errorString_, top, token, lastDerivedNonterminal);
             if (!error_recovery(lastDerivedNonterminal, token,
                                 attributeActions))
               return;
@@ -365,7 +238,7 @@ class LLTranslationControlTemplate : public TranslationControl {
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
             set_error();
-            add_error(top, token, lastDerivedNonterminal);
+            add_error(errorString_, top, token, lastDerivedNonterminal);
             if (!error_recovery(lastDerivedNonterminal, token,
                                 attributeActions))
               return;
@@ -380,39 +253,6 @@ class LLTranslationControlTemplate : public TranslationControl {
   }
 
   void set_error() { errorFlag_ = true; }
-
-  /**
-  \brief Adds error message caused by a top symbol and incoming token
-  combination.
-
-  \param[in] top The current top symbol.
-  \param[in] token The incoming token.
-  */
-  virtual void add_error(
-      const Symbol& top, const Symbol& token,
-      [[maybe_unused]] const Symbol& lastDerivedNonterminal) {
-    using Type = Symbol::Type;
-
-    errorString_ += token.location().to_string() + ": ";
-    switch (top.type()) {
-      case Type::EOI:
-        errorString_ += "Unexpected token '" + token.name() +
-                        "' after translation has finished.";
-        break;
-      case Type::TERMINAL:
-        errorString_ += "Unexpected token '" + token.name() + "'; expected '" +
-                        top.name() + "'";
-        break;
-      case Type::NONTERMINAL:
-        // TODO list expected tokens
-        errorString_ += "Unexpected token '" + token.name() +
-                        "', nonterminal '" + top.name() + "'";
-        break;
-      default:
-        break;
-    }
-    errorString_ += "\n";
-  }
 
   /**
   \brief Hartmann error recovery.
