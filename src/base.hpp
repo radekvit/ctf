@@ -367,10 +367,10 @@ class Symbol {
 #ifdef CTF_MULTITHREAD
     std::lock_guard l(nameLock());
 #endif
-    auto it = reversenameMap().find(name);
-    if (it == reversenameMap().end()) {
+    auto it = reverseNameMap().find(name);
+    if (it == reverseNameMap().end()) {
       size_t result = nameMap().size();
-      reversenameMap()[name] = result;
+      reverseNameMap()[name] = result;
       nameMap().push_back(name);
       return result;
     }
