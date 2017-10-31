@@ -11,6 +11,9 @@
 #include <stdexcept>
 
 #include "generic_types.hpp"
+#ifdef CTF_MULTITHREAD
+#include <mutex>
+#endif
 
 namespace ctf {
 
@@ -299,8 +302,20 @@ struct Location {
 Nonterminal or end of input.
 */
 class Symbol {
-  inline static unordered_map<string, size_t> reverseNameMap;
-  inline static vector<string> nameMap;
+#ifdef CTF_MULTITHREAD
+  inline static std::mutex& nameLock() {
+    static std::mutex nl;
+    return nl;
+  }
+#endif
+  inline static unordered_map<string, size_t>& reverseNameMap() {
+    static unordered_map<string, size_t> rnm;
+    return rnm;
+  }
+  inline static vector<string>& nameMap() {
+    static vector<string> nm;
+    return nm;
+  }
 
  public:
   /**
@@ -349,11 +364,14 @@ class Symbol {
   Location location_;
 
   static size_t name_index(const string& name) {
-    auto it = reverseNameMap.find(name);
-    if (it == reverseNameMap.end()) {
-      size_t result = nameMap.size();
-      reverseNameMap[name] = result;
-      nameMap.push_back(name);
+#ifdef CTF_MULTITHREAD
+    std::lock_guard l(nameLock());
+#endif
+    auto it = reversenameMap().find(name);
+    if (it == reversenameMap().end()) {
+      size_t result = nameMap().size();
+      reversenameMap()[name] = result;
+      nameMap().push_back(name);
       return result;
     }
     return it->second;
@@ -396,13 +414,19 @@ class Symbol {
   static Symbol eof() { return Symbol(Type::EOI); }
 
   size_t id() const { return id_; }
+
   /**
   \brief Returns a const reference to name.
   \returns A const reference to name.
 
   May be invalidated by constructing a Symbol with a previously unused name.
   */
-  const string& name() const { return nameMap[id_]; }
+  const string& name() const {
+#ifdef CTF_MULTITHREAD
+    std::lock_guard l(nameLock());
+#endif
+    return nameMap()[id_];
+  }
   /**
   \brief Returns a reference to attribute.
   \returns A reference to attribute.
