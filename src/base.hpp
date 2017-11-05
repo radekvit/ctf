@@ -57,11 +57,11 @@ class Attribute {
   /**
   \brief Default assignment operator.
   */
-  Attribute& operator=(const Attribute&) = default;
+  Attribute& operator=(const Attribute& other) { storage_ = other.storage_; }
   /**
   \brief Default assignment operator.
   */
-  Attribute& operator=(Attribute&&) = default;
+  Attribute& operator=(Attribute&&) { storage_ = other.storage_; }
   /**
   \brief Assigns rhs to the Attribute object.
 
