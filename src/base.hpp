@@ -44,10 +44,10 @@ class Attribute {
   */
   template <typename T,
             typename = typename std::enable_if<
-                !std::is_same<T, Attribute>::value &&
-                !std::is_same<T, Attribute&>::value &&
-                !std::is_same<T, const Attribute&>::value &&
-                !std::is_same<T, Attribute&&>::value>::type>
+                !std::is_same<typename std::remove_reference<T>::type,
+                              Attribute>::value &&
+                !std::is_same<typename std::remove_reference<T>::type,
+                              const Attribute>::value>::type>
   Attribute(T&& arg) : storage_(arg) {}
 
   /**
