@@ -80,7 +80,7 @@ class LexicalAnalyzer {
     }
     reader_->unget();
 
-    return token(name, attribute++);
+    return token(name, Attribute{attribute++});
   }
 
   /**

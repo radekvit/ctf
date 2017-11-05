@@ -28,31 +28,27 @@ class Attribute {
   std::any storage_;
 
  public:
+  constexpr Attribute() = default;
   /**
   \brief Default copy constructor.
   */
   Attribute(const Attribute&) = default;
   /**
-  \brief Constructs Attribute from a reference to any type.
-
-  \tparam T The type of stored object.
+  \brief Default copy constructor.
   */
-  template <typename T>
-  Attribute(const T& arg) : storage_(arg) {}
+  Attribute(Attribute&&) noexcept = default;
   /**
   \brief Constructs Attribute from a rvalue reference.
 
   \tparam T The type of stored object.
   */
-  template <typename T>
+  template <typename T,
+            typename = typename std::enable_if<
+                !std::is_same<T, Attribute>::value &&
+                !std::is_same<T, Attribute&>::value &&
+                !std::is_same<T, const Attribute&>::value &&
+                !std::is_same<T, Attribute&&>::value>::type>
   Attribute(T&& arg) : storage_(arg) {}
-  /**
-  \brief Constructs Attribute by passing constructor arguments to std::any.
-
-  \tparam Args Variadic arguments type to be passed to std::any constuctor.
-  */
-  template <typename... Args>
-  Attribute(Args&&... args) : storage_(std::forward(args)...) {}
 
   /**
   \brief Default assignment operator.
