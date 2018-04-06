@@ -139,37 +139,6 @@ TEST_CASE("is_in") {
   REQUIRE(ctf::is_in(vec, 3) == false);
 }
 
-TEST_CASE("set_union") {
-  vector<int> vec1{1, 2, 5, 6};
-  vector<int> vec2{2, 3, 4, 6};
-
-  vector<int> result = ctf::set_union(vec1, vec2);
-
-  REQUIRE(result.size() == 6);
-  int last = -1;
-  for (int i : result) {
-    REQUIRE(i > last);
-    last = i;
-  }
-}
-
-TEST_CASE("modify set") {
-  vector<int> vec1{1, 2, 5, 6};
-  vector<int> vec2{2, 3, 4, 6};
-  vector<int> vec3{1};
-
-  vector<int> uni = ctf::set_union(vec1, vec2);
-
-  REQUIRE(ctf::modify_set(vec1, vec3) == false);
-  REQUIRE(vec1.size() == 4);
-
-  REQUIRE(ctf::modify_set(vec1, vec2) == true);
-  REQUIRE(vec1.size() == 6);
-  REQUIRE(vec2.size() == 4);
-
-  REQUIRE(vec1 == uni);
-}
-
 TEST_CASE("reverse") {
   using ctf::reverse;
 

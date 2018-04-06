@@ -18,39 +18,69 @@ combination.
 \param[in] top The current top symbol.
 \param[in] token The incoming token.
 */
-inline void default_LL_error_message(
-    string& errorString, const Symbol& top, const Symbol& token,
-    [[maybe_unused]] const Symbol& lastDerivedNonterminal) {
+inline string default_LL_error_message(
+    const Symbol& top, const Symbol& token,
+    [[maybe_unused]] const Symbol& lastDerivedNonterminal,
+    [[maybe_unused]] const set<Symbol>& predict,
+    [[maybe_unused]] const set<Symbol>& follow) {
   using Type = Symbol::Type;
+
+  string errorString{};
 
   errorString += token.location().to_string() + ": ";
   switch (top.type()) {
     case Type::EOI:
-      errorString += "Unexpected token '" + token.name() +
-                     "' after translation has finished.";
+      errorString +=
+          "Unexpected token '" + token.name() + "' at the end of input.";
       break;
     case Type::TERMINAL:
       errorString += "Unexpected token '" + token.name() + "'; expected '" +
                      top.name() + "'";
       break;
     case Type::NONTERMINAL:
-      errorString += "Unexpected token '" + token.name() + "', nonterminal '" +
-                     top.name() + "'";
+      errorString += "Unexpected token '" + token.name() + "'; expected:\n";
+      for (auto&& expected : predict) {
+        errorString += "\t'" + expected.name() + "'\n";
+      }
       break;
     default:
       break;
   }
   errorString += "\n";
+  return errorString;
 }
 
-/**
-\brief Implements LL top down translation control.
-*/
-template <typename LLTableType>
-class LLTranslationControlTemplate : public TranslationControl {
+class LLTranslationControlGeneral : public TranslationControl {
  public:
-  using error_message_function =
-      std::function<void(string&, const Symbol&, const Symbol&, const Symbol&)>;
+  using error_message_function = std::function<string(
+      const Symbol& top, const Symbol& token, const Symbol& lastDerived,
+      const set<Symbol>& predict, const set<Symbol>& follow)>;
+
+  /**
+  \brief Constructs a LLTranslationControlGeneral.
+  */
+  explicit LLTranslationControlGeneral(
+      error_message_function error_message = default_LL_error_message)
+      : error_function(error_message) {}
+  /**
+  \brief Constructs LLTranslationControlGeneral with a LexicalAnalyzer and
+  TranslationGrammar.
+
+  \param[in] la A reference to the lexical analyzer to be used to get tokens.
+  \param[in] tg The translation grammar for this translation.
+  */
+  LLTranslationControlGeneral(
+      LexicalAnalyzer& la, TranslationGrammar& tg,
+      error_message_function error_message = default_LL_error_message)
+      : error_function(error_message) {
+    set_grammar(tg);
+    set_lexical_analyzer(la);
+  }
+
+  /**
+  \brief Default destructor.
+  */
+  virtual ~LLTranslationControlGeneral() = default;
 
  protected:
   /**
@@ -71,11 +101,6 @@ class LLTranslationControlTemplate : public TranslationControl {
   predict_type predict_;
 
   /**
-  \brief LL table used to control the translation.
-  */
-  LLTableType llTable_;
-
-  /**
   \brief Error message string.
   */
   string errorString_;
@@ -83,15 +108,7 @@ class LLTranslationControlTemplate : public TranslationControl {
   /**
   \brief The error message adding function
   */
-  error_message_function add_error;
-  /**
-  Creates all predictive sets and creates a new LL table.
-  */
-  void create_ll_table() {
-    create_predictive_sets();
-
-    llTable_ = LLTableType(*translationGrammar_, predict_);
-  }
+  error_message_function error_function;
 
   /**
   \brief Creates all predictive sets.
@@ -129,50 +146,45 @@ class LLTranslationControlTemplate : public TranslationControl {
     }
   }
 
- public:
-  /**
-  \brief Constructs a LLTranslationControlTemplate.
-  */
-  explicit LLTranslationControlTemplate(
-      error_message_function error_message = default_LL_error_message)
-      : add_error(error_message) {}
-  /**
-  \brief Default destructor.
-  */
-  virtual ~LLTranslationControlTemplate() = default;
-  /**
-  \brief Constructs LLTranslationControlTemplate with a LexicalAnalyzer and
-  TranslationGrammar.
-
-  \param[in] la A reference to the lexical analyzer to be used to get tokens.
-  \param[in] tg The translation grammar for this translation.
-  */
-  LLTranslationControlTemplate(
-      LexicalAnalyzer& la, TranslationGrammar& tg,
-      error_message_function error_message = default_LL_error_message)
-      : add_error(error_message) {
-    set_grammar(tg);
-    set_lexical_analyzer(la);
-  }
-
-  /**
-  \brief Sets translation grammar.
-
-  \param[in] tg The translation grammar for this translation.
-  */
-  virtual void set_grammar(const TranslationGrammar& tg) {
-    translationGrammar_ = &tg;
-    create_ll_table();
-  }
-
   void set_error_message(error_message_function error_message) {
-    add_error = error_message;
+    error_function = error_message;
   }
+
+  void set_error() { errorFlag_ = true; }
+
+  /**
+  \brief Get error message.
+
+  \returns The error message string.
+  */
+  string error_message() { return errorString_; }
+
+  string add_error(const Symbol& top, const Symbol& token,
+                   const Symbol& lastDerivedNonterminal) {
+    if (top.type() == Symbol::Type::NONTERMINAL) {
+      // find predict and follow
+      auto& nonterminals = translationGrammar_->nonterminals();
+      size_t i = std::find(nonterminals.begin(), nonterminals.end(), top) -
+                 nonterminals.begin();
+      return error_function(top, token, lastDerivedNonterminal, predict_[i],
+                            follow_[i]);
+    }
+    return error_function(top, token, lastDerivedNonterminal, {}, {});
+  }
+};
+
+/**
+\brief Implements LL top down translation control.
+*/
+template <typename LLTableType>
+class LLTranslationControlTemplate : public LLTranslationControlGeneral {
+ public:
+  using LLTranslationControlGeneral::LLTranslationControlGeneral;
 
   /**
   \brief Runs the translation. Output symbols are stored in output_.
   */
-  virtual void run() {
+  void run() override {
     using Type = Symbol::Type;
 
     if (!lexicalAnalyzer_)
@@ -206,7 +218,7 @@ class LLTranslationControlTemplate : public TranslationControl {
             return;
           } else {
             set_error();
-            add_error(errorString_, top, token, lastDerivedNonterminal);
+            errorString_ += add_error(top, token, lastDerivedNonterminal);
             return;
           }
           break;
@@ -219,7 +231,7 @@ class LLTranslationControlTemplate : public TranslationControl {
             token = next_token();
           } else {
             set_error();
-            add_error(errorString_, top, token, lastDerivedNonterminal);
+            errorString_ += add_error(top, token, lastDerivedNonterminal);
             if (!error_recovery(lastDerivedNonterminal, token,
                                 attributeActions))
               return;
@@ -238,7 +250,7 @@ class LLTranslationControlTemplate : public TranslationControl {
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
             set_error();
-            add_error(errorString_, top, token, lastDerivedNonterminal);
+            errorString_ += add_error(top, token, lastDerivedNonterminal);
             if (!error_recovery(lastDerivedNonterminal, token,
                                 attributeActions))
               return;
@@ -252,7 +264,30 @@ class LLTranslationControlTemplate : public TranslationControl {
     }
   }
 
-  void set_error() { errorFlag_ = true; }
+  /**
+  \brief Sets translation grammar.
+
+  \param[in] tg The translation grammar for this translation.
+  */
+  void set_grammar(const TranslationGrammar& tg) override {
+    translationGrammar_ = &tg;
+    create_ll_table();
+  }
+
+ protected:
+  /**
+  \brief LL table used to control the translation.
+  */
+  LLTableType llTable_;
+
+  /**
+  Creates all predictive sets and creates a new LL table.
+  */
+  void create_ll_table() {
+    create_predictive_sets();
+
+    llTable_ = LLTableType(*translationGrammar_, predict_);
+  }
 
   /**
   \brief Hartmann error recovery.
@@ -280,7 +315,7 @@ class LLTranslationControlTemplate : public TranslationControl {
       Symbol& top = input_.top();
       switch (top.type()) {
         case Type::EOI:
-          return true;
+          return false;
         case Type::TERMINAL:
           if (top == token)
             return true;
@@ -301,17 +336,182 @@ class LLTranslationControlTemplate : public TranslationControl {
     // this should never happen
     return true;
   }
-  /**
-  \brief Get error message.
-
-  \returns The error message string.
-  */
-  string error_message() { return errorString_; }
 };
 
 using LLTranslationControl = LLTranslationControlTemplate<LLTable>;
 using PriorityLLTranslationControl =
     LLTranslationControlTemplate<PriorityLLTable>;
+
+class GeneralLLTranslationControl : public LLTranslationControlGeneral {
+ public:
+  using LLTableType = GeneralLLTable;
+
+ protected:
+  vector<Symbol> tokens_;
+
+  size_t tokenPosition_ = 0;
+
+  struct ParseState {
+    tstack<Symbol> input;
+    tstack<Symbol> output;
+    size_t tokenPosition;
+    set<size_t> rules;
+    tstack<vector<tstack<Symbol>::iterator>> attributeActions;
+  };
+
+  tstack<ParseState> parseStates_;
+
+  Symbol next_token() override {
+    while (tokenPosition_ >= tokens_.size()) {
+      tokens_.push_back(TranslationControl::next_token());
+    }
+    return tokens_[tokenPosition_++];
+  }
+
+  bool roll_back(tstack<vector<tstack<Symbol>::iterator>>& attributeActions,
+                 tstack<Symbol>::iterator& obegin) {
+    if (parseStates_.empty())
+      return false;
+    auto&& previousState = parseStates_.pop();
+    input_ = previousState.input;
+    output_ = previousState.output;
+    tokenPosition_ = previousState.tokenPosition;
+    attributeActions = previousState.attributeActions;
+
+    auto& rule = translationGrammar_->rules()[*(previousState.rules.begin())];
+    // a rule is now applicable
+    if (previousState.rules.size() > 2) {
+      previousState.rules.erase(previousState.rules.begin());
+      parseStates_.push(previousState);
+    }
+    obegin = output_.replace(input_.top(), rule.output());
+    input_.replace(input_.begin(), rule.input());
+    create_attibute_actions(obegin, rule.actions(), attributeActions);
+    return true;
+  }
+
+  void run() override {
+    using Type = Symbol::Type;
+
+    if (!lexicalAnalyzer_)
+      throw TranslationException("No lexical analyzer was attached.");
+    else if (!translationGrammar_)
+      throw TranslationException("No translation grammar was attached.");
+
+    input_.clear();
+    output_.clear();
+    tstack<vector<tstack<Symbol>::iterator>> attributeActions;
+
+    Symbol token = next_token();
+    // last derived nonterminal
+    Symbol lastDerivedNonterminal = translationGrammar_->starting_symbol();
+
+    input_.push(Symbol::eof());
+    output_.push(Symbol::eof());
+    input_.push(translationGrammar_->starting_symbol());
+    output_.push(translationGrammar_->starting_symbol());
+
+    // iterator to the first symbol of the last inserted string
+    // used to speed up output_ linear search
+    auto obegin = output_.begin();
+
+    while (1) {
+      Symbol& top = input_.top();
+      set<size_t> applicableRules;
+      switch (top.type()) {
+        case Symbol::Type::EOI:
+          if (token == Symbol::eof()) {
+            return;
+          } else {
+            set_error();
+            errorString_ += add_error(top, token, lastDerivedNonterminal);
+            return;
+          }
+          break;
+        case Type::TERMINAL:
+          if (top == token) {
+            for (auto it : attributeActions.pop()) {
+              it->set_attribute(token);
+            }
+            input_.pop();
+            token = next_token();
+          } else {
+            if (!roll_back(attributeActions, obegin)) {
+              set_error();
+              errorString_ += add_error(top, token, lastDerivedNonterminal);
+              if (!error_recovery(lastDerivedNonterminal, token,
+                                  attributeActions))
+                return;
+            }
+          }
+          break;
+        case Type::NONTERMINAL:
+          applicableRules = llTable_.rule_index(top, token);
+          if (!applicableRules.empty()) {
+            // we derive this terminal
+            lastDerivedNonterminal = top;
+            auto& rule =
+                translationGrammar_->rules()[*(applicableRules.begin())];
+
+            if (applicableRules.size() > 1) {
+              // store state
+              applicableRules.erase(applicableRules.begin());
+              parseStates_.push(ParseState{input_, output_, tokenPosition_,
+                                           applicableRules, attributeActions});
+            }
+
+            obegin = output_.replace(top, rule.output(), obegin);
+            input_.replace(input_.begin(), rule.input());
+            create_attibute_actions(obegin, rule.actions(), attributeActions);
+          } else {
+            if (!roll_back(attributeActions, obegin)) {
+              set_error();
+              errorString_ += add_error(top, token, lastDerivedNonterminal);
+              if (!error_recovery(lastDerivedNonterminal, token,
+                                  attributeActions))
+                return;
+            }
+          }
+          break;
+        default:
+          // unexpected symbol type on input stack
+          input_.pop();
+          break;
+      }
+    }
+  }
+
+  /**
+  \brief Sets translation grammar.
+
+  \param[in] tg The translation grammar for this translation.
+  */
+  void set_grammar(const TranslationGrammar& tg) override {
+    translationGrammar_ = &tg;
+    create_ll_table();
+  }
+
+ protected:
+  /**
+  \brief LL table used to control the translation.
+  */
+  LLTableType llTable_;
+
+  /**
+  Creates all predictive sets and creates a new LL table.
+  */
+  void create_ll_table() {
+    create_predictive_sets();
+
+    llTable_ = LLTableType(*translationGrammar_, predict_);
+  }
+
+  virtual bool error_recovery(const Symbol&, Symbol&,
+                              tstack<vector<tstack<Symbol>::iterator>>&) {
+    return false;
+  }
+};
+
 }  // namespace ctf
 #endif
 /*** End of file ll_translation_control.hpp ***/

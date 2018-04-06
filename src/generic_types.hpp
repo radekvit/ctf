@@ -154,13 +154,17 @@ class set {
     return {false, elements_.end()};
   }
 
-  bool remove(const T& element) noexcept {
+  bool erase(const T& element) noexcept {
     auto it = lower_bound(element);
     if (it == elements_.end() || !equals(*it, element)) {
       return false;
     }
     elements_.erase(it);
     return true;
+  }
+
+  void erase(iterator it) {
+    elements_.erase(it);
   }
 
   void swap(set& other) {
@@ -211,7 +215,7 @@ class set {
   friend bool operator!=(const set& lhs, const set& rhs) {
     return !(lhs == rhs);
   }
-  friend bool operator<=(const set&lhs, const set& rhs) {
+  friend bool operator<=(const set& lhs, const set& rhs) {
     for(auto&& e: lhs.elements_) {
       if (!rhs.contains(e))
         return false;
@@ -292,13 +296,11 @@ class tstack {
   is at top of the stack.
   */
   tstack(std::initializer_list<T> ilist) : list_(ilist) {}
-  /**
-  \brief Creates tstack. All constructor variants of std::list are applicable.
-  \param[in] args Arguments sent to the std::list constructor.
-  */
-  template <typename... Args>
-  tstack(Args&&... args) : list_(std::forward<Args>(args)...) {}
+  tstack(const tstack&) = default;
+  tstack(tstack&&) = default;
 
+  tstack& operator=(const tstack&) = default;
+  tstack& operator=(tstack&&) = default;
   /**
   \brief Is the tstack empty predicate.
   \returns True when the tstack is empty. False otherwise.
@@ -614,36 +616,6 @@ template <class T, class CT>
 bool is_in(const CT& c, const T& e) {
   auto it = std::lower_bound(c.begin(), c.end(), e);
   return it != c.end() && *it == e;
-}
-
-/**
-\brief Set union of two sorted containers.
-
-\returns A set union of the two containers.
-*/
-template <class T>
-T set_union(const T& lhs, const T& rhs) {
-  T r;
-  std::set_union(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(),
-                 back_inserter(r));
-  return r;
-}
-
-/**
-\brief Set union between sorted containers.
-
-\param[in,out] target Targer container. One half of the resulting set. Must be
-sorted.
-\param[in] addition One half of the resulting set. Must be sorted.
-
-\returns True if the set union between the two containers changed the
-target container. False otherwise.
-*/
-template <class CT>
-bool modify_set(CT& target, const CT& addition) {
-  auto before = target.size();
-  target = set_union(target, addition);
-  return before != target.size();
 }
 
 /*-

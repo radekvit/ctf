@@ -121,7 +121,7 @@ class DecisionTable {
 
   If no rule is applicable, returns the index beyond the last rule.
   */
-  size_t rule_index(const Symbol& nt, const Symbol& t) noexcept {
+  const T& rule_index(const Symbol& nt, const Symbol& t) noexcept {
     // iterator to nonterminal index
     auto ntit = nonterminalMap_.find(nt);
     // iterator to terminal index;
@@ -175,13 +175,9 @@ class PriorityLLTable : public LLTable {
   PriorityLLTable() { invalid_ = 0; }
 };
 
-class GeneralLLTable : public DecisionTable<vector<size_t>> {
+class GeneralLLTable : public DecisionTable<set<size_t>> {
   void insert_rule(const size_t insertedRule, const size_t i) override {
-    cell inserted{insertedRule};
-    cell newTable{};
-    std::set_union(table_[i].begin(), table_[i].end(), inserted.begin(),
-                   inserted.end(), std::back_inserter(newTable));
-    std::swap(table_[i], newTable);
+    table_[i].insert(insertedRule);
   }
 
   void initialize_invalid(const TranslationGrammar&) override { invalid_ = {}; }

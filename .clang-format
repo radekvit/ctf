@@ -45,7 +45,6 @@ Cpp11BracedListStyle: true
 DerivePointerAlignment: false
 DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
-ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
 IncludeCategories: 
   - Regex:           '^<.*\.h>'
     Priority:        1
@@ -86,5 +85,3 @@ SpacesInSquareBrackets: false
 Standard:        Auto
 TabWidth:        4
 UseTab:          Never
-...
-
