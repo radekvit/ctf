@@ -40,16 +40,21 @@ inline string default_LL_error_message(
     case Type::NONTERMINAL:
       errorString += "Unexpected token '" + token.name() +
                      "' "
-                     "when deriving " +
-                     top.name() + "; expected one of:\n";
+                     "when deriving '" +
+                     top.name() + "'; expected one of:\n";
       for (auto&& expected : first) {
-        errorString += "\t'" + expected.name() + "'\n";
+        errorString += "'" + expected.name() + "', ";
       }
       if (empty) {
         for (auto&& expected : follow) {
-          errorString += "\t'" + expected.name() + "'\n";
+          errorString += "'" + expected.name() + "', ";
         }
       }
+      if (errorString.back() == ' ') {
+        errorString.pop_back();
+        errorString.pop_back();
+      }
+      errorString += '.';
       break;
     default:
       break;
@@ -299,9 +304,7 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
       const Symbol& lastDerivedNonterminal, Symbol& token,
       tstack<vector<tstack<Symbol>::iterator>>& attributeActions) {
     using Type = Symbol::Type;
-    static const string recoveryMessage =
-        "-----\nRecovering from syntax error, the following error messages may "
-        "be invalid.\n-----\n";
+    static const string recoveryMessage = "Recovering from syntax error...\n";
 
     size_t ruleIndex = 0;
     size_t ntIndex =
