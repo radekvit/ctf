@@ -132,10 +132,7 @@ class OutputGenerator {
     return *error_;
   }
 
-
-  void error_message(const string& message) {
-    err() << message << "\n";
-  }
+  void error_message(const string& message) { err() << message << "\n"; }
   /**
   \brief Outputs an error message with the location automatically printed before
   it.

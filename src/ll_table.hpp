@@ -165,6 +165,7 @@ class PriorityLLTable : public LLTable {
   }
 
   PriorityLLTable() { invalid_ = 0; }
+
  private:
   void insert_rule(const size_t insertedRule, const size_t i) override {
     // insert high priority rule
@@ -172,7 +173,6 @@ class PriorityLLTable : public LLTable {
       table_[i] = insertedRule;
     }
   }
-
 };
 
 class GeneralLLTable : public DecisionTable<set<size_t>> {
@@ -182,6 +182,7 @@ class GeneralLLTable : public DecisionTable<set<size_t>> {
   }
 
   GeneralLLTable() { initialize(); };
+
  private:
   void insert_rule(const size_t insertedRule, const size_t i) override {
     table_[i].insert(insertedRule);

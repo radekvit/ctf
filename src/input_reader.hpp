@@ -272,7 +272,7 @@ class InputReader {
         return {location.row, location.col + 1, location.fileName};
       }
     }
-  
+
    private:
     /**
     \brief Stores all read characters.

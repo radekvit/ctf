@@ -21,7 +21,7 @@ combination.
 inline string default_LL_error_message(
     const Symbol& top, const Symbol& token,
     [[maybe_unused]] const Symbol& lastDerivedNonterminal,
-    [[maybe_unused]] const set<Symbol>& predict,
+    [[maybe_unused]] bool empty, [[maybe_unused]] const set<Symbol>& first,
     [[maybe_unused]] const set<Symbol>& follow) {
   using Type = Symbol::Type;
 
@@ -38,15 +38,22 @@ inline string default_LL_error_message(
                      top.name() + "'";
       break;
     case Type::NONTERMINAL:
-      errorString += "Unexpected token '" + token.name() + "'; expected:\n";
-      for (auto&& expected : predict) {
+      errorString += "Unexpected token '" + token.name() +
+                     "' "
+                     "when deriving " +
+                     top.name() + "; expected one of:\n";
+      for (auto&& expected : first) {
         errorString += "\t'" + expected.name() + "'\n";
+      }
+      if (empty) {
+        for (auto&& expected : follow) {
+          errorString += "\t'" + expected.name() + "'\n";
+        }
       }
       break;
     default:
       break;
   }
-  errorString += "\n";
   return errorString;
 }
 
@@ -54,7 +61,7 @@ class LLTranslationControlGeneral : public TranslationControl {
  public:
   using error_message_function = std::function<string(
       const Symbol& top, const Symbol& token, const Symbol& lastDerived,
-      const set<Symbol>& predict, const set<Symbol>& follow)>;
+      bool empty, const set<Symbol>& first, const set<Symbol>& follow)>;
 
   /**
   \brief Constructs a LLTranslationControlGeneral.
@@ -156,10 +163,11 @@ class LLTranslationControlGeneral : public TranslationControl {
       auto& nonterminals = translationGrammar_->nonterminals();
       size_t i = std::find(nonterminals.begin(), nonterminals.end(), top) -
                  nonterminals.begin();
-      message = error_function(top, token, lastDerivedNonterminal, predict_[i],
-                               follow_[i]);
+      message = error_function(top, token, lastDerivedNonterminal, empty_[i],
+                               first_[i], follow_[i]);
     } else {
-      message = error_function(top, token, lastDerivedNonterminal, {}, {});
+      message =
+          error_function(top, token, lastDerivedNonterminal, false, {}, {});
     }
     err() << top.location().to_string() << ": " << message << "\n";
   }
