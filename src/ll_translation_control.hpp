@@ -303,7 +303,6 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
       const Symbol& lastDerivedNonterminal, Symbol& token,
       tstack<vector<tstack<Symbol>::iterator>>& attributeActions) {
     using Type = Symbol::Type;
-    static const string recoveryMessage = "Recovering from syntax error...\n";
 
     size_t ruleIndex = 0;
     size_t ntIndex =
@@ -323,7 +322,6 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
           return false;
         case Type::TERMINAL:
           if (top == token) {
-            err() << recoveryMessage;
             return true;
           }
           attributeActions.pop();
@@ -331,7 +329,6 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
         case Type::NONTERMINAL:
           ruleIndex = llTable_.rule_index(top, token);
           if (ruleIndex < translationGrammar_->rules().size()) {
-            err() << recoveryMessage;
             return true;
           }
           break;
