@@ -27,7 +27,6 @@ inline string default_LL_error_message(
 
   string errorString{};
 
-  errorString += token.location().to_string() + ": ";
   switch (top.type()) {
     case Type::EOI:
       errorString +=
@@ -174,7 +173,7 @@ class LLTranslationControlGeneral : public TranslationControl {
       message =
           error_function(top, token, lastDerivedNonterminal, false, {}, {});
     }
-    err() << top.location().to_string() << ": " << message << "\n";
+    err() << token.location().to_string() << ": " << message << "\n";
   }
 };
 
