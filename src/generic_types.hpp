@@ -40,16 +40,6 @@ using std::stack;
 */
 template <typename T, class Compare = std::less<T>>
 class set {
-  vector<T> elements_;
-
-  Compare compare_;
-
-  set(vector<T>& vec, Compare compare): elements_(vec), compare_(compare) {}
-  set(vector<T>&& vec, Compare&& compare): elements_(vec), compare_(compare) {}
-
-  bool equals(const T& lhs, const T& rhs) const {
-    return !compare_(lhs, rhs) && !compare_(rhs, lhs);
-  }
  public:
   using value_type = T;
   using size_type = size_t;
@@ -259,6 +249,18 @@ class set {
     *this = set_union(*this, other);
     return oldSize != size();
   }
+
+ private:
+  vector<T> elements_;
+
+  Compare compare_;
+
+  set(vector<T>& vec, Compare compare): elements_(vec), compare_(compare) {}
+  set(vector<T>&& vec, Compare&& compare): elements_(vec), compare_(compare) {}
+
+  bool equals(const T& lhs, const T& rhs) const {
+    return !compare_(lhs, rhs) && !compare_(rhs, lhs);
+  }
 };
 
 /**
@@ -267,12 +269,6 @@ class set {
  */
 template <class T>
 class tstack {
- protected:
-  /**
-  \brief Underlying list.
-  */
-  std::list<T> list_;
-
  public:
   using container_type = tstack<T>;
   using value_type = T;
@@ -579,6 +575,12 @@ class tstack {
     return rhs <= lhs;
   }
   ///@}
+
+ protected:
+  /**
+  \brief Underlying list.
+  */
+  std::list<T> list_;
 };
 
 /*-
@@ -628,11 +630,6 @@ namespace impl {
  */
 template <class T>
 class reverser {
-  /**
-  \brief Reference to the reversed container.
-  */
-  T& ref;
-
  public:
   reverser() = delete;
   /**
@@ -647,17 +644,18 @@ class reverser {
 
   auto rbegin() { return ref.begin(); }
   auto rend() { return ref.end(); }
+ private:
+  /**
+  \brief Reference to the reversed container.
+  */
+  T& ref;
+
 };
 /**
 Adapter for const classes to reverse their iterator.
 */
 template <class T>
 class const_reverser {
-  /**
-  \brief Const reference to the reversed containter.
-  */
-  const T& ref;
-
  public:
   const_reverser() = delete;
   /**
@@ -671,6 +669,12 @@ class const_reverser {
   auto end() const { return ref.rend(); }
   auto rbegin() const { return ref.begin(); }
   auto rend() const { return ref.end(); }
+
+ private:
+  /**
+  \brief Const reference to the reversed containter.
+  */
+  const T& ref;
 };
 }  // namespace cf::impl
 

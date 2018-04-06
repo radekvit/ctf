@@ -27,6 +27,44 @@ class DecisionTable {
   */
   using row = vector<cell>;
 
+  /**
+  \brief Constructs an empty LL table.
+  */
+  DecisionTable() = default;
+  /**
+  \brief Constructs a decision table from a translation grammar and a predict
+  set.
+
+  \param[in] tg TranslationGrammar. Terminals and Nonterminals are mapped to
+  their respective indices. Rule indices are stored in the decision table.
+  \param[in] predict Predict set for table construction.
+  */
+  DecisionTable(const TranslationGrammar& tg, const predict_type& predict) {
+    initialize(tg, predict);
+  }
+  /**
+  \brief Returns an index of the rule to be used when t is the current token
+  and nt is at the top of input stack.
+
+  \param[in] nt Nonterminal on the top of the stack.
+  \param[in] t Last read terminal.
+
+  \returns Index of the applicable rule or invalid rule index.
+
+  If no rule is applicable, returns the index beyond the last rule.
+  */
+  const T& rule_index(const Symbol& nt, const Symbol& t) noexcept {
+    // iterator to nonterminal index
+    auto ntit = nonterminalMap_.find(nt);
+    // iterator to terminal index;
+    auto tit = terminalMap_.find(t);
+    // either of the arguments not found
+    if (ntit == nonterminalMap_.end() || tit == terminalMap_.end())
+      return invalid_;
+    // returning from LL table
+    return table_[index(ntit->second, tit->second)];
+  }
+
  protected:
   /**
   \brief Table storing rule indices. 2D array mapped to 1D array.
@@ -93,45 +131,6 @@ class DecisionTable {
       }  // for all terminals
     }    // for all i
   }
-
- public:
-  /**
-  \brief Constructs an empty LL table.
-  */
-  DecisionTable() = default;
-  /**
-  \brief Constructs a decision table from a translation grammar and a predict
-  set.
-
-  \param[in] tg TranslationGrammar. Terminals and Nonterminals are mapped to
-  their respective indices. Rule indices are stored in the decision table.
-  \param[in] predict Predict set for table construction.
-  */
-  DecisionTable(const TranslationGrammar& tg, const predict_type& predict) {
-    initialize(tg, predict);
-  }
-  /**
-  \brief Returns an index of the rule to be used when t is the current token
-  and nt is at the top of input stack.
-
-  \param[in] nt Nonterminal on the top of the stack.
-  \param[in] t Last read terminal.
-
-  \returns Index of the applicable rule or invalid rule index.
-
-  If no rule is applicable, returns the index beyond the last rule.
-  */
-  const T& rule_index(const Symbol& nt, const Symbol& t) noexcept {
-    // iterator to nonterminal index
-    auto ntit = nonterminalMap_.find(nt);
-    // iterator to terminal index;
-    auto tit = terminalMap_.find(t);
-    // either of the arguments not found
-    if (ntit == nonterminalMap_.end() || tit == terminalMap_.end())
-      return invalid_;
-    // returning from LL table
-    return table_[index(ntit->second, tit->second)];
-  }
 };
 
 /**
@@ -160,6 +159,13 @@ class LLTable : public DecisionTable<size_t> {
 };
 
 class PriorityLLTable : public LLTable {
+ public:
+  PriorityLLTable(const TranslationGrammar& tg, const predict_type& predict) {
+    initialize(tg, predict);
+  }
+
+  PriorityLLTable() { invalid_ = 0; }
+ private:
   void insert_rule(const size_t insertedRule, const size_t i) override {
     // insert high priority rule
     if (table_[i] == invalid_ || table_[i] > insertedRule) {
@@ -167,27 +173,21 @@ class PriorityLLTable : public LLTable {
     }
   }
 
- public:
-  PriorityLLTable(const TranslationGrammar& tg, const predict_type& predict) {
-    initialize(tg, predict);
-  }
-
-  PriorityLLTable() { invalid_ = 0; }
 };
 
 class GeneralLLTable : public DecisionTable<set<size_t>> {
-  void insert_rule(const size_t insertedRule, const size_t i) override {
-    table_[i].insert(insertedRule);
-  }
-
-  void initialize_invalid(const TranslationGrammar&) override { invalid_ = {}; }
-
  public:
   GeneralLLTable(const TranslationGrammar& tg, const predict_type& predict) {
     initialize(tg, predict);
   }
 
   GeneralLLTable() { initialize(); };
+ private:
+  void insert_rule(const size_t insertedRule, const size_t i) override {
+    table_[i].insert(insertedRule);
+  }
+
+  void initialize_invalid(const TranslationGrammar&) override { invalid_ = {}; }
 };
 }  // namespace ctf
 

@@ -101,11 +101,6 @@ class LLTranslationControlGeneral : public TranslationControl {
   predict_type predict_;
 
   /**
-  \brief Error message string.
-  */
-  string errorString_;
-
-  /**
   \brief The error message adding function
   */
   error_message_function error_function;
@@ -146,30 +141,27 @@ class LLTranslationControlGeneral : public TranslationControl {
     }
   }
 
-  void set_error_message(error_message_function error_message) {
+  void set_error_message_function(error_message_function error_message) {
     error_function = error_message;
   }
 
   void set_error() { errorFlag_ = true; }
 
-  /**
-  \brief Get error message.
-
-  \returns The error message string.
-  */
-  string error_message() { return errorString_; }
-
-  string add_error(const Symbol& top, const Symbol& token,
-                   const Symbol& lastDerivedNonterminal) {
+  void add_error(const Symbol& top, const Symbol& token,
+                 const Symbol& lastDerivedNonterminal) {
+    set_error();
+    string message;
     if (top.type() == Symbol::Type::NONTERMINAL) {
       // find predict and follow
       auto& nonterminals = translationGrammar_->nonterminals();
       size_t i = std::find(nonterminals.begin(), nonterminals.end(), top) -
                  nonterminals.begin();
-      return error_function(top, token, lastDerivedNonterminal, predict_[i],
-                            follow_[i]);
+      message = error_function(top, token, lastDerivedNonterminal, predict_[i],
+                               follow_[i]);
+    } else {
+      message = error_function(top, token, lastDerivedNonterminal, {}, {});
     }
-    return error_function(top, token, lastDerivedNonterminal, {}, {});
+    err() << top.location().to_string() << ": " << message << "\n";
   }
 };
 
@@ -218,7 +210,7 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
             return;
           } else {
             set_error();
-            errorString_ += add_error(top, token, lastDerivedNonterminal);
+            add_error(top, token, lastDerivedNonterminal);
             return;
           }
           break;
@@ -231,7 +223,7 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
             token = next_token();
           } else {
             set_error();
-            errorString_ += add_error(top, token, lastDerivedNonterminal);
+            add_error(top, token, lastDerivedNonterminal);
             if (!error_recovery(lastDerivedNonterminal, token,
                                 attributeActions))
               return;
@@ -250,7 +242,7 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
             set_error();
-            errorString_ += add_error(top, token, lastDerivedNonterminal);
+            add_error(top, token, lastDerivedNonterminal);
             if (!error_recovery(lastDerivedNonterminal, token,
                                 attributeActions))
               return;
@@ -299,6 +291,9 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
       const Symbol& lastDerivedNonterminal, Symbol& token,
       tstack<vector<tstack<Symbol>::iterator>>& attributeActions) {
     using Type = Symbol::Type;
+    static const string recoveryMessage =
+        "-----\nRecovering from syntax error, the following error messages may "
+        "be invalid.\n-----\n";
 
     size_t ruleIndex = 0;
     size_t ntIndex =
@@ -317,13 +312,16 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
         case Type::EOI:
           return false;
         case Type::TERMINAL:
-          if (top == token)
+          if (top == token) {
+            err() << recoveryMessage;
             return true;
+          }
           attributeActions.pop();
           break;
         case Type::NONTERMINAL:
           ruleIndex = llTable_.rule_index(top, token);
           if (ruleIndex < translationGrammar_->rules().size()) {
+            err() << recoveryMessage;
             return true;
           }
           break;
@@ -334,7 +332,7 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
     }
 
     // this should never happen
-    return true;
+    throw std::runtime_error("Syntax error recovery failed.");
   }
 };
 
@@ -424,7 +422,7 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
             return;
           } else {
             set_error();
-            errorString_ += add_error(top, token, lastDerivedNonterminal);
+            add_error(top, token, lastDerivedNonterminal);
             return;
           }
           break;
@@ -438,7 +436,7 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
           } else {
             if (!roll_back(attributeActions, obegin)) {
               set_error();
-              errorString_ += add_error(top, token, lastDerivedNonterminal);
+              add_error(top, token, lastDerivedNonterminal);
               if (!error_recovery(lastDerivedNonterminal, token,
                                   attributeActions))
                 return;
@@ -466,7 +464,7 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
           } else {
             if (!roll_back(attributeActions, obegin)) {
               set_error();
-              errorString_ += add_error(top, token, lastDerivedNonterminal);
+              add_error(top, token, lastDerivedNonterminal);
               if (!error_recovery(lastDerivedNonterminal, token,
                                   attributeActions))
                 return;

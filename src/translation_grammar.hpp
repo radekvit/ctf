@@ -30,74 +30,6 @@ class TranslationGrammar {
   markers for TranslationControl subclasses.
   */
   class Rule {
-   protected:
-    /**
-    \brief Starting nonterminal for this rule.
-
-    A rule with a symbol other than nonterminal may serve as a special marker
-    rule for TranslationControl subclasses.
-    */
-    Symbol nonterminal_;
-
-    /**
-    \brief A vector of input symbols.
-    */
-    vector<Symbol> input_;
-    /**
-    \brief A vector of output symbols.
-    */
-    vector<Symbol> output_;
-
-    /**
-    \brief Attribute copying from input to output when applying this rule.
-    Implicitly
-    created to copy no attributes.
-     */
-    vector<set<size_t>> attributeActions_;
-
-    /**
-    \brief Checks if nonterminals are in same space in input and output strings.
-    */
-    void check_nonterminals() {
-      vector<Symbol> inputNonterminals;
-      vector<Symbol> outputNonterminals;
-      for (auto& s : input_) {
-        if (s.type() == Symbol::Type::NONTERMINAL)
-          inputNonterminals.push_back(s);
-        else if (s.type() != Symbol::Type::TERMINAL &&
-                 s.type() != Symbol::Type::SPECIAL)
-          throw std::invalid_argument("Unknown symbol type in Rule input.");
-      }
-      for (auto& s : output_) {
-        if (s.type() == Symbol::Type::NONTERMINAL)
-          outputNonterminals.push_back(s);
-        else if (s.type() != Symbol::Type::TERMINAL &&
-                 s.type() != Symbol::Type::SPECIAL)
-          throw std::invalid_argument("Unknown symbol type in Rule output.");
-      }
-      if (inputNonterminals != outputNonterminals)
-        throw std::invalid_argument(
-            "Input and output nonterminals must match.");
-    }
-    /**
-    \brief Counts input nonterminals.
-    */
-    size_t count_input_terminals() const {
-      size_t count = 0;
-      for (auto& s : input_) {
-        if (s.type() == Symbol::Type::TERMINAL)
-          count++;
-      }
-      return count;
-    }
-    /**
-    \brief Creates empty actions for terminal attributes.
-    */
-    void create_empty_actions() {
-      attributeActions_ =
-          vector<set<size_t>>(count_input_terminals(), set<size_t>());
-    }
-
    public:
     /**
     \brief Constructs a rule.
@@ -218,27 +150,76 @@ class TranslationGrammar {
       return rhs <= lhs;
     }
     ///@}
+
+   protected:
+    /**
+    \brief Starting nonterminal for this rule.
+
+    A rule with a symbol other than nonterminal may serve as a special marker
+    rule for TranslationControl subclasses.
+    */
+    Symbol nonterminal_;
+
+    /**
+    \brief A vector of input symbols.
+    */
+    vector<Symbol> input_;
+    /**
+    \brief A vector of output symbols.
+    */
+    vector<Symbol> output_;
+
+    /**
+    \brief Attribute copying from input to output when applying this rule.
+    Implicitly
+    created to copy no attributes.
+     */
+    vector<set<size_t>> attributeActions_;
+
+    /**
+    \brief Checks if nonterminals are in same space in input and output strings.
+    */
+    void check_nonterminals() {
+      vector<Symbol> inputNonterminals;
+      vector<Symbol> outputNonterminals;
+      for (auto& s : input_) {
+        if (s.type() == Symbol::Type::NONTERMINAL)
+          inputNonterminals.push_back(s);
+        else if (s.type() != Symbol::Type::TERMINAL &&
+                 s.type() != Symbol::Type::SPECIAL)
+          throw std::invalid_argument("Unknown symbol type in Rule input.");
+      }
+      for (auto& s : output_) {
+        if (s.type() == Symbol::Type::NONTERMINAL)
+          outputNonterminals.push_back(s);
+        else if (s.type() != Symbol::Type::TERMINAL &&
+                 s.type() != Symbol::Type::SPECIAL)
+          throw std::invalid_argument("Unknown symbol type in Rule output.");
+      }
+      if (inputNonterminals != outputNonterminals)
+        throw std::invalid_argument(
+            "Input and output nonterminals must match.");
+    }
+    /**
+    \brief Counts input nonterminals.
+    */
+    size_t count_input_terminals() const {
+      size_t count = 0;
+      for (auto& s : input_) {
+        if (s.type() == Symbol::Type::TERMINAL)
+          count++;
+      }
+      return count;
+    }
+    /**
+    \brief Creates empty actions for terminal attributes.
+    */
+    void create_empty_actions() {
+      attributeActions_ =
+          vector<set<size_t>>(count_input_terminals(), set<size_t>());
+    }
   };
 
- protected:
-  /**
-  \brief A sorted set of all input terminals.
-  */
-  vector<Symbol> terminals_;
-  /**
-  \brief A sorted set of all input nonterminals.
-  */
-  vector<Symbol> nonterminals_;
-  /**
-  \brief An unsorted vector of all rules.
-  */
-  vector<Rule> rules_;
-  /**
-  \brief The starting symbol.
-  */
-  Symbol starting_symbol_;
-
- public:
   /**
   \brief Constructs an empty TranslationGrammar. Implicit starting symbol is
   "E"_nt.
@@ -403,6 +384,24 @@ class TranslationGrammar {
     return std::lower_bound(terminals_.begin(), terminals_.end(), t) -
            terminals_.begin();
   }
+
+ protected:
+  /**
+  \brief A sorted set of all input terminals.
+  */
+  vector<Symbol> terminals_;
+  /**
+  \brief A sorted set of all input nonterminals.
+  */
+  vector<Symbol> nonterminals_;
+  /**
+  \brief An unsorted vector of all rules.
+  */
+  vector<Rule> rules_;
+  /**
+  \brief The starting symbol.
+  */
+  Symbol starting_symbol_;
 };
 }  // namespace ctf
 #endif

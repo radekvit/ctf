@@ -292,6 +292,8 @@ struct Location {
     return fileName + ":" + std::to_string(row) + ":" + std::to_string(col);
   }
 
+  explicit operator string() const { return to_string(); }
+
  private:
   /**
   \brief Constructs an invalid Location.

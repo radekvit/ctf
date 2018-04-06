@@ -14,7 +14,7 @@ TEST_CASE("OutputGenerator construction", "[OutputGenerator]") {
   REQUIRE(o1.has_stream() == false);
   REQUIRE(o2.has_stream() == true);
 
-  o1.set_stream(std::cout);
+  o1.set_output_stream(std::cout);
   REQUIRE(o1.has_stream() == true);
 }
 

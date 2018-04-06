@@ -33,41 +33,6 @@ enum class TranslationResult {
 and outputs.
 */
 class Translation {
- protected:
-  /**
-  \brief The input reader and buffer.
-  */
-  InputReader reader_;
-  /**
-  \brief Lexical Analyzer ownership.
-  */
-  std::unique_ptr<LexicalAnalyzer> lexer_;
-  /**
-  \brief Provides input terminals from istream.
-  */
-  LexicalAnalyzer& lexicalAnalyzer_;
-  /**
-  \brief Holds standard control when generated with Translation::control().
-  */
-  std::unique_ptr<TranslationControl> control_ = nullptr;
-  /**
-  \brief Reference to TranslationControl to be used.
-  */
-  TranslationControl& translationControl_;
-  /**
-  \brief Translation grammar that defines accepted language and output
-  language.
-  */
-  TranslationGrammar translationGrammar_;
-  /**
-  \brief Output generator ownership
-  */
-  std::unique_ptr<OutputGenerator> generator_;
-  /**
-  \brief Outputs output terminals to ostream.
-  */
-  OutputGenerator& outputGenerator_;
-
  public:
   /**
   \brief Constructs Translation with given lexical analyzer, translation
@@ -121,8 +86,8 @@ class Translation {
 
   \returns True when no errors were encountered.
   */
-  TranslationResult run(std::istream& input, std::ostream& output,
-                        std::ostream& error,
+  TranslationResult run(std::istream& inputStream, std::ostream& outputStream,
+                        std::ostream& errorStream,
                         const std::string& inputName = "") {
     // extra output buffer
     std::stringstream ss;
@@ -135,8 +100,14 @@ class Translation {
     translationControl_.reset();
     lexicalAnalyzer_.reset();
     lexicalAnalyzer_.set_reader(reader_);
-    reader_.set_stream(input, inputName);
-    outputGenerator_.set_stream(ss);
+    lexicalAnalyzer_.set_error_stream(errorStream);
+    reader_.set_stream(inputStream, inputName);
+
+    translationControl_.set_error_stream(errorStream);
+
+    outputGenerator_.set_error_stream(errorStream);
+    outputGenerator_.set_output_stream(ss);
+
     try {
       // lexical analysis, syntax analysis and translation
       translationControl_.run();
@@ -146,9 +117,6 @@ class Translation {
       synError = true;
     }
 
-    // translation errors and warnings
-    error << lexicalAnalyzer_.error_message();
-    error << translationControl_.error_message();
     if (lexicalAnalyzer_.error() || lexError) {
       return TranslationResult::LEXICAL_ERROR;
     } else if (translationControl_.error() || synError) {
@@ -165,15 +133,13 @@ class Translation {
       genError = true;
     }
 
-    // semantic error
-    error << outputGenerator_.error_message();
     if (outputGenerator_.error() || semError) {
       return TranslationResult::SEMANTIC_ERROR;
     } else if (genError) {
       return TranslationResult::CODE_GENERATION_ERROR;
     }
 
-    output << ss.str();
+    outputStream << ss.str();
     return TranslationResult::SUCCESS;
   }
 
@@ -211,6 +177,41 @@ class Translation {
     else
       return (*it).second();
   }
+
+ protected:
+  /**
+  \brief The input reader and buffer.
+  */
+  InputReader reader_;
+  /**
+  \brief Lexical Analyzer ownership.
+  */
+  std::unique_ptr<LexicalAnalyzer> lexer_;
+  /**
+  \brief Provides input terminals from istream.
+  */
+  LexicalAnalyzer& lexicalAnalyzer_;
+  /**
+  \brief Holds standard control when generated with Translation::control().
+  */
+  std::unique_ptr<TranslationControl> control_ = nullptr;
+  /**
+  \brief Reference to TranslationControl to be used.
+  */
+  TranslationControl& translationControl_;
+  /**
+  \brief Translation grammar that defines accepted language and output
+  language.
+  */
+  TranslationGrammar translationGrammar_;
+  /**
+  \brief Output generator ownership
+  */
+  std::unique_ptr<OutputGenerator> generator_;
+  /**
+  \brief Outputs output terminals to ostream.
+  */
+  OutputGenerator& outputGenerator_;
 };
 }  // namespace ctf
 

@@ -15,14 +15,14 @@ namespace ctf {
 /**
 Semantic error exception class.
 */
-class SemanticException: public TranslationException {
+class SemanticException : public TranslationException {
   using TranslationException::TranslationException;
 };
 
 /**
 Code generation error exception class.
 */
-class CodeGenerationException: public TranslationException {
+class CodeGenerationException : public TranslationException {
   using TranslationException::TranslationException;
 };
 
@@ -30,39 +30,6 @@ class CodeGenerationException: public TranslationException {
 Outputs tokens to output stream. Base class.
 */
 class OutputGenerator {
-  /**
-  \brief
-  */
-  bool errorFlag_ = false;
-
-  /**
-  \brief Pointer to the output stream tokens will be output to.
-  */
-  std::ostream* os_;
-
-  /**
-  \brief Clears the inner state and errors.
-  */
-  virtual void reset_private() noexcept {}
-
- protected:
-  /**
-  \brief Get the output stream.
-
-  \returns A reference to the output stream if set.
-  */
-  std::ostream& os() const {
-    if (!os_) {
-      throw std::runtime_error(
-          "ctf::OutputGenerator::os() output stream not set.");
-    }
-    return *os_;
-  }
-  /**
-  \brief Set the error flag.
-  */
-  void set_error() noexcept { errorFlag_ = true; }
-
  public:
   OutputGenerator() = default;
   OutputGenerator(std::ostream& os) : os_(&os) {}
@@ -78,10 +45,16 @@ class OutputGenerator {
 
   \param[in] o Output stream.
   */
-  void set_stream(std::ostream& o) noexcept {
+  void set_output_stream(std::ostream& o) noexcept {
     os_ = &o;
     reset();
   }
+  /**
+  \brief Sets the error stream.
+
+  \param[in] o Error stream.
+  */
+  void set_error_stream(std::ostream& o) noexcept { error_ = &o; }
   /**
   \brief Get the error flag.
 
@@ -95,12 +68,7 @@ class OutputGenerator {
     errorFlag_ = false;
     reset_private();
   }
-  /**
-  \brief Get the error message.
 
-  \returns The error message string.
-  */
-  virtual string error_message() { return ""; }
   /**
   \brief Outputs a token to the given stream.
 
@@ -129,6 +97,81 @@ class OutputGenerator {
       os << "\n";
     }
   }
+
+ protected:
+  /**
+  \brief Get the output stream.
+
+  \returns A reference to the output stream if set.
+  */
+  std::ostream& os() const {
+    if (!os_) {
+      throw std::runtime_error(
+          "ctf::OutputGenerator::os() output stream not set.");
+    }
+    return *os_;
+  }
+  /**
+  \brief Set the error flag.
+  */
+  void set_error() noexcept { errorFlag_ = true; }
+
+  /**
+  \brief Clears the inner state and errors.
+  */
+  virtual void reset_private() noexcept {}
+
+  /**
+  \brief Get the error stream.
+  */
+  std::ostream& err() {
+    if (!error_) {
+      throw std::runtime_error(
+          "ctf::OutputGenerator::err() error stream not set.");
+    }
+    return *error_;
+  }
+
+
+  void error_message(const string& message) {
+    err() << message << "\n";
+  }
+  /**
+  \brief Outputs an error message with the location automatically printed before
+  it.
+  */
+  void error_message(const tstack<Symbol>::const_iterator it,
+                     const string& message) {
+    err() << it->location().to_string() << ": " << message << "\n";
+  }
+
+  void fatal_error(const string& message) {
+    error_message(message);
+    set_error();
+    throw SemanticException("Semantic error encountered.");
+  }
+
+  void fatal_error(tstack<Symbol>::const_iterator it, const string& message) {
+    error_message(it, message);
+    set_error();
+    throw SemanticException("Semantic error encountered.");
+  }
+
+ private:
+  /**
+  \brief
+  */
+  bool errorFlag_ = false;
+
+  /**
+  \brief Pointer to the output stream tokens will be output to.
+  */
+  std::ostream* os_;
+
+  /**
+  \brief The error stream.
+  */
+  std::ostream* error_;
 };
 }  // namespace ctf
 

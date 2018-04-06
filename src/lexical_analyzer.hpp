@@ -12,6 +12,7 @@
 #include <cctype>
 #include <functional>
 #include <istream>
+#include <ostream>
 
 namespace ctf {
 /**
@@ -28,31 +29,68 @@ Lexical errors are created by creating a token with an unused name. Then,
 attribute should be used as an error message.
 */
 class LexicalAnalyzer {
- private:
+ public:
   /**
-  \brief Input manager. The managing object is responsible for setting up the
-  reader object.
+  \brief The implicit constructor. The lexical analyzer is in inoperable state,
+  an input reader must be set before it is.
   */
-  InputReader* reader_ = nullptr;
-
-  /**
-  \brief Error flag. This flag should be set by subclasses on invalid input.
-  */
-  bool errorFlag_ = false;
+  LexicalAnalyzer() {}
+  LexicalAnalyzer(InputReader& reader) : reader_(&reader) {}
+  virtual ~LexicalAnalyzer() noexcept = default;
 
   /**
-  \brief Current token location.
+  \brief Returns true when a reader has been set and the reader has a stream
+  set.
+  \returns True when the lexical analyzer is ready to receive input. False
+  otherwise.
   */
-  Location location_ = Location::invalid();
+  bool has_input() const noexcept {
+    return reader_ != nullptr && reader_->stream() != nullptr;
+  }
+  /**
+  \brief Sets the reader.
+
+  \param[in] reader The reader to be assigned.
+  */
+  void set_reader(InputReader& reader) noexcept { reader_ = &reader; }
+  /**
+  \brief Removes the assigned reader.
+  */
+  void remove_reader() noexcept { reader_ = nullptr; }
+  /**
+  \brief Resets the internal state.
+  */
+  virtual void reset() noexcept {
+    clear_error();
+    location_ = Location::invalid();
+    if (reader_) {
+      reader_->reset();
+    }
+    reset_private();
+  }
+  /**
+  \brief Get the error flag.
+
+  \returns True when an error has been encountered.
+  */
+  bool error() const noexcept { return errorFlag_; }
 
   /**
-  \brief Clears the error flag and resets all error messages.
+  \brief Gets next Symbol from stream and resets symbol location.
+
+  \returns A token from the input stream.
   */
-  void clear_error() noexcept { errorFlag_ = false; }
+  Symbol get_token() {
+    location_ = Location::invalid();
+    return read_token();
+  }
 
-  virtual void reset_private() noexcept {}
+  /**
+  \brief Set the error stream.
 
-  virtual void clear_message() noexcept {}
+  \param[in] os The output stream to be set.
+  */
+  void set_error_stream(std::ostream& os) { error_ = &os; }
 
  protected:
   /**
@@ -134,67 +172,59 @@ class LexicalAnalyzer {
   */
   void set_error() noexcept { errorFlag_ = true; }
 
- public:
   /**
-  \brief The implicit constructor. The lexical analyzer is in inoperable state,
-  an input reader must be set before it is.
+  \brief Outputs an error message with the location automatically printed before
+  it.
   */
-  LexicalAnalyzer() {}
-  LexicalAnalyzer(InputReader& reader) : reader_(&reader) {}
-  virtual ~LexicalAnalyzer() noexcept = default;
-
-  /**
-  \brief Returns true when a reader has been set and the reader has a stream
-  set.
-  \returns True when the lexical analyzer is ready to receive input. False
-  otherwise.
-  */
-  bool has_input() const noexcept {
-    return reader_ != nullptr && reader_->stream() != nullptr;
+  void error_message(const string& message) {
+    err() << location_.to_string() << ": " << message << "\n";
   }
-  /**
-  \brief Sets the reader.
 
-  \param[in] reader The reader to be assigned.
-  */
-  void set_reader(InputReader& reader) noexcept { reader_ = &reader; }
+  void fatal_error(const string& message) {
+    error_message(message);
+    set_error();
+    throw LexicalException("Lexical error encountered.");
+  }
+
   /**
-  \brief Removes the assigned reader.
+  \brief Get the error stream.
   */
-  void remove_reader() noexcept { reader_ = nullptr; }
-  /**
-  \brief Resets the internal state.
-  */
-  virtual void reset() noexcept {
-    clear_error();
-    location_ = Location::invalid();
-    if (reader_) {
-      reader_->reset();
+  std::ostream& err() {
+    if (!error_) {
+      throw std::runtime_error(
+          "ctf::OutputGenerator::err() error stream not set.");
     }
-    reset_private();
+    return *error_;
   }
+
+ private:
   /**
-  \brief Get the error flag.
-
-  \returns True when an error has been encountered.
+  \brief Input manager. The managing object is responsible for setting up the
+  reader object.
   */
-  bool error() const noexcept { return errorFlag_; }
+  InputReader* reader_ = nullptr;
 
   /**
-  \brief Get the set error message.
-
-  \returns String with an error message.
+  \brief The error stream.
   */
-  virtual string error_message() { return ""; }
+  std::ostream* error_ = nullptr;
+
   /**
-  \brief Gets next Symbol from stream and resets symbol location.
-
-  \returns A token from the input stream.
+  \brief Error flag. This flag should be set by subclasses on invalid input.
   */
-  Symbol get_token() {
-    location_ = Location::invalid();
-    return read_token();
-  }
+  bool errorFlag_ = false;
+
+  /**
+  \brief Current token location.
+  */
+  Location location_ = Location::invalid();
+
+  /**
+  \brief Clears the error flag and resets all error messages.
+  */
+  void clear_error() noexcept { errorFlag_ = false; }
+
+  virtual void reset_private() noexcept {}
 };
 }  // namespace ctf
 
