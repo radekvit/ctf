@@ -26,6 +26,7 @@ enum class TranslationResult {
   LEXICAL_ERROR,
   TRANSLATION_ERROR,  // syntax errors
   SEMANTIC_ERROR,
+  CODE_GENERATION_ERROR,
 };
 /**
 \brief Defines a translation. Can be used multiple times for different inputs
@@ -128,6 +129,8 @@ class Translation {
     // error flags
     bool lexError = false;
     bool synError = false;
+    bool semError = false;
+    bool genError = false;
     // setup
     translationControl_.reset();
     lexicalAnalyzer_.reset();
@@ -153,13 +156,21 @@ class Translation {
     }
 
     // semantic analysis and code generation
-    auto&& outputTokens = translationControl_.output();
-    outputGenerator_.output(outputTokens);
+    try {
+      auto&& outputTokens = translationControl_.output();
+      outputGenerator_.output(outputTokens);
+    } catch (SemanticException& se) {
+      semError = true;
+    } catch (CodeGenerationException& cge) {
+      genError = true;
+    }
 
     // semantic error
     error << outputGenerator_.error_message();
-    if (outputGenerator_.error()) {
+    if (outputGenerator_.error() || semError) {
       return TranslationResult::SEMANTIC_ERROR;
+    } else if (genError) {
+      return TranslationResult::CODE_GENERATION_ERROR;
     }
 
     output << ss.str();

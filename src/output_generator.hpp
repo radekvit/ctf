@@ -11,6 +11,21 @@ and outputs it into a stream.
 #include "base.hpp"
 
 namespace ctf {
+
+/**
+Semantic error exception class.
+*/
+class SemanticException: public TranslationException {
+  using TranslationException::TranslationException;
+};
+
+/**
+Code generation error exception class.
+*/
+class CodeGenerationException: public TranslationException {
+  using TranslationException::TranslationException;
+};
+
 /**
 Outputs tokens to output stream. Base class.
 */
