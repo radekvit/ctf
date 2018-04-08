@@ -12,7 +12,7 @@ methods.
 #include <stdexcept>
 #include <utility>
 
-#include "base.hpp"
+#include "ctf_base.hpp"
 
 namespace ctf {
 

@@ -1,8 +1,8 @@
 #include <catch.hpp>
 
-#include "../src/translation_grammar.hpp"
-
 #include <algorithm>
+
+#include "../src/ctf_translation_grammar.hpp"
 
 using ctf::vector;
 using ctf::set;

@@ -6,13 +6,13 @@
 #ifndef CTF_LEXICAL_ANALYZER_H
 #define CTF_LEXICAL_ANALYZER_H
 
-#include "base.hpp"
-#include "input_reader.hpp"
-
 #include <cctype>
 #include <functional>
 #include <istream>
 #include <ostream>
+
+#include "ctf_base.hpp"
+#include "ctf_input_reader.hpp"
 
 namespace ctf {
 /**

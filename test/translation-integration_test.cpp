@@ -1,8 +1,9 @@
-#include "../src/translation.hpp"
 #include <catch.hpp>
 
 #include <fstream>
 #include <sstream>
+
+#include "../src/ctf_translation.hpp"
 
 using ctf::Symbol;
 using ctf::Translation;

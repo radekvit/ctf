@@ -6,8 +6,8 @@
 #ifndef CTF_LL_TRANSLATION_CONTROL_H
 #define CTF_LL_TRANSLATION_CONTROL_H
 
-#include "table_sets.hpp"
-#include "translation_control.hpp"
+#include "ctf_table_sets.hpp"
+#include "ctf_translation_control.hpp"
 
 namespace ctf {
 
@@ -34,7 +34,7 @@ inline string default_LL_error_message(
       break;
     case Type::TERMINAL:
       errorString += "Unexpected token '" + token.name() + "'; expected '" +
-                     top.name() + "'";
+                     top.name() + "'.";
       break;
     case Type::NONTERMINAL:
       errorString += "Unexpected token '" + token.name() +

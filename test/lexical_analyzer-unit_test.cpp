@@ -1,8 +1,8 @@
 #include <catch.hpp>
 
-#include "../src/lexical_analyzer.hpp"
-
 #include <sstream>
+
+#include "../src/ctf_lexical_analyzer.hpp"
 
 using ctf::LexicalAnalyzer;
 using ctf::InputReader;

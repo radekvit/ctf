@@ -1,6 +1,6 @@
 #include <catch.hpp>
 
-#include "../src/ll_translation_control.hpp"
+#include "../src/ctf_ll_translation_control.hpp"
 
 #include <sstream>
 

@@ -1,9 +1,9 @@
 #include <catch.hpp>
 
-#include "../src/output_generator.hpp"
-
 #include <iostream>
 #include <sstream>
+
+#include "../src/ctf_output_generator.hpp"
 
 using ctf::OutputGenerator;
 

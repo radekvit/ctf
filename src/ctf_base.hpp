@@ -10,7 +10,7 @@
 #include <ostream>
 #include <stdexcept>
 
-#include "generic_types.hpp"
+#include "ctf_generic_types.hpp"
 #ifdef CTF_MULTITHREAD
 #include <mutex>
 #endif

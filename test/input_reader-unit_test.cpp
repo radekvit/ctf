@@ -1,7 +1,8 @@
-#include "../src/input_reader.hpp"
 #include <catch.hpp>
 
 #include <sstream>
+
+#include "../src/ctf_input_reader.hpp"
 
 using ctf::InputReader;
 using ctf::Location;

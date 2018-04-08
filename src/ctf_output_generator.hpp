@@ -8,7 +8,7 @@ and outputs it into a stream.
 
 #include <ostream>
 
-#include "base.hpp"
+#include "ctf_base.hpp"
 
 namespace ctf {
 

@@ -1,5 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include <catch.hpp>
+
 #include "../include/ctf.hpp"
 
 std::ostream &operator<<(std::ostream &os, const Symbol &s) {

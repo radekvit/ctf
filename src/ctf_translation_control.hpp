@@ -6,9 +6,9 @@
 #ifndef CTF_TRANSLATION_CONTROL_H
 #define CTF_TRANSLATION_CONTROL_H
 
-#include "lexical_analyzer.hpp"
-#include "ll_table.hpp"
-#include "translation_grammar.hpp"
+#include "ctf_lexical_analyzer.hpp"
+#include "ctf_ll_table.hpp"
+#include "ctf_translation_grammar.hpp"
 
 namespace ctf {
 /**

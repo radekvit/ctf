@@ -11,11 +11,11 @@
 #include <ostream>
 #include <sstream>
 
-#include "lexical_analyzer.hpp"
-#include "ll_translation_control.hpp"
-#include "output_generator.hpp"
-#include "translation_control.hpp"
-#include "translation_grammar.hpp"
+#include "ctf_lexical_analyzer.hpp"
+#include "ctf_ll_translation_control.hpp"
+#include "ctf_output_generator.hpp"
+#include "ctf_translation_control.hpp"
+#include "ctf_translation_grammar.hpp"
 
 namespace ctf {
 /**

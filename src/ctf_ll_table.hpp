@@ -9,9 +9,9 @@
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
-#include "table_sets.hpp"
 
-#include "translation_grammar.hpp"
+#include "ctf_table_sets.hpp"
+#include "ctf_translation_grammar.hpp"
 
 namespace ctf {
 

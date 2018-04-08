@@ -1,6 +1,6 @@
 #include <catch.hpp>
 
-#include "../src/ll_table.hpp"
+#include "../src/ctf_ll_table.hpp"
 
 using ctf::LLTable;
 using ctf::TranslationGrammar;

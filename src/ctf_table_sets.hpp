@@ -1,7 +1,7 @@
 #ifndef CTF_PREDICTIVE_SETS
 #define CTF_PREDICTIVE_SETS
 
-#include "translation_grammar.hpp"
+#include "ctf_translation_grammar.hpp"
 
 namespace ctf {
 

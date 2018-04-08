@@ -1,9 +1,11 @@
-#include "../src/generic_types.hpp"
 #include <catch.hpp>
-#include "../src/base.hpp"
 
 #include <list>
 #include <vector>
+
+#include "../src/ctf_generic_types.hpp"
+#include "../src/ctf_base.hpp"
+
 
 using ctf::tstack;
 
