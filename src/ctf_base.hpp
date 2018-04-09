@@ -306,21 +306,6 @@ struct Location {
 Nonterminal or end of input.
 */
 class Symbol {
-#ifdef CTF_MULTITHREAD
-  inline static std::mutex& nameLock() {
-    static std::mutex nl;
-    return nl;
-  }
-#endif
-  inline static unordered_map<string, size_t>& reverseNameMap() {
-    static unordered_map<string, size_t> rnm;
-    return rnm;
-  }
-  inline static vector<string>& nameMap() {
-    static vector<string> nm;
-    return nm;
-  }
-
  public:
   /**
   \brief Type of the Symbol.
@@ -349,39 +334,6 @@ class Symbol {
     SPECIAL,
   };
 
- protected:
-  /**
-  \brief Type of this Symbol.
-  */
-  Type type_;
-  /**
-  \brief Id of this Symbol.
-  */
-  size_t id_;
-  /**
-  \brief Attribute of this Symbol. Only valid for some types.
-  */
-  Attribute attribute_;
-  /**
-  \brief Location of the origin of this Symbol.
-  */
-  Location location_;
-
-  static size_t name_index(const string& name) {
-#ifdef CTF_MULTITHREAD
-    std::lock_guard l(nameLock());
-#endif
-    auto it = reverseNameMap().find(name);
-    if (it == reverseNameMap().end()) {
-      size_t result = nameMap().size();
-      reverseNameMap()[name] = result;
-      nameMap().push_back(name);
-      return result;
-    }
-    return it->second;
-  }
-
- public:
   /**
   \brief Constructs a Symbol with a given type. If specified, sets Symbol's name
   and attribute.
@@ -496,6 +448,54 @@ class Symbol {
     return rhs <= lhs;
   }
   ///@}
+
+ protected:
+  /**
+  \brief Type of this Symbol.
+  */
+  Type type_;
+  /**
+  \brief Id of this Symbol.
+  */
+  size_t id_;
+  /**
+  \brief Attribute of this Symbol. Only valid for some types.
+  */
+  Attribute attribute_;
+  /**
+  \brief Location of the origin of this Symbol.
+  */
+  Location location_;
+
+  static size_t name_index(const string& name) {
+#ifdef CTF_MULTITHREAD
+    std::lock_guard l(nameLock());
+#endif
+    auto it = reverseNameMap().find(name);
+    if (it == reverseNameMap().end()) {
+      size_t result = nameMap().size();
+      reverseNameMap()[name] = result;
+      nameMap().push_back(name);
+      return result;
+    }
+    return it->second;
+  }
+
+ private:
+#ifdef CTF_MULTITHREAD
+  inline static std::mutex& nameLock() {
+    static std::mutex nl;
+    return nl;
+  }
+#endif
+  inline static unordered_map<string, size_t>& reverseNameMap() {
+    static unordered_map<string, size_t> rnm;
+    return rnm;
+  }
+  inline static vector<string>& nameMap() {
+    static vector<string> nm;
+    return nm;
+  }
 };
 /**
 \brief Returns a Symbol with Type::Terminal, given name and attribute.
