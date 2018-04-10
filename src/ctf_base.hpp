@@ -348,6 +348,9 @@ class Symbol {
     if (type != Symbol::Type::EOI && name == "")
       throw std::invalid_argument(
           "Empty name when constructing non-EOI Symbol.");
+#ifdef CTF_MULTITHREAD
+    name_ = name;
+#endif
   }
   /**
   \brief Constructs a Symbol with unspecified type. Sets Symbol's name and if
@@ -379,9 +382,10 @@ class Symbol {
   */
   const string& name() const {
 #ifdef CTF_MULTITHREAD
-    std::lock_guard l(nameLock());
-#endif
+    return name_;
+#else
     return nameMap()[id_];
+#endif
   }
   /**
   \brief Returns a reference to attribute.
@@ -467,6 +471,16 @@ class Symbol {
   */
   Location location_;
 
+#ifdef CTF_MULTITHREAD
+  /**
+  \brief Storing the name of the symbol for multithread applications.
+  */
+  string name_;
+#endif
+
+  /**
+  \brief Inserts a name into static maps and returns its index.
+  */
   static size_t name_index(const string& name) {
 #ifdef CTF_MULTITHREAD
     std::lock_guard l(nameLock());
@@ -483,6 +497,9 @@ class Symbol {
 
  private:
 #ifdef CTF_MULTITHREAD
+  /**
+  \brief Gets the mutex for Symbol name insertion.
+  */
   inline static std::mutex& nameLock() {
     static std::mutex nl;
     return nl;
