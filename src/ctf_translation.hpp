@@ -98,9 +98,9 @@ class Translation {
     bool genError = false;
     // setup
     translationControl_.reset();
-    lexicalAnalyzer_.reset();
     lexicalAnalyzer_.set_reader(reader_);
     lexicalAnalyzer_.set_error_stream(errorStream);
+    lexicalAnalyzer_.reset();
     reader_.set_stream(inputStream, inputName);
 
     translationControl_.set_error_stream(errorStream);
