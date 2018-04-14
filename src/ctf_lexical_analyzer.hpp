@@ -135,6 +135,25 @@ class LexicalAnalyzer {
   }
 
   /**
+  \brief Sets the current token location if not yet specified and reads a
+  character that satisfies the supplied predicate.
+  \param[in] accept The supplied predicate.
+
+  \returns The int value of the read character.
+  */
+  int get(std::function<bool (int)> accept) {
+    int result;
+    do {
+      result = reader_->get();
+    } while (!accept(result));
+    reader_->unget();
+    if (location_ == Location::invalid()) {
+      return reader_->get(location_);
+    }
+    return reader_->get();
+  }
+
+  /**
   \brief Rolls back input.
 
   \param[in] num How many positions to roll back.
