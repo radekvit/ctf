@@ -141,7 +141,7 @@ class LexicalAnalyzer {
 
   \returns The int value of the read character.
   */
-  int get(std::function<bool (int)> accept) {
+  int get(std::function<bool(int)> accept) {
     int result;
     do {
       result = reader_->get();

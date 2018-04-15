@@ -200,7 +200,6 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
     output_.clear();
     tstack<vector<tstack<Symbol>::iterator>> attributeActions;
 
-    Symbol token = next_token();
     // last derived nonterminal
     Symbol lastDerivedNonterminal = translationGrammar_->starting_symbol();
 
@@ -208,6 +207,8 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
     output_.push(Symbol::eof());
     input_.push(translationGrammar_->starting_symbol());
     output_.push(translationGrammar_->starting_symbol());
+
+    Symbol token = next_token();
 
     // iterator to the first symbol of the last inserted string
     // used to speed up output_ linear search
@@ -407,7 +408,6 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
     output_.clear();
     tstack<vector<tstack<Symbol>::iterator>> attributeActions;
 
-    Symbol token = next_token();
     // last derived nonterminal
     Symbol lastDerivedNonterminal = translationGrammar_->starting_symbol();
 
@@ -415,6 +415,8 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
     output_.push(Symbol::eof());
     input_.push(translationGrammar_->starting_symbol());
     output_.push(translationGrammar_->starting_symbol());
+
+    Symbol token = next_token();
 
     // iterator to the first symbol of the last inserted string
     // used to speed up output_ linear search
