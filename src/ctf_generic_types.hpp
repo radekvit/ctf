@@ -33,6 +33,7 @@ using std::list;
 using std::map;
 using std::unordered_map;
 using std::queue;
+using std::deque;
 using std::stack;
 
 /**
