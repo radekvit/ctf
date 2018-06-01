@@ -88,3 +88,4 @@ TabWidth:        4
 UseTab:          Never
 
 FixNamespaceComments: true
+SpaceBeforeRangeBasedForLoopColon: false
