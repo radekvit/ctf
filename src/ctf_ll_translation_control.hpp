@@ -19,9 +19,11 @@ combination.
 \param[in] token The incoming token.
 */
 inline string default_LL_error_message(
-    const Symbol& top, const Symbol& token,
+    const Symbol& top,
+    const Symbol& token,
     [[maybe_unused]] const Symbol& lastDerivedNonterminal,
-    [[maybe_unused]] bool empty, [[maybe_unused]] const set<Symbol>& first,
+    [[maybe_unused]] bool empty,
+    [[maybe_unused]] const set<Symbol>& first,
     [[maybe_unused]] const set<Symbol>& follow) {
   using Type = Symbol::Type;
 
@@ -63,9 +65,13 @@ inline string default_LL_error_message(
 
 class LLTranslationControlGeneral : public TranslationControl {
  public:
-  using error_message_function = std::function<string(
-      const Symbol& top, const Symbol& token, const Symbol& lastDerived,
-      bool empty, const set<Symbol>& first, const set<Symbol>& follow)>;
+  using error_message_function =
+      std::function<string(const Symbol& top,
+                           const Symbol& token,
+                           const Symbol& lastDerived,
+                           bool empty,
+                           const set<Symbol>& first,
+                           const set<Symbol>& follow)>;
 
   /**
   \brief Constructs a LLTranslationControlGeneral.
@@ -81,7 +87,8 @@ class LLTranslationControlGeneral : public TranslationControl {
   \param[in] tg The translation grammar for this translation.
   */
   LLTranslationControlGeneral(
-      LexicalAnalyzer& la, TranslationGrammar& tg,
+      LexicalAnalyzer& la,
+      TranslationGrammar& tg,
       error_message_function error_message = default_LL_error_message)
       : error_function(error_message) {
     set_grammar(tg);
@@ -97,19 +104,19 @@ class LLTranslationControlGeneral : public TranslationControl {
   /**
   \brief Empty set for each nonterminal.
   */
-  empty_type empty_;
+  empty_t empty_;
   /**
   \brief First set for each nonterminal.
   */
-  first_type first_;
+  first_t first_;
   /**
   \brief Follow set for each nonterminal.
   */
-  follow_type follow_;
+  follow_t follow_;
   /**
   \brief Predict set for each nonterminal.
   */
-  predict_type predict_;
+  predict_t predict_;
 
   /**
   \brief The error message adding function
@@ -137,7 +144,8 @@ class LLTranslationControlGeneral : public TranslationControl {
   The added iterators point to input terminal attribute targets.
   */
   void create_attibute_actions(
-      tstack<Symbol>::iterator obegin, const vector<set<size_t>>& targets,
+      tstack<Symbol>::iterator obegin,
+      const vector<set<size_t>>& targets,
       tstack<vector<tstack<Symbol>::iterator>>& attributeActions) {
     for (auto& target : reverse(targets)) {
       vector<tstack<Symbol>::iterator> iterators;
@@ -158,7 +166,8 @@ class LLTranslationControlGeneral : public TranslationControl {
 
   void set_error() { errorFlag_ = true; }
 
-  void add_error(const Symbol& top, const Symbol& token,
+  void add_error(const Symbol& top,
+                 const Symbol& token,
                  const Symbol& lastDerivedNonterminal) {
     set_error();
     string message;
@@ -167,8 +176,8 @@ class LLTranslationControlGeneral : public TranslationControl {
       auto& nonterminals = translationGrammar_->nonterminals();
       size_t i = std::find(nonterminals.begin(), nonterminals.end(), top) -
                  nonterminals.begin();
-      message = error_function(top, token, lastDerivedNonterminal, empty_[i],
-                               first_[i], follow_[i]);
+      message = error_function(
+          top, token, lastDerivedNonterminal, empty_[i], first_[i], follow_[i]);
     } else {
       message =
           error_function(top, token, lastDerivedNonterminal, false, {}, {});
@@ -215,7 +224,7 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
     auto obegin = output_.begin();
 
     while (1) {
-      Symbol& top = input_.top();
+      const Symbol& top = input_.top();
       size_t ruleIndex;
       switch (top.type()) {
         case Symbol::Type::EOI:
@@ -237,8 +246,8 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
           } else {
             set_error();
             add_error(top, token, lastDerivedNonterminal);
-            if (!error_recovery(lastDerivedNonterminal, token,
-                                attributeActions))
+            if (!error_recovery(
+                    lastDerivedNonterminal, token, attributeActions))
               return;
           }
           break;
@@ -256,8 +265,8 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
           } else {
             set_error();
             add_error(top, token, lastDerivedNonterminal);
-            if (!error_recovery(lastDerivedNonterminal, token,
-                                attributeActions))
+            if (!error_recovery(
+                    lastDerivedNonterminal, token, attributeActions))
               return;
           }
           break;
@@ -301,7 +310,8 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
   \returns True if the error recovery succeeded.
   */
   virtual bool error_recovery(
-      const Symbol& lastDerivedNonterminal, Symbol& token,
+      const Symbol& lastDerivedNonterminal,
+      Symbol& token,
       tstack<vector<tstack<Symbol>::iterator>>& attributeActions) {
     using Type = Symbol::Type;
 
@@ -446,8 +456,8 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
             if (!roll_back(attributeActions, obegin)) {
               set_error();
               add_error(top, token, lastDerivedNonterminal);
-              if (!error_recovery(lastDerivedNonterminal, token,
-                                  attributeActions))
+              if (!error_recovery(
+                      lastDerivedNonterminal, token, attributeActions))
                 return;
             }
           }
@@ -463,8 +473,11 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
             if (applicableRules.size() > 1) {
               // store state
               applicableRules.erase(applicableRules.begin());
-              parseStates_.push(ParseState{input_, output_, tokenPosition_,
-                                           applicableRules, attributeActions});
+              parseStates_.push(ParseState{input_,
+                                           output_,
+                                           tokenPosition_,
+                                           applicableRules,
+                                           attributeActions});
             }
 
             obegin = output_.replace(top, rule.output(), obegin);
@@ -474,8 +487,8 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
             if (!roll_back(attributeActions, obegin)) {
               set_error();
               add_error(top, token, lastDerivedNonterminal);
-              if (!error_recovery(lastDerivedNonterminal, token,
-                                  attributeActions))
+              if (!error_recovery(
+                      lastDerivedNonterminal, token, attributeActions))
                 return;
             }
           }
@@ -513,7 +526,8 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
     llTable_ = LLTableType(*translationGrammar_, predict_);
   }
 
-  virtual bool error_recovery(const Symbol&, Symbol&,
+  virtual bool error_recovery(const Symbol&,
+                              Symbol&,
                               tstack<vector<tstack<Symbol>::iterator>>&) {
     return false;
   }

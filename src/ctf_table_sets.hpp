@@ -5,10 +5,10 @@
 
 namespace ctf {
 
-using empty_type = vector<bool>;
-using first_type = vector<set<Symbol>>;
-using follow_type = vector<set<Symbol>>;
-using predict_type = vector<set<Symbol>>;
+using empty_t = vector<bool>;
+using first_t = vector<set<Symbol>>;
+using follow_t = vector<set<Symbol>>;
+using predict_t = vector<set<Symbol>>;
 
 /**
 \brief Creates Empty set for each nonterminal.
@@ -16,8 +16,8 @@ using predict_type = vector<set<Symbol>>;
 Empty is true if a series of productions from the nonterminal can result in an
 empty string.
 */
-inline empty_type create_empty(const TranslationGrammar& tg) {
-  empty_type empty = empty_type(tg.nonterminals().size(), false);
+inline empty_t create_empty(const TranslationGrammar& tg) {
+  empty_t empty = empty_t(tg.nonterminals().size(), false);
 
   for (auto& r : tg.rules()) {
     if (r.input().size() == 0) {
@@ -62,9 +62,9 @@ inline empty_type create_empty(const TranslationGrammar& tg) {
 First contains all characters that can be at the first position of any string
 derived from this nonterminal.
 */
-inline first_type create_first(const TranslationGrammar& tg,
-                               const empty_type& empty) {
-  first_type first = {tg.nonterminals().size(), set<Symbol>{}};
+inline first_t create_first(const TranslationGrammar& tg,
+                            const empty_t& empty) {
+  first_t first = {tg.nonterminals().size(), set<Symbol>{}};
 
   bool changed = false;
   do {
@@ -102,10 +102,10 @@ inline first_type create_first(const TranslationGrammar& tg,
 Follow contains all characters that may follow that nonterminal in a
 sentential form from the starting nonterminal.
 */
-inline follow_type create_follow(const TranslationGrammar& tg,
-                                 const empty_type& empty,
-                                 const first_type& first) {
-  follow_type follow = {tg.nonterminals().size(), set<Symbol>{}};
+inline follow_t create_follow(const TranslationGrammar& tg,
+                              const empty_t& empty,
+                              const first_t& first) {
+  follow_t follow = {tg.nonterminals().size(), set<Symbol>{}};
   follow[tg.nonterminal_index(tg.starting_symbol())].insert(Symbol::eof());
 
   bool changed = false;
@@ -165,11 +165,11 @@ inline follow_type create_follow(const TranslationGrammar& tg,
 Predict contains all Terminals that may be the first terminal read in a
 sentential form from that nonterminal.
 */
-inline predict_type create_predict(const TranslationGrammar& tg,
-                                   const empty_type& empty,
-                                   const first_type& first,
-                                   const follow_type& follow) {
-  predict_type predict;
+inline predict_t create_predict(const TranslationGrammar& tg,
+                                const empty_t& empty,
+                                const first_t& first,
+                                const follow_t& follow) {
+  predict_t predict;
   for (auto& r : tg.rules()) {
     set<Symbol> compoundFirst;
     set<Symbol> rfollow = follow[tg.nonterminal_index(r.nonterminal())];

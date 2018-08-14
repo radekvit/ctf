@@ -15,6 +15,7 @@ this project.
 #include <stack>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace ctf {
@@ -28,16 +29,22 @@ using std::string;
 STL
 -*/
 
-using std::vector;
+using std::deque;
 using std::list;
 using std::map;
-using std::unordered_map;
+using std::pair;
 using std::queue;
-using std::deque;
 using std::stack;
+using std::unordered_map;
+using std::vector;
 
 /**
-\brief Simple set class.
+\brief A set implementation optimized for smaller sets.
+The guarantee for log(N) insertion is not fulfilled contrary to std::set,
+but for all applications in ctf, this implementation should be substantially
+faster.
+
+The API is the same as std::set.
 */
 template <typename T, class Compare = std::less<T>>
 class set {
@@ -61,9 +68,10 @@ class set {
     iterator it;
   };
 
-  set(): compare_(Compare()) {}
-  explicit set(const Compare& compare): compare_(compare) {}
-  set(std::initializer_list<T> il, const Compare& compare = Compare()): elements_(il), compare_(compare) {
+  set() : compare_(Compare()) {}
+  explicit set(const Compare& compare) : compare_(compare) {}
+  set(std::initializer_list<T> il, const Compare& compare = Compare())
+      : elements_(il), compare_(compare) {
     std::sort(elements_.begin(), elements_.end(), Compare());
     auto newEnd = std::unique(elements_.begin(), elements_.end());
     elements_.erase(newEnd, elements_.end());
@@ -73,7 +81,7 @@ class set {
   set(set&&) = default;
 
   set& operator=(const set&) = default;
-  //set& operator=(const set&&) noexcept = default;
+  // set& operator=(const set&&) noexcept = default;
   set& operator=(std::initializer_list<T> il) {
     elements_ = il;
     std::sort(elements_.begin(), elements_.end(), Compare());
@@ -83,45 +91,21 @@ class set {
     return *this;
   }
 
-  iterator begin() {
-    return elements_.begin();
-  }
-  const_iterator begin() const {
-    return elements_.cbegin();
-  }
-  const_iterator cbegin() const {
-    return elements_.cbegin();
-  }
+  iterator begin() { return elements_.begin(); }
+  const_iterator begin() const { return elements_.cbegin(); }
+  const_iterator cbegin() const { return elements_.cbegin(); }
 
-  iterator end() {
-    return elements_.end();
-  }
-  const_iterator end() const {
-    return elements_.cend();
-  }
-  const_iterator cend() const {
-    return elements_.cend();
-  }
+  iterator end() { return elements_.end(); }
+  const_iterator end() const { return elements_.cend(); }
+  const_iterator cend() const { return elements_.cend(); }
 
-  reverse_iterator rbegin() {
-    return elements_.rbegin();
-  }
-  const_reverse_iterator rbegin() const {
-    return elements_.crbegin();
-  }
-  const_reverse_iterator crbegin() const {
-    return elements_.crbegin();
-  }
+  reverse_iterator rbegin() { return elements_.rbegin(); }
+  const_reverse_iterator rbegin() const { return elements_.crbegin(); }
+  const_reverse_iterator crbegin() const { return elements_.crbegin(); }
 
-  reverse_iterator rend() {
-    return elements_.rend();
-  }
-  const_reverse_iterator rend() const {
-    return elements_.crend();
-  }
-  const_reverse_iterator crend() const {
-    return elements_.crend();
-  }
+  reverse_iterator rend() { return elements_.rend(); }
+  const_reverse_iterator rend() const { return elements_.crend(); }
+  const_reverse_iterator crend() const { return elements_.crend(); }
 
   bool empty() const noexcept { return elements_.empty(); }
   size_type size() const noexcept { return elements_.size(); }
@@ -154,9 +138,7 @@ class set {
     return true;
   }
 
-  void erase(iterator it) {
-    elements_.erase(it);
-  }
+  void erase(iterator it) { elements_.erase(it); }
 
   void swap(set& other) {
     elements_.swap(other.elements_);
@@ -167,6 +149,8 @@ class set {
     auto it = lower_bound(element);
     return it != elements_.end() && equals(*it, element);
   }
+
+  size_t count(const T& element) noexcept { return find(element) ? 1 : 0; }
 
   iterator find(const T& element) noexcept {
     auto it = lower_bound(element);
@@ -207,25 +191,19 @@ class set {
     return !(lhs == rhs);
   }
   friend bool operator<=(const set& lhs, const set& rhs) {
-    for(auto&& e: lhs.elements_) {
+    for (auto&& e : lhs.elements_) {
       if (!rhs.contains(e))
         return false;
     }
     return true;
   }
-  friend bool operator>=(const set& lhs, const set&rhs) {
-    return rhs <= lhs;
-  }
+  friend bool operator>=(const set& lhs, const set& rhs) { return rhs <= lhs; }
   friend bool operator<(const set& lhs, const set& rhs) {
     return lhs <= rhs && lhs != rhs;
   }
-  friend bool operator>(const set& lhs, const set& rhs) {
-    return rhs < lhs;
-  }
+  friend bool operator>(const set& lhs, const set& rhs) { return rhs < lhs; }
 
-  friend bool subset(const set&lhs, const set& rhs) {
-    return lhs <= rhs;
-  }
+  friend bool subset(const set& lhs, const set& rhs) { return lhs <= rhs; }
   friend bool proper_subset(const set& lhs, const set& rhs) {
     return lhs < rhs;
   }
@@ -233,15 +211,25 @@ class set {
     return !(lhs <= rhs) && !(lhs >= rhs);
   }
 
-  friend set set_union(const set&lhs, const set& rhs) {
+  friend set set_union(const set& lhs, const set& rhs) {
     vector<T> vec;
-    std::set_union(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), std::back_inserter<vector<T>>(vec));
+    vec.reserve(lhs.size() + rhs.size());
+    std::set_union(lhs.begin(),
+                   lhs.end(),
+                   rhs.begin(),
+                   rhs.end(),
+                   std::back_inserter<vector<T>>(vec));
     return set(vec, lhs.compare_);
   }
 
-  friend set set_intersection(const set&lhs, const set& rhs) {
+  friend set set_intersection(const set& lhs, const set& rhs) {
     vector<T> vec;
-    std::set_intersection(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), std::back_inserter<vector<T>>(vec));
+    vec.reserve(lhs.size());
+    std::set_intersection(lhs.begin(),
+                          lhs.end(),
+                          rhs.begin(),
+                          rhs.end(),
+                          std::back_inserter<vector<T>>(vec));
     return set(vec, lhs.compare_);
   }
 
@@ -256,8 +244,8 @@ class set {
 
   Compare compare_;
 
-  set(vector<T>& vec, Compare compare): elements_(vec), compare_(compare) {}
-  set(vector<T>&& vec, Compare&& compare): elements_(vec), compare_(compare) {}
+  set(vector<T>& vec, Compare compare) : elements_(vec), compare_(compare) {}
+  set(vector<T>&& vec, Compare&& compare) : elements_(vec), compare_(compare) {}
 
   bool equals(const T& lhs, const T& rhs) const {
     return !compare_(lhs, rhs) && !compare_(rhs, lhs);
@@ -350,7 +338,8 @@ class tstack {
   predicate. If no element fits the criteria, the returned iterator is
   equal to tstack::end().
   */
-  iterator search(const T& target, iterator from,
+  iterator search(const T& target,
+                  iterator from,
                   std::function<bool(const T&, const T&)> predicate =
                       [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
     iterator it;
@@ -371,7 +360,8 @@ class tstack {
   predicate. If no element fits the criteria, the returned iterator is
   equal to tstack::cend().
   */
-  const_iterator search(const T& target, const_iterator from,
+  const_iterator search(const T& target,
+                        const_iterator from,
                         std::function<bool(const T&, const T&)> predicate =
                             [](auto& lhs, auto& rhs) {
                               return lhs == rhs;
@@ -458,7 +448,9 @@ class tstack {
   tstack after this operation.
   */
   template <class TS>
-  iterator replace(const T& target, const TS& string, iterator from,
+  iterator replace(const T& target,
+                   const TS& string,
+                   iterator from,
                    std::function<bool(const T&, const T&)> predicate =
                        [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
     return replace(search(target, from, predicate), string);
@@ -481,7 +473,8 @@ class tstack {
   tstack after this operation.
   */
   template <class TS>
-  iterator replace(const T& target, const TS& string,
+  iterator replace(const T& target,
+                   const TS& string,
                    std::function<bool(const T&, const T&)> predicate =
                        [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
     return replace(search(target, predicate), string);
@@ -645,12 +638,12 @@ class reverser {
 
   auto rbegin() { return ref.begin(); }
   auto rend() { return ref.end(); }
+
  private:
   /**
   \brief Reference to the reversed container.
   */
   T& ref;
-
 };
 /**
 Adapter for const classes to reverse their iterator.
@@ -677,7 +670,7 @@ class const_reverser {
   */
   const T& ref;
 };
-}  // namespace cf::impl
+}  // namespace impl
 
 /**
 \brief Reverses a container.

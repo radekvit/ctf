@@ -44,7 +44,8 @@ class TranslationGrammar {
     The numbers say which output symbols are the targets for each input token's
     attribute.
     */
-    Rule(const Symbol& nonterminal, const vector<Symbol>& input,
+    Rule(const Symbol& nonterminal,
+         const vector<Symbol>& input,
          const vector<Symbol>& output,
          const vector<set<size_t>>& attributeActions = {})
         : nonterminal_(nonterminal),
@@ -150,6 +151,8 @@ class TranslationGrammar {
       return rhs <= lhs;
     }
     ///@}
+
+    size_t id = -1;
 
    protected:
     /**
@@ -261,6 +264,7 @@ class TranslationGrammar {
     }      // for all rules
     make_set(terminals_);
     make_set(nonterminals_);
+    mark_rules();
   }
   /**
   \brief Constructs a TranslationGrammar.
@@ -275,7 +279,8 @@ class TranslationGrammar {
   Checks rules for validity with supplied terminals and nonterminals.
   */
   TranslationGrammar(const vector<Symbol>& nonterminals,
-                     const vector<Symbol>& terminals, const vector<Rule>& rules,
+                     const vector<Symbol>& terminals,
+                     const vector<Rule>& rules,
                      const Symbol& starting_symbol)
       : terminals_(terminals),
         nonterminals_(nonterminals),
@@ -334,6 +339,7 @@ class TranslationGrammar {
         }  // switch
       }    // for all input
     }      // for all rules
+    mark_rules();
   }
 
   ~TranslationGrammar() = default;
@@ -402,6 +408,12 @@ class TranslationGrammar {
   \brief The starting symbol.
   */
   Symbol starting_symbol_;
+
+  void mark_rules() {
+    for (size_t i = 0; i < rules_.size(); ++i) {
+      rules_[i].id = i;
+    }
+  }
 };
 }  // namespace ctf
 #endif

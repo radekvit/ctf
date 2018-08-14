@@ -43,7 +43,8 @@ class Translation {
   A copy is made.
   \param[in] og A callable to perform output generation.
   */
-  Translation(std::unique_ptr<LexicalAnalyzer>&& la, TranslationControl& tc,
+  Translation(std::unique_ptr<LexicalAnalyzer>&& la,
+              TranslationControl& tc,
               const TranslationGrammar& tg,
               std::unique_ptr<OutputGenerator>&& og)
       : lexer_(std::move(la)),
@@ -64,7 +65,8 @@ class Translation {
   languages.
    \param[in] og A callable to perform output generation.
   */
-  Translation(std::unique_ptr<LexicalAnalyzer>&& la, const string& tcName,
+  Translation(std::unique_ptr<LexicalAnalyzer>&& la,
+              const string& tcName,
               const TranslationGrammar& tg,
               std::unique_ptr<OutputGenerator>&& og)
       : lexer_(std::move(la)),
@@ -86,7 +88,8 @@ class Translation {
 
   \returns True when no errors were encountered.
   */
-  TranslationResult run(std::istream& inputStream, std::ostream& outputStream,
+  TranslationResult run(std::istream& inputStream,
+                        std::ostream& outputStream,
                         std::ostream& errorStream,
                         const std::string& inputName = "") {
     // extra output buffer
@@ -151,7 +154,8 @@ class Translation {
   */
   static std::unique_ptr<TranslationControl> control(const string& name) {
     const static unordered_map<
-        string, std::function<std::unique_ptr<TranslationControl>()>>
+        string,
+        std::function<std::unique_ptr<TranslationControl>()>>
         controls{
             {"ll",
              []() -> std::unique_ptr<TranslationControl> {

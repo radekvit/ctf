@@ -342,7 +342,9 @@ class Symbol {
   for Type::EOI.
   \param[in] atr Attribute of constructed Symbol.
   */
-  Symbol(Type type, const string& name = "", const Attribute& atr = Attribute{},
+  Symbol(Type type,
+         const string& name = "",
+         const Attribute& atr = Attribute{},
          const Location& loc = Location::invalid())
       : type_(type), id_(name_index(name)), attribute_(atr), location_(loc) {
     if (type != Symbol::Type::EOI && name == "")
@@ -358,7 +360,8 @@ class Symbol {
   \param[in] name Name of constructed Symbol.
   \param[in] atr Attribute of constructed Symbol. Defaults to "".
   */
-  Symbol(const string& name, const Attribute& atr = Attribute{},
+  Symbol(const string& name,
+         const Attribute& atr = Attribute{},
          const Location& loc = Location::invalid())
       : Symbol(Type::UNKNOWN, name, atr, loc) {}
   /**
@@ -555,7 +558,7 @@ inline Symbol operator""_nt(const char* s, size_t) { return Nonterminal({s}); }
 inline Symbol operator""_s(const char* s, size_t) {
   return Symbol(Symbol::Type::SPECIAL, {s});
 }
-}  // inline namespace literals
+}  // namespace literals
 #endif
 
 }  // namespace ctf

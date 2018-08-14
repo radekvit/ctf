@@ -249,8 +249,8 @@ class InputReader {
         return {location.fileName};
       }
       // find first line after the current
-      auto it = std::upper_bound(lineStartBuffer_.begin(),
-                                 lineStartBuffer_.end(), index);
+      auto it = std::upper_bound(
+          lineStartBuffer_.begin(), lineStartBuffer_.end(), index);
       --it;
       return {uint64_t(it - begin) + 1, index - *it + 1, location.fileName};
     }

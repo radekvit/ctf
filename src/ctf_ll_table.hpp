@@ -16,7 +16,7 @@
 namespace ctf {
 
 template <typename T>
-class DecisionTable {
+class LLGenericTable {
  public:
   /**
   \brief Type of cells.
@@ -30,7 +30,7 @@ class DecisionTable {
   /**
   \brief Constructs an empty LL table.
   */
-  DecisionTable() = default;
+  LLGenericTable() = default;
   /**
   \brief Constructs a decision table from a translation grammar and a predict
   set.
@@ -39,7 +39,7 @@ class DecisionTable {
   their respective indices. Rule indices are stored in the decision table.
   \param[in] predict Predict set for table construction.
   */
-  DecisionTable(const TranslationGrammar& tg, const predict_type& predict) {
+  LLGenericTable(const TranslationGrammar& tg, const predict_t& predict) {
     initialize(tg, predict);
   }
   /**
@@ -95,7 +95,7 @@ class DecisionTable {
 
   void initialize() {}
 
-  void initialize(const TranslationGrammar& tg, const predict_type& predict) {
+  void initialize(const TranslationGrammar& tg, const predict_t& predict) {
     initialize_invalid(tg);
     table_ =
         row(tg.nonterminals().size() * (tg.terminals().size() + 1), invalid_);
@@ -136,7 +136,7 @@ class DecisionTable {
 /**
 \brief Class containing rule indices to be used in a LL controlled translation.
 */
-class LLTable : public DecisionTable<size_t> {
+class LLTable : public LLGenericTable<size_t> {
   void initialize_invalid(const TranslationGrammar& tg) override {
     invalid_ = tg.rules().size();
   }
@@ -151,7 +151,7 @@ class LLTable : public DecisionTable<size_t> {
   }
 
  public:
-  LLTable(const TranslationGrammar& tg, const predict_type& predict) {
+  LLTable(const TranslationGrammar& tg, const predict_t& predict) {
     initialize(tg, predict);
   }
 
@@ -160,7 +160,7 @@ class LLTable : public DecisionTable<size_t> {
 
 class PriorityLLTable : public LLTable {
  public:
-  PriorityLLTable(const TranslationGrammar& tg, const predict_type& predict) {
+  PriorityLLTable(const TranslationGrammar& tg, const predict_t& predict) {
     initialize(tg, predict);
   }
 
@@ -175,9 +175,9 @@ class PriorityLLTable : public LLTable {
   }
 };
 
-class GeneralLLTable : public DecisionTable<set<size_t>> {
+class GeneralLLTable : public LLGenericTable<set<size_t>> {
  public:
-  GeneralLLTable(const TranslationGrammar& tg, const predict_type& predict) {
+  GeneralLLTable(const TranslationGrammar& tg, const predict_t& predict) {
     initialize(tg, predict);
   }
 
