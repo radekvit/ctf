@@ -74,11 +74,9 @@ class Item {
   mutable set<Item> closure_;
 };
 
-unordered_map<Symbol, set<Item>> symbol_skip_closures(
-    const TranslationGrammar& grammar,
-    const set<Item>& state) {
+inline unordered_map<Symbol, set<Item>> symbol_skip_closures(
+    const TranslationGrammar& grammar, const set<Item>& state) {
   unordered_map<Symbol, set<Item>> result;
-  size_t i = 0;
 
   for (auto&& item : state) {
     if (item.mark() == item.rule().input().size()) {

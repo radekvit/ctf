@@ -4,7 +4,7 @@
 
 TEST_CASE("TranslationException") {
   REQUIRE_THROWS_AS(throw ctf::TranslationException("m"),
-                    ctf::TranslationException &);
+                    ctf::TranslationException);
   REQUIRE_THROWS_WITH(throw ctf::TranslationException("m"), "m");
 }
 using namespace std::string_literals;
@@ -16,7 +16,7 @@ TEST_CASE("Symbol Construction", "[Symbol]") {
   REQUIRE(s.name() == "name");
   REQUIRE(s.attribute() == "a"s);
 
-  REQUIRE_THROWS_AS(s = Symbol(""), std::invalid_argument &);
+  REQUIRE_THROWS_AS(s = Symbol(""), std::invalid_argument);
 
   using namespace ctf::literals;
   using ctf::Attribute;

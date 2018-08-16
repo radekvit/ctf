@@ -21,16 +21,16 @@ TEST_CASE("Rule construction", "[TranslationGrammar::Rule]") {
   REQUIRE_NOTHROW(Rule("NT"_nt, {"x"_t, "y"_t}, {"y"_t, "y"_t}, {{}, {0, 1}}));
 
   REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t}, {}, {{}, {}}),
-                    std::invalid_argument &);
-  REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t}, {}, {{0}}), std::invalid_argument &);
+                    std::invalid_argument);
+  REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t}, {}, {{0}}), std::invalid_argument);
   REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t, "X"_nt}, {"X"_nt}, {{0}}),
-                    std::invalid_argument &);
+                    std::invalid_argument);
   REQUIRE_THROWS_AS(Rule("NT"_nt, {Symbol::eof()}, {"x"_t}),
-                    std::invalid_argument &);
+                    std::invalid_argument);
   REQUIRE_THROWS_AS(Rule("NT"_nt, {}, {Symbol::eof()}),
-                    std::invalid_argument &);
+                    std::invalid_argument);
   REQUIRE_THROWS_AS(Rule("NT"_nt, {"X"_nt, "Y"_nt}, {"Y"_nt, "X"_nt}),
-                    std::invalid_argument &);
+                    std::invalid_argument);
 }
 
 TEST_CASE("Rule basics", "[TranslationGrammar::Rule]") {
@@ -85,15 +85,15 @@ TEST_CASE("TranslationGrammar construction", "[TranslationGrammar]") {
       {{"X"_nt, {"X"_nt, "X"_t}}, {"X"_nt, {"x"_t, "X"_t, "special"_s}}},
       "X"_nt));
   REQUIRE_THROWS_AS(TranslationGrammar({}, {}, {}, "X"_nt),
-                    std::invalid_argument &);
+                    std::invalid_argument);
   REQUIRE_THROWS_AS(TranslationGrammar({}, {}, {{"X"_nt, {}}}, "X"_nt),
-                    std::invalid_argument &);
+                    std::invalid_argument);
   REQUIRE_THROWS_AS(
       TranslationGrammar({"X"_nt}, {}, {{"X"_nt, {"x"_t}}}, "X"_nt),
-      std::invalid_argument &);
+      std::invalid_argument);
   REQUIRE_THROWS_AS(TranslationGrammar({"X"_nt}, {"x"_t},
                                        {{"X"_nt, {"x"_t, "A"_nt}}}, "X"_nt),
-                    std::invalid_argument &);
+                    std::invalid_argument);
   REQUIRE_NOTHROW(TranslationGrammar(
       {"X"_nt}, {"x"_t},
       {{"X"_nt, {"X"_nt, "X"_nt}}, {"X"_nt, {"x"_t, "X"_nt, "special"_s}}},

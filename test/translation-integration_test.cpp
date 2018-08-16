@@ -37,7 +37,7 @@ TEST_CASE("Constructing translation", "[Translation]") {
   REQUIRE_THROWS_AS(
       Translation(std::make_unique<LexicalAnalyzer>(), "fail, please", tg,
                   std::make_unique<OutputGenerator>()),
-      std::invalid_argument &);
+      std::invalid_argument);
 }
 
 TEST_CASE("Running translation", "[Translation]") {

@@ -9,7 +9,7 @@ using namespace ctf::literals;
 
 TEST_CASE("LLTable construction", "[LLTable]") {
   SECTION("Wrong predict size") {
-    REQUIRE_THROWS_AS(LLTable({}, {{"x"_nt}}), std::invalid_argument &);
+    REQUIRE_THROWS_AS(LLTable({}, {{"x"_nt}}), std::invalid_argument);
   }
 
   SECTION("Multiple terminals and nonterminals.") {
@@ -27,7 +27,7 @@ TEST_CASE("LLTable construction", "[LLTable]") {
   SECTION("non-LL Translation Grammar") {
     TranslationGrammar tg{{{"E"_nt, {"x"_t}}, {"E"_nt, {"x"_t}}}, "E"_nt};
     REQUIRE_THROWS_AS(LLTable(tg, {{"x"_nt}, {"x"_nt}}),
-                      std::invalid_argument &);
+                      std::invalid_argument);
   }
 
   SECTION("regular Translation Grammar") {
@@ -80,3 +80,5 @@ TEST_CASE("rule index returning", "[LLTable]") {
   REQUIRE(ll.rule_index("F"_nt, "("_t) == 3);
   REQUIRE(ll.rule_index("E"_nt, ")"_t) == tg.rules().size());
 }
+
+// TODO create tests for PriorityLLTable and GeneralLLTable.

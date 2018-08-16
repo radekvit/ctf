@@ -9,7 +9,7 @@ using ctf::set;
 
 using namespace ctf::literals;
 
-TranslationGrammar grammar{
+static TranslationGrammar grammar{
   	{
   	    {"S'"_nt, {"S"_nt}},
   	    {"S"_nt, {"S"_nt, "o"_t, "A"_nt}},
