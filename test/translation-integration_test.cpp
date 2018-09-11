@@ -27,17 +27,22 @@ TEST_CASE("Constructing translation", "[Translation]") {
           {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
       },
       "E"_nt};
-  REQUIRE_NOTHROW(Translation(std::make_unique<LexicalAnalyzer>(), "ll", tg,
+  REQUIRE_NOTHROW(Translation(std::make_unique<LexicalAnalyzer>(),
+                              "ll",
+                              tg,
                               std::make_unique<OutputGenerator>()));
 
   auto tcp = Translation::control("ll");
-  REQUIRE_NOTHROW(Translation(std::make_unique<LexicalAnalyzer>(), *tcp, tg,
+  REQUIRE_NOTHROW(Translation(std::make_unique<LexicalAnalyzer>(),
+                              *tcp,
+                              tg,
                               std::make_unique<OutputGenerator>()));
 
-  REQUIRE_THROWS_AS(
-      Translation(std::make_unique<LexicalAnalyzer>(), "fail, please", tg,
-                  std::make_unique<OutputGenerator>()),
-      std::invalid_argument);
+  REQUIRE_THROWS_AS(Translation(std::make_unique<LexicalAnalyzer>(),
+                                "fail, please",
+                                tg,
+                                std::make_unique<OutputGenerator>()),
+                    std::invalid_argument);
 }
 
 TEST_CASE("Running translation", "[Translation]") {
@@ -54,7 +59,9 @@ TEST_CASE("Running translation", "[Translation]") {
             {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
         },
         "E"_nt};
-    Translation tr(std::make_unique<LexicalAnalyzer>(), "ll", tg,
+    Translation tr(std::make_unique<LexicalAnalyzer>(),
+                   "ll",
+                   tg,
                    std::make_unique<OutputGenerator>());
     std::stringstream expected;
     std::stringstream out;
@@ -80,7 +87,9 @@ TEST_CASE("Running translation", "[Translation]") {
             {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "T'"_nt}},
         },
         "E"_nt};
-    Translation tr(std::make_unique<LexicalAnalyzer>(), "ll", tg,
+    Translation tr(std::make_unique<LexicalAnalyzer>(),
+                   "ll",
+                   tg,
                    std::make_unique<OutputGenerator>());
     std::stringstream out;
     std::stringstream error;

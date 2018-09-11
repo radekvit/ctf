@@ -13,6 +13,7 @@
 
 #include "ctf_lexical_analyzer.hpp"
 #include "ctf_ll_translation_control.hpp"
+#include "ctf_lr_translation_control.hpp"
 #include "ctf_output_generator.hpp"
 #include "ctf_translation_control.hpp"
 #include "ctf_translation_grammar.hpp"
@@ -47,12 +48,12 @@ class Translation {
               TranslationControl& tc,
               const TranslationGrammar& tg,
               std::unique_ptr<OutputGenerator>&& og)
-      : lexer_(std::move(la)),
-        lexicalAnalyzer_(*lexer_),
-        translationControl_(tc),
-        translationGrammar_(tg),
-        generator_(std::move(og)),
-        outputGenerator_(*generator_) {
+      : lexer_(std::move(la))
+      , lexicalAnalyzer_(*lexer_)
+      , translationControl_(tc)
+      , translationGrammar_(tg)
+      , generator_(std::move(og))
+      , outputGenerator_(*generator_) {
     translationControl_.set_lexical_analyzer(lexicalAnalyzer_);
     translationControl_.set_grammar(translationGrammar_);
   }
@@ -69,13 +70,13 @@ class Translation {
               const string& tcName,
               const TranslationGrammar& tg,
               std::unique_ptr<OutputGenerator>&& og)
-      : lexer_(std::move(la)),
-        lexicalAnalyzer_(*lexer_),
-        control_(Translation::control(tcName)),
-        translationControl_(*control_),
-        translationGrammar_(tg),
-        generator_(std::move(og)),
-        outputGenerator_(*generator_) {
+      : lexer_(std::move(la))
+      , lexicalAnalyzer_(*lexer_)
+      , control_(Translation::control(tcName))
+      , translationControl_(*control_)
+      , translationGrammar_(tg)
+      , generator_(std::move(og))
+      , outputGenerator_(*generator_) {
     translationControl_.set_grammar(translationGrammar_);
     translationControl_.set_lexical_analyzer(lexicalAnalyzer_);
   }
@@ -172,6 +173,10 @@ class Translation {
             {"general ll",
              []() -> std::unique_ptr<TranslationControl> {
                return std::make_unique<GeneralLLTranslationControl>();
+             }},
+            {"slr",
+             []() -> std::unique_ptr<TranslationControl> {
+               return std::make_unique<SLRTranslationControl>();
              }},
         };
     auto it = controls.find(name);

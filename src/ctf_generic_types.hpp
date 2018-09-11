@@ -37,6 +37,7 @@ using std::queue;
 using std::stack;
 using std::unordered_map;
 using std::vector;
+using std::tuple;
 
 /**
 \brief A set implementation optimized for smaller sets.

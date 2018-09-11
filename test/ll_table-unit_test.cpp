@@ -26,8 +26,7 @@ TEST_CASE("LLTable construction", "[LLTable]") {
 
   SECTION("non-LL Translation Grammar") {
     TranslationGrammar tg{{{"E"_nt, {"x"_t}}, {"E"_nt, {"x"_t}}}, "E"_nt};
-    REQUIRE_THROWS_AS(LLTable(tg, {{"x"_nt}, {"x"_nt}}),
-                      std::invalid_argument);
+    REQUIRE_THROWS_AS(LLTable(tg, {{"x"_nt}, {"x"_nt}}), std::invalid_argument);
   }
 
   SECTION("regular Translation Grammar") {
@@ -43,14 +42,15 @@ TEST_CASE("LLTable construction", "[LLTable]") {
             {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
         },
         "E"_nt};
-    REQUIRE_NOTHROW(LLTable(tg, {{"i"_t, "("_t},
-                                 {")"_t, Symbol::eof()},
-                                 {"+"_t},
-                                 {"("_t},
-                                 {"i"_t},
-                                 {"i"_t, "("_t},
-                                 {"+"_t, ")"_t, Symbol::eof()},
-                                 {"*"_t}}));
+    REQUIRE_NOTHROW(LLTable(tg,
+                            {{"i"_t, "("_t},
+                             {")"_t, Symbol::eof()},
+                             {"+"_t},
+                             {"("_t},
+                             {"i"_t},
+                             {"i"_t, "("_t},
+                             {"+"_t, ")"_t, Symbol::eof()},
+                             {"*"_t}}));
   }
 }
 

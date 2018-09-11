@@ -333,7 +333,9 @@ class Symbol {
     */
     SPECIAL,
   };
-
+#if 0
+  Symbol(): Symbol(Symbol::eof()) {}
+#endif
   /**
   \brief Constructs a Symbol with a given type. If specified, sets Symbol's name
   and attribute.

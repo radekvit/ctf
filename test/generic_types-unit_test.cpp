@@ -3,9 +3,8 @@
 #include <list>
 #include <vector>
 
-#include "../src/ctf_generic_types.hpp"
 #include "../src/ctf_base.hpp"
-
+#include "../src/ctf_generic_types.hpp"
 
 using ctf::tstack;
 
@@ -75,7 +74,7 @@ TEST_CASE("tstack search", "[tstack]") {
   }
 
   SECTION("custom predicate") {
-    auto it = stack.search('c', [](auto &lhs, auto &rhs) { return lhs > rhs; });
+    auto it = stack.search('c', [](auto& lhs, auto& rhs) { return lhs > rhs; });
     REQUIRE(*it == 'd');
   }
 }

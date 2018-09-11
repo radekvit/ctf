@@ -27,15 +27,16 @@ TEST_CASE("Rule construction", "[TranslationGrammar::Rule]") {
                     std::invalid_argument);
   REQUIRE_THROWS_AS(Rule("NT"_nt, {Symbol::eof()}, {"x"_t}),
                     std::invalid_argument);
-  REQUIRE_THROWS_AS(Rule("NT"_nt, {}, {Symbol::eof()}),
-                    std::invalid_argument);
+  REQUIRE_THROWS_AS(Rule("NT"_nt, {}, {Symbol::eof()}), std::invalid_argument);
   REQUIRE_THROWS_AS(Rule("NT"_nt, {"X"_nt, "Y"_nt}, {"Y"_nt, "X"_nt}),
                     std::invalid_argument);
 }
 
 TEST_CASE("Rule basics", "[TranslationGrammar::Rule]") {
-  Rule rule("NT"_nt, {"a"_t, "A"_nt, "B"_nt, "b"_t},
-            {"A"_nt, "b"_t, "a"_t, "B"_nt}, {{1}, {2}});
+  Rule rule("NT"_nt,
+            {"a"_t, "A"_nt, "B"_nt, "b"_t},
+            {"A"_nt, "b"_t, "a"_t, "B"_nt},
+            {{1}, {2}});
   vector<set<size_t>> expectedActions{{1}, {2}};
   REQUIRE(rule.actions() == expectedActions);
   REQUIRE(rule.nonterminal() == "NT"_nt);
@@ -91,11 +92,12 @@ TEST_CASE("TranslationGrammar construction", "[TranslationGrammar]") {
   REQUIRE_THROWS_AS(
       TranslationGrammar({"X"_nt}, {}, {{"X"_nt, {"x"_t}}}, "X"_nt),
       std::invalid_argument);
-  REQUIRE_THROWS_AS(TranslationGrammar({"X"_nt}, {"x"_t},
-                                       {{"X"_nt, {"x"_t, "A"_nt}}}, "X"_nt),
+  REQUIRE_THROWS_AS(TranslationGrammar(
+                        {"X"_nt}, {"x"_t}, {{"X"_nt, {"x"_t, "A"_nt}}}, "X"_nt),
                     std::invalid_argument);
   REQUIRE_NOTHROW(TranslationGrammar(
-      {"X"_nt}, {"x"_t},
+      {"X"_nt},
+      {"x"_t},
       {{"X"_nt, {"X"_nt, "X"_nt}}, {"X"_nt, {"x"_t, "X"_nt, "special"_s}}},
       "X"_nt));
 }

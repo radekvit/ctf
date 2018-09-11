@@ -3,7 +3,7 @@
 
 #include "../include/ctf.hpp"
 
-std::ostream &operator<<(std::ostream &os, const Symbol &s) {
+std::ostream& operator<<(std::ostream& os, const Symbol& s) {
   switch (s.type()) {
     case Symbol::Type::NONTERMINAL:
       os << "NONTERMINAL: ";
@@ -26,6 +26,6 @@ std::ostream &operator<<(std::ostream &os, const Symbol &s) {
   return os;
 }
 
-std::ostream &operator<<(std::ostream &os, const Location &l) {
+std::ostream& operator<<(std::ostream& os, const Location& l) {
   return os << l.to_string();
 }

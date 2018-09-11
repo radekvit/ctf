@@ -202,6 +202,31 @@ inline predict_t create_predict(const TranslationGrammar& tg,
   return predict;
 }
 
+set<Symbol> string_first(const TranslationGrammar& grammar,
+                         const empty_t& empty,
+                         const first_t& first,
+                         const std::vector<Symbol>& symbols) {
+  using Type = Symbol::Type;
+  set<Symbol> result;
+  for (auto&& symbol : symbols) {
+    switch (symbol.type()) {
+      case Type::TERMINAL:
+      case Type::EOI:
+        result.insert(symbol);
+        return result;
+      case Type::NONTERMINAL:
+        size_t i = grammar.nonterminal_index(symbol);
+        result = set_union(result, first[i]);
+        if (!empty[i]) {
+          return result;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+}
+
 }  // namespace ctf
 
 #endif

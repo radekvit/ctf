@@ -48,10 +48,10 @@ class TranslationGrammar {
          const vector<Symbol>& input,
          const vector<Symbol>& output,
          const vector<set<size_t>>& attributeActions = {})
-        : nonterminal_(nonterminal),
-          input_(input),
-          output_(output),
-          attributeActions_(attributeActions) {
+        : nonterminal_(nonterminal)
+        , input_(input)
+        , output_(output)
+        , attributeActions_(attributeActions) {
       check_nonterminals();
 
       // no actions provided
@@ -282,10 +282,10 @@ class TranslationGrammar {
                      const vector<Symbol>& terminals,
                      const vector<Rule>& rules,
                      const Symbol& starting_symbol)
-      : terminals_(terminals),
-        nonterminals_(nonterminals),
-        rules_(rules),
-        starting_symbol_(starting_symbol) {
+      : terminals_(terminals)
+      , nonterminals_(nonterminals)
+      , rules_(rules)
+      , starting_symbol_(starting_symbol) {
     make_set(terminals_);
     make_set(nonterminals_);
 
@@ -345,6 +345,28 @@ class TranslationGrammar {
   ~TranslationGrammar() = default;
 
   /**
+   * Transforms a translation grammar into an augmented translation grammar.
+   */
+  void make_augmented() {
+    // create new unique starting symbol
+    std::string newStartingName = starting_symbol().name() + '\'';
+    auto newStartingNonterminal = Nonterminal(newStartingName);
+    auto it = std::lower_bound(
+        nonterminals_.begin(), nonterminals_.end(), newStartingNonterminal);
+    while (it != nonterminals_.end() && *it == newStartingNonterminal) {
+      newStartingName += '\'';
+      newStartingNonterminal = Nonterminal(newStartingName);
+    }
+
+    // insert rule S' -> (S, S)
+    rules_.push_back({newStartingNonterminal, {starting_symbol()}});
+    // add S' to nonterminals
+    nonterminals_.push_back(newStartingNonterminal);
+    make_set(nonterminals_);
+    // make S' the new starting symbol
+    starting_symbol_ = newStartingNonterminal;
+  }
+  /**
   \brief Returns an empty string of symbols.
   */
   static const vector<Symbol>& EPSILON_STRING() {
@@ -360,6 +382,8 @@ class TranslationGrammar {
 
   vector<Rule>& rules() { return rules_; }
   const vector<Rule>& rules() const { return rules_; }
+
+  const Rule& augmented_starting_rule() const { return rules_.back(); }
 
   Symbol& starting_symbol() { return starting_symbol_; }
   const Symbol& starting_symbol() const { return starting_symbol_; }

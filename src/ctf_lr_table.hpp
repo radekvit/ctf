@@ -78,50 +78,33 @@ class LRGenericTable {
     terminalMap_.insert(std::make_pair(Symbol::eof(), tg.terminals().size()));
   }
 
-  void initialize_tables(const vector<set<Item>>& states) {
+  void initialize_tables(const vector<set<LR0Item>>& states) {
     actionTable_ = {states.size() * terminalMap_.size(),
                     {LRActionType::ERROR, 0}};
     gotoTable_ = vector<size_t>(states.size() * nonterminalMap_.size(), 0);
   }
 };
 
+// TODO propably delete
 class SLRTable : public LRGenericTable {
  public:
+  SLRTable() {}
   SLRTable(const TranslationGrammar& grammar, const follow_t& follow) {
     initialize_maps(grammar);
-    // dummy rule for the grammar
-    TranslationGrammar::Rule DUMMY_RULE{Symbol::eof(),
-                                        {grammar.starting_symbol()}};
-    // states
-    vector<set<Item>> states{{Item{DUMMY_RULE, 0}.closure(grammar)}};
-    // state transitions
-    vector<unordered_map<Symbol, size_t>> transitions{{{}}};
-    // create grammar machine
-    for (size_t i = 0; i < states.size(); ++i) {
-      auto&& state = states[i];
-      // get all nonempty closures
-      auto&& stateTransitions = symbol_skip_closures(grammar, state);
-      // add transitions
-      for (auto&& transitionPair : stateTransitions) {
-        const Symbol& symbol = transitionPair.first;
-        auto&& state = transitionPair.second;
-        size_t j = insert_state(states, transitions, state);
-        transitions[i][symbol] = j;
-      }
-    }
-    initialize_tables(states);
+    LR0StateMachine sm = lr0_state_machine(grammar);
+    initialize_tables(sm.states);
 
-    for (size_t i = 0; i < states.size(); ++i) {
-      for (auto&& item : states[i]) {
-        slr_insert(i, item, transitions[i], grammar, follow);
+    for (size_t i = 0; i < sm.states.size(); ++i) {
+      for (auto&& item : sm.states[i]) {
+        slr_insert(i, item, sm.transitions[i], grammar, follow);
       }
     }
   }
 
  protected:
-  size_t insert_state(vector<set<Item>>& states,
+  size_t insert_state(vector<set<LR0Item>>& states,
                       vector<unordered_map<Symbol, size_t>>& transitions,
-                      const set<Item>& state) {
+                      const set<LR0Item>& state) {
     auto it = std::find(states.begin(), states.end(), state);
     if (it == states.end()) {
       // insert
@@ -134,14 +117,14 @@ class SLRTable : public LRGenericTable {
   }
 
   void slr_insert(size_t state,
-                  const Item& item,
+                  const LR0Item& item,
                   const unordered_map<Symbol, size_t>& transitionMap,
                   const TranslationGrammar& grammar,
                   const follow_t& follow) {
     auto&& rule = item.rule();
     auto&& mark = item.mark();
     // special S' -> S. item
-    if (rule.nonterminal() == Symbol::eof() && mark == 1) {
+    if (rule.nonterminal() == grammar.starting_symbol() && mark == 1) {
       lr_action_item(state, Symbol::eof()) = {LRActionType::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
       size_t ni = grammar.nonterminal_index(rule.nonterminal());
