@@ -138,7 +138,6 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
           break;
         }
         case LRActionType::SUCCESS:
-          // TODO output from productions
           produce_output(appliedRules);
           break;
         case LRActionType::ERROR:
@@ -154,8 +153,8 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     tstack<vector<tstack<Symbol>::iterator>> attributeActions;
 
     input_.push(Symbol::eof());
-    input_.push(translationGrammar_->starting_symbol());
     output_.push(Symbol::eof());
+    input_.push(translationGrammar_->starting_symbol());
     output_.push(translationGrammar_->starting_symbol());
     size_t tokenIndex = 0;
 

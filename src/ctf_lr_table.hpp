@@ -7,7 +7,8 @@
 #define CRF_LR_TABLE_HPP
 
 #include "ctf_base.hpp"
-#include "ctf_lr_base.hpp"
+#include "ctf_lr_lr0.hpp"
+#include "ctf_lr_lalr.hpp"
 
 namespace ctf {
 
@@ -78,7 +79,7 @@ class LRGenericTable {
     terminalMap_.insert(std::make_pair(Symbol::eof(), tg.terminals().size()));
   }
 
-  void initialize_tables(const vector<set<LR0Item>>& states) {
+  void initialize_tables(const vector<set<lr0::Item>>& states) {
     actionTable_ = {states.size() * terminalMap_.size(),
                     {LRActionType::ERROR, 0}};
     gotoTable_ = vector<size_t>(states.size() * nonterminalMap_.size(), 0);
@@ -89,9 +90,12 @@ class LRGenericTable {
 class SLRTable : public LRGenericTable {
  public:
   SLRTable() {}
-  SLRTable(const TranslationGrammar& grammar, const follow_t& follow) {
+  SLRTable(const TranslationGrammar& grammar) {
+    const empty_t empty = create_empty(grammar);
+    const first_t first = create_first(grammar, empty);
+    const follow_t follow = create_follow(grammar, empty, first);
     initialize_maps(grammar);
-    LR0StateMachine sm = lr0_state_machine(grammar);
+    LR0StateMachine sm(grammar);
     initialize_tables(sm.states);
 
     for (size_t i = 0; i < sm.states.size(); ++i) {
@@ -102,9 +106,9 @@ class SLRTable : public LRGenericTable {
   }
 
  protected:
-  size_t insert_state(vector<set<LR0Item>>& states,
+  size_t insert_state(vector<set<lr0::Item>>& states,
                       vector<unordered_map<Symbol, size_t>>& transitions,
-                      const set<LR0Item>& state) {
+                      const set<lr0::Item>& state) {
     auto it = std::find(states.begin(), states.end(), state);
     if (it == states.end()) {
       // insert
@@ -117,7 +121,7 @@ class SLRTable : public LRGenericTable {
   }
 
   void slr_insert(size_t state,
-                  const LR0Item& item,
+                  const lr0::Item& item,
                   const unordered_map<Symbol, size_t>& transitionMap,
                   const TranslationGrammar& grammar,
                   const follow_t& follow) {
@@ -150,6 +154,16 @@ class SLRTable : public LRGenericTable {
     }
   }
 };
+
+class LALRTable : public LRGenericTable {
+  LALRTable() {}
+  LALRTable(const TranslationGrammar& grammar) {
+    const empty_t empty = create_empty(grammar);
+    LALRStateMachine sm(grammar, empty);
+    // TODO
+  }
+};
+
 }  // namespace ctf
 #endif
 /*** End of file lr_table.hpp ***/

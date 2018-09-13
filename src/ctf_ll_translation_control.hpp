@@ -396,7 +396,7 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
 
     auto& rule = translationGrammar_->rules()[*(previousState.rules.begin())];
     // a rule is now applicable
-    if (previousState.rules.size() > 2) {
+    if (previousState.rules.size() > 1) {
       previousState.rules.erase(previousState.rules.begin());
       parseStates_.push(previousState);
     }
