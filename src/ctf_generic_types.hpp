@@ -291,7 +291,7 @@ class tstack {
   \brief Is the tstack empty predicate.
   \returns True when the tstack is empty. False otherwise.
   */
-  bool empty() const noexcept { return list_.size() == 0; }
+  bool empty() const noexcept { return list_.empty(); }
   /**
   \brief Get the number of elements on the tstack.
   \returns The number of elements on the tstack.
@@ -333,7 +333,7 @@ class tstack {
 
   \param[in] target The reference element for the search.
   \param[in] it The first element of the search.
-  \param[in] predicate Predicate to find the targer. Defaults to operator ==.
+  \param[in] predicate Predicate to find the target. Defaults to operator ==.
 
   \returns An iterator to the element defined by target and
   predicate. If no element fits the criteria, the returned iterator is
@@ -341,7 +341,7 @@ class tstack {
   */
   iterator search(const T& target,
                   iterator from,
-                  std::function<bool(const T&, const T&)> predicate =
+                  bool (*predicate)(const T&, const T&) =
                       [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
     iterator it;
     for (it = from; it != list_.end(); ++it) {
@@ -363,10 +363,10 @@ class tstack {
   */
   const_iterator search(const T& target,
                         const_iterator from,
-                        std::function<bool(const T&, const T&)> predicate =
-                            [](auto& lhs, auto& rhs) {
-                              return lhs == rhs;
-                            }) const {
+                        bool (*predicate)(const T&, const T&) = [](auto& lhs,
+                                                                   auto& rhs) {
+                          return lhs == rhs;
+                        }) const {
     const_iterator it;
     for (it = from; it != list_.cend(); ++it) {
       if (predicate(*it, target))
@@ -378,14 +378,14 @@ class tstack {
   \brief Searches for an element.
 
   \param[in] target The reference element for the search.
-  \param[in] predicate Predicate to find the targer. Defaults to operator ==.
+  \param[in] predicate Predicate to find the target. Defaults to operator ==.
 
   \returns An iterator to the element defined by target and
   predicate. If no element fits the criteria, the returned iterator is
   equal to tstack::end().
   */
   iterator search(const T& target,
-                  std::function<bool(const T&, const T&)> predicate =
+                  bool (*predicate)(const T&, const T&) =
                       [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
     return search(target, begin(), predicate);
   }
@@ -400,12 +400,106 @@ class tstack {
   equal to tstack::cend().
   */
   const_iterator search(const T& target,
-                        std::function<bool(const T&, const T&)> predicate =
-                            [](auto& lhs, auto& rhs) {
-                              return lhs == rhs;
-                            }) const {
+                        bool (*predicate)(const T&, const T&) = [](auto& lhs,
+                                                                   auto& rhs) {
+                          return lhs == rhs;
+                        }) const {
     return search(target, begin(), predicate);
   }
+  /**
+  \brief Searches for an element between a given position and the beginning.
+
+  \param[in] target The reference element for the search.
+  \param[in] it The first element of the backward search.
+  \param[in] predicate Predicate to find the target. Defaults to operator ==.
+
+  \returns An iterator to the element defined by target and
+  predicate. If no element fits the criteria, the returned iterator is
+  equal to tstack::end().
+  */
+  iterator search_last(const T& target,
+                       iterator from,
+                       bool (*predicate)(const T&, const T&) =
+                           [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
+    iterator it;
+    for (it = from; it != list_.begin(); --it) {
+      if (predicate(*it, target))
+        return it;
+    }
+    if (predicate(*it, target))
+      return it;
+    return list_.end();
+  }
+  /**
+  \brief Searches for an element in a const tstack.
+
+  \param[in] target The reference element for the search.
+  \param[in] it The first element of the search.
+  \param[in] predicate Predicate to find the target. Defaults to operator ==.
+
+  \returns A const iterator to the element defined by target and
+  predicate. If no element fits the criteria, the returned iterator is
+  equal to tstack::cend().
+  */
+  const_iterator search_last(const T& target,
+                             const_iterator from,
+                             bool (*predicate)(const T&, const T&) =
+                                 [](auto& lhs, auto& rhs) {
+                                   return lhs == rhs;
+                                 }) const {
+    const_iterator it;
+    for (it = from; it != list_.cbegin(); --it) {
+      if (predicate(*it, target))
+        return it;
+    }
+    if (predicate(*it, target))
+      return it;
+    return list_.end();
+  }
+  /**
+  \brief Searches for an element.
+
+  \param[in] target The reference element for the search.
+  \param[in] predicate Predicate to find the target. Defaults to operator ==.
+
+  \returns An iterator to the element defined by target and predicate. If no
+  element fits the criteria, the returned iterator is equal to tstack::end().
+  */
+  iterator search_last(const T& target,
+                       bool (*predicate)(const T&, const T&) =
+                           [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
+    if (begin() == end())
+      return end();
+    return search(target, --end(), predicate);
+  }
+  /**
+  \brief Searches for an element in a const tstack.
+
+  \param[in] target The reference element for the search.
+  \param[in] predicate Predicate to find the target. Defaults to operator ==.
+
+  \returns A const iterator to the element defined by target and predicate. If
+  no element fits the criteria, the returned iterator is equal to
+  tstack::cend().
+  */
+  const_iterator search_last(const T& target,
+                             bool (*predicate)(const T&, const T&) =
+                                 [](auto& lhs, auto& rhs) {
+                                   return lhs == rhs;
+                                 }) const {
+    if (begin() == end())
+      return end();
+    return search(target, --end(), predicate);
+  }
+
+  struct ReplaceResult {
+    iterator begin;
+    iterator end;
+
+    friend bool operator==(const ReplaceResult& lhs, const ReplaceResult& rhs) {
+      return lhs.begin == rhs.begin && lhs.end == rhs.end;
+    }
+  };
   /**
   \brief Replaces the element at the position given by an iterator with elements
   in the string.
@@ -415,25 +509,49 @@ class tstack {
   \param[in] string A string of elements to be pushed to tstack at the position
   given by iterator.
 
-  \returns Iterator to the first element from string on the tstack.
+  \returns The iterator range that the inserted string occupies.
 
   The first element in the string will be closest to top of the tstack.
   */
   template <class TS>
-  iterator replace(iterator it, const TS& string) {
+  ReplaceResult replace(iterator it, const TS& string) {
     if (it == list_.end())
-      return it;
+      return {it, it};
     auto insert = it;
     ++insert;
     for (auto& t : string) {
       list_.insert(insert, t);
     }
     list_.erase(it++);
-    return it;
+    return {it, insert};
   }
   /**
-  \brief Replaces an element defined by a target, its first possible position,
-  and a predicate by a string of elements.
+  \brief Replaces the first element matched by the given target and predicate
+  with a string of elements.
+
+  \param[in] target The reference element for the search.
+  \param[in] string A string of elements to be pushed to tstack instead of the
+  matched element. \param[in] predicate The predicate used to match the target.
+  Defaults to operator ==.
+
+  \returns An iterator to the element defined by target and
+  predicate. If no element fits the criteria, the returned iterator is range
+  equal to tstack::end().
+
+  If no element on the tstack is matched, nothing happens.
+  The first element in the string will be closest to top of the tstack after
+  this operation.
+  */
+  template <class TS>
+  iterator replace(const T& target,
+                   const TS& string,
+                   bool (*predicate)(const T&, const T&) =
+                       [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
+    return replace(search(target, predicate), string).begin;
+  }
+  /**
+  \brief Replaces the first element from the given iterator matched by the given
+  target and predicate with a string of elements.
 
   \param[in] target The reference element for the search.
   \param[in] string A string of elements to be pushed to tstack instead of the
@@ -452,13 +570,37 @@ class tstack {
   iterator replace(const T& target,
                    const TS& string,
                    iterator from,
-                   std::function<bool(const T&, const T&)> predicate =
+                   bool (*predicate)(const T&, const T&) =
                        [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
-    return replace(search(target, from, predicate), string);
+    return replace(search(target, from, predicate), string).begin;
   }
   /**
-  \brief Replaces an element defined by target and a predicate by a string of
-  elements.
+  \brief Replaces the last element matched by the given target and predicate
+  with a string of elements.
+
+  \param[in] target The reference element for the search.
+  \param[in] string A string of elements to be pushed to tstack instead of the
+  given element.
+  \param[in] predicate Predicate to find the target. Defaults to operator ==. If
+  no element on the tstack makes this predicate true, nothing happens.
+
+  \returns An iterator to the element defined by target and
+  predicate. If no element fits the criteria, the returned iterator is
+  equal to tstack::end().
+
+  The first element in the string will be closest to top of the
+  tstack after this operation.
+  */ // TODO fix docs
+  template <class TS>
+  iterator replace_last(const T& target,
+                        const TS& string,
+                        bool (*predicate)(const T&, const T&) =
+                            [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
+    return replace(search_last(target, predicate), string).end;
+  }
+  /**
+  \brief Replaces the first element from the given iterator matched by the given
+  target and predicate with a string of elements.
 
   \param[in] target The reference element for the search.
   \param[in] string A string of elements to be pushed to tstack instead of the
@@ -474,11 +616,12 @@ class tstack {
   tstack after this operation.
   */
   template <class TS>
-  iterator replace(const T& target,
-                   const TS& string,
-                   std::function<bool(const T&, const T&)> predicate =
-                       [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
-    return replace(search(target, predicate), string);
+  iterator replace_last(const T& target,
+                        const TS& string,
+                        iterator from,
+                        bool (*predicate)(const T&, const T&) =
+                            [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
+    return replace(search_last(target, from, predicate), string).end;
   }
   /**
   \brief Swaps the contents of this tstack with another tstack.

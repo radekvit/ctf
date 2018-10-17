@@ -32,7 +32,7 @@ Outputs tokens to output stream. Base class.
 class OutputGenerator {
  public:
   OutputGenerator() = default;
-  OutputGenerator(std::ostream& os) : os_(&os) {}
+  explicit OutputGenerator(std::ostream& os) : os_(&os) {}
   virtual ~OutputGenerator() noexcept = default;
   /**
   \brief Returns true if an output stream has been set.

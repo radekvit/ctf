@@ -3,6 +3,39 @@
 
 #include "ctf_lr_lr0.hpp"
 
+namespace std {
+template <>
+struct hash<tuple<size_t, ctf::Symbol>> {
+  size_t operator()(const tuple<size_t, ctf::Symbol>& t) const noexcept {
+    const size_t i = get<0>(t);
+    const ctf::Symbol& s = get<1>(t);
+    return hash<size_t>{}(i) ^ hash<ctf::Symbol>{}(s);
+  }
+};
+
+template <>
+struct hash<tuple<tuple<size_t, size_t>, tuple<size_t, ctf::Symbol>>> {
+  size_t operator()(
+      const tuple<tuple<size_t, size_t>, tuple<size_t, ctf::Symbol>>& t) const
+      noexcept {
+    const size_t i = get<0>(get<0>(t));
+    const size_t j = get<0>(get<1>(t));
+    const size_t k = get<1>(get<0>(t));
+    const ctf::Symbol& s = get<1>(get<1>(t));
+    return hash<size_t>{}(i + k) ^ hash<size_t>{}(j) + hash<ctf::Symbol>{}(s);
+  }
+};
+
+template <>
+struct hash<tuple<size_t, size_t>> {
+  size_t operator()(const tuple<size_t, size_t>& t) const noexcept {
+    const size_t i = get<0>(t);
+    const size_t j = get<1>(t);
+    return hash<size_t>{}(i) ^ hash<size_t>{}(j);
+  }
+};
+}  // namespace std
+
 namespace ctf::lalr {
 template <typename X, typename T>
 unordered_map<X, set<T>> digraph(const set<tuple<X, X>>& r,
@@ -27,21 +60,24 @@ unordered_map<X, set<T>> digraph(const set<tuple<X, X>>& r,
       if (n[yi] == 0) {
         traverse(y, f.at(y));
       }
-      n[xi] = min(n[xi], n[yi]);
+      if (n[yi] < n[xi])
+        n[xi] = n[yi];
       ff[x] = set_union(ff[x], ff[y]);
     }
     if (n[xi] == d) {
-      while (1) {
+      while (true) {
         auto&& s = stack.top();
         n[index(s)] = std::numeric_limits<size_t>::max();
-        ff[s] = if (s == x) {
+        ff[s] = ff[x];
+        if (s == x) {
           stack.pop();
           break;
         }
         stack.pop();
       }
     }
-  } for (auto&& [x, fx] : f) {
+  };
+  for (auto&& [x, fx] : f) {
     if (n[index(x)] == 0) {
       traverse(x, fx);
     }
@@ -50,16 +86,16 @@ unordered_map<X, set<T>> digraph(const set<tuple<X, X>>& r,
 }
 
 inline unordered_map<tuple<size_t, Symbol>, set<Symbol>> get_direct_reads(
-    const LR0StateMachine& sm, const TranslationGrammar& grammar) {
+    const LR0StateMachine& sm) {
   unordered_map<tuple<size_t, Symbol>, set<Symbol>> directReads{{}};
-  for (size_t state = 0; state < sm.states.size(); ++state) {
-    for (auto&& transitionPair : sm.transitions[state]) {
+  for (size_t state = 0; state < sm.states().size(); ++state) {
+    for (auto&& transitionPair : sm.transitions()[state]) {
       auto& symbol = transitionPair.first;
       auto& nextState = transitionPair.second;
       if (symbol.type() != Symbol::Type::NONTERMINAL) {
         continue;
       }
-      for (auto&& transitionPair : sm.transitions[nextState]) {
+      for (auto&& transitionPair : sm.transitions()[nextState]) {
         auto& nextSymbol = transitionPair.first;
         switch (auto type = nextSymbol.type(); type) {
           case Symbol::Type::TERMINAL:
@@ -79,14 +115,14 @@ inline set<tuple<tuple<size_t, Symbol>, tuple<size_t, Symbol>>> get_reads(
     const TranslationGrammar& grammar,
     const empty_t& empty) {
   set<tuple<tuple<size_t, Symbol>, tuple<size_t, Symbol>>> reads;
-  for (size_t state = 0; state < sm.states.size(); ++state) {
-    for (auto&& transitionPair : sm.transitions[state]) {
+  for (size_t state = 0; state < sm.states().size(); ++state) {
+    for (auto&& transitionPair : sm.transitions()[state]) {
       auto& symbol = transitionPair.first;
       auto& nextState = transitionPair.second;
       if (symbol.type() != Symbol::Type::NONTERMINAL) {
         continue;
       }
-      for (auto&& transitionPair : sm.transitions[nextState]) {
+      for (auto&& transitionPair : sm.transitions()[nextState]) {
         auto& nextSymbol = transitionPair.first;
         switch (auto type = nextSymbol.type(); type) {
           case Symbol::Type::NONTERMINAL:
@@ -123,22 +159,22 @@ inline set<tuple<tuple<size_t, Symbol>, tuple<size_t, Symbol>>> get_includes(
     size_t i = input.size();
     // go left until the right side isn't empty
     for (auto&& symbol : reverse(input)) {
-      if (symbol.type == Symbol::Type::NONTERMINAL) {
+      if (symbol.type() == Symbol::Type::NONTERMINAL) {
         // add this to the relation
         vector<Symbol> symbols = {input.begin(), input.begin() + i};
         // try starting from all states
-        for (size_t state = 0; state < sm.states.size(); ++state) {
+        for (size_t state = 0; state < sm.states().size(); ++state) {
           size_t finalState = state;
           for (auto&& inputSymbol : symbols) {
-            auto it = sm.transitions[finalState].find(inputSymbol);
-            if (it == sm.transitions[finalState].end()) {
+            auto it = sm.transitions()[finalState].find(inputSymbol);
+            if (it == sm.transitions()[finalState].end()) {
               goto try_next_state;
             }
             finalState = it->second;
           }
           includes.insert(
               tuple{tuple{finalState, symbol}, tuple{state, nonterminal}});
-        try_next_state:
+        try_next_state:;
         }
         // break if this nonterminal isn't empty
         if (!empty[grammar.nonterminal_index(nonterminal)]) {
@@ -162,18 +198,18 @@ inline set<tuple<tuple<size_t, size_t>, tuple<size_t, Symbol>>> get_lookback(
 
   for (size_t i = 0; i < grammar.rules().size(); ++i) {
     auto&& rule = grammar.rules()[i];
-    for (size_t state = 0; state < sm.states.size(); ++state) {
+    for (size_t state = 0; state < sm.states().size(); ++state) {
       size_t nextState = state;
       for (auto& symbol : rule.input()) {
-        auto it = sm.transitions[nextState].find(symbol);
-        if (it == sm.transitions[nextState].end()) {
+        auto it = sm.transitions()[nextState].find(symbol);
+        if (it == sm.transitions()[nextState].end()) {
           goto try_next_state;
         }
         nextState = it->second;
       }
       lookback.insert(
           tuple{tuple{nextState, i}, tuple{state, rule.nonterminal()}});
-    try_next_state:
+    try_next_state:;
     }
   }
   return std::move(lookback);
@@ -200,7 +236,7 @@ struct LALRRelations {
   LALRRelations(const LR0StateMachine& sm,
                 const TranslationGrammar& grammar,
                 const empty_t& empty)
-      : xsize(sm.states.size() *
+      : xsize(sm.states().size() *
               (grammar.terminals().size() + grammar.nonterminals().size()))
       , xmap({})
       , xmapper([&](const tuple<size_t, Symbol>& x) {
@@ -222,7 +258,7 @@ struct LALRRelations {
         xmap[x] = result;
         return result;
       })
-      , directReads(lalr::get_direct_reads(sm, grammar))
+      , directReads(lalr::get_direct_reads(sm))
       , reads(lalr::get_reads(sm, grammar, empty))
       , includes(lalr::get_includes(sm, grammar, empty))
       , lookback(lalr::get_lookback(sm, grammar))

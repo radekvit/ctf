@@ -202,10 +202,10 @@ inline predict_t create_predict(const TranslationGrammar& tg,
   return predict;
 }
 
-set<Symbol> string_first(const TranslationGrammar& grammar,
-                         const empty_t& empty,
-                         const first_t& first,
-                         const std::vector<Symbol>& symbols) {
+inline set<Symbol> string_first(const TranslationGrammar& grammar,
+                                const empty_t& empty,
+                                const first_t& first,
+                                const std::vector<Symbol>& symbols) {
   using Type = Symbol::Type;
   set<Symbol> result;
   for (auto&& symbol : symbols) {
@@ -214,17 +214,19 @@ set<Symbol> string_first(const TranslationGrammar& grammar,
       case Type::EOI:
         result.insert(symbol);
         return result;
-      case Type::NONTERMINAL:
+      case Type::NONTERMINAL: {
         size_t i = grammar.nonterminal_index(symbol);
         result = set_union(result, first[i]);
         if (!empty[i]) {
           return result;
         }
         break;
+      }
       default:
         break;
     }
   }
+  return result;
 }
 
 }  // namespace ctf

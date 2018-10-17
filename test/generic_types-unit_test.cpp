@@ -80,33 +80,68 @@ TEST_CASE("tstack search", "[tstack]") {
 }
 
 TEST_CASE("tstack replace", "[tstack]") {
-  tstack<int> stack{-1, 5, 0, 9};
+  tstack<int> stack{-1, 5, 0, 9, 9};
+  tstack<int>::ReplaceResult expected;
 
   SECTION("iterator is end()") {
-    REQUIRE(stack.replace(stack.end(), vector<int>{}) == stack.end());
-    REQUIRE(stack.size() == 4);
+    expected = {stack.end(), stack.end()};
+    REQUIRE(stack.replace(stack.end(), vector<int>{}) == expected);
+    REQUIRE(stack.size() == 5);
   }
 
   SECTION("insert empty string") {
     auto it = stack.begin();
     ++it;
     ++it;
-    REQUIRE(stack.replace(++stack.begin(), vector<int>{}) == it);
-    REQUIRE(stack.size() == 3);
+    expected = {it, it};
+    REQUIRE(stack.replace(++stack.begin(), vector<int>{}) == expected);
+    REQUIRE(stack.size() == 4);
     REQUIRE(stack.top() == -1);
   }
 
   SECTION("insert multiple element string") {
-    auto it = stack.replace(stack.begin(), vector<int>{1, 2, 3});
-    REQUIRE(it == stack.begin());
-    REQUIRE(stack.size() == 6);
+    auto it = stack.begin();
+    ++it;
+    expected.end = it;
+    auto result = stack.replace(stack.begin(), vector<int>{1, 2, 3});
+    expected.begin = stack.begin();
+    REQUIRE(result == expected);
+    REQUIRE(stack.size() == 7);
     REQUIRE(*stack.begin() == 1);
   }
 
   SECTION("searched replace") {
     auto it = stack.replace(9, std::list<int>{10, 11});
     REQUIRE(*it == 10);
-    REQUIRE(stack.size() == 5);
+    ++(++it);
+    REQUIRE(*it == 9);
+    REQUIRE(stack.size() == 6);
+  }
+
+  SECTION("searched replace from point") {
+    auto it = stack.end();
+    --it;
+    it = stack.replace(9, std::vector<int>{11}, it);
+    ++it;
+    REQUIRE(it == stack.end());
+  }
+
+  SECTION("searched replace last") {
+    auto it = stack.replace_last(9, std::vector<int>{10, 11});
+    REQUIRE(it == stack.end());
+    --it;
+    REQUIRE(*it == 11);
+    REQUIRE(stack.size() == 6);
+  }
+
+  SECTION("searched replace last from point") {
+    auto it = stack.end();
+    --it;
+    --it;
+    it = stack.replace_last(9, std::vector<int>{10, 11}, it);
+    REQUIRE(it != stack.end());
+    ++it;
+    REQUIRE(it == stack.end());
   }
 }
 

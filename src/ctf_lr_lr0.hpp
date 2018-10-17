@@ -26,8 +26,8 @@ class Item {
     }
 
     set<Symbol> expandedNonterminals;
-    State items{closure_};
-    State newItems;
+    set<Item> items{closure_};
+    set<Item> newItems;
     while (!items.empty()) {
       // expand all new items for nonterminals we haven't expanded yet
       for (auto&& item : items) {
@@ -81,7 +81,7 @@ using State = set<Item>;
 namespace ctf {
 class LR0StateMachine {
  public:
-  LR0StateMachine(const TranslationGrammar& grammar) {
+  explicit LR0StateMachine(const TranslationGrammar& grammar) {
     auto& startingRule = grammar.augmented_starting_rule();
 
     states_.push_back(lr0::Item{startingRule, 0}.closure(grammar));
@@ -101,7 +101,7 @@ class LR0StateMachine {
     }
   }
 
-  const vector<lr0::State> states() const { return states_; }
+  const vector<lr0::State>& states() const { return states_; }
   const vector<unordered_map<Symbol, size_t>>& transitions() const {
     return transitions_;
   }

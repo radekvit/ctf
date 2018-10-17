@@ -232,7 +232,8 @@ struct Location {
 
   \param[in] _fileName The name of the source file.
   */
-  Location(string _fileName = "") : row(1), col(1), fileName(_fileName) {}
+  explicit Location(string _fileName = "")
+      : row(1), col(1), fileName(_fileName) {}
   Location(const Location&) = default;
   Location(Location&&) noexcept = default;
   ~Location() = default;
@@ -298,7 +299,7 @@ struct Location {
   /**
   \brief Constructs an invalid Location.
   */
-  Location(bool) : row(0), col(0) {}
+  explicit Location(bool) : row(0), col(0) {}
 };
 
 /**
@@ -417,7 +418,6 @@ class Symbol {
   \brief Merges symbol's attribute and sets location if not set.
   */
   void set_attribute(const Symbol& other) {
-    // TODO change for future Attribute type
     attribute_ = other.attribute();
     if (location_ == Location::invalid())
       location_ = other.location();

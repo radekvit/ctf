@@ -7,8 +7,8 @@
 #define CRF_LR_TABLE_HPP
 
 #include "ctf_base.hpp"
-#include "ctf_lr_lr0.hpp"
 #include "ctf_lr_lalr.hpp"
+#include "ctf_lr_lr0.hpp"
 
 namespace ctf {
 
@@ -34,6 +34,8 @@ class LRGenericTable {
     return gotoTable_[gotoIndex(state, nonterminalMap_.at(nonterminal))];
   }
 
+  size_t total_states() const { return states_; }
+
  protected:
   vector<LRActionItem> actionTable_;
   vector<size_t> gotoTable_;
@@ -46,6 +48,8 @@ class LRGenericTable {
   \brief Mapping terminals to table_ row indices.
   */
   unordered_map<Symbol, size_t> terminalMap_;
+
+  size_t states_;
 
   LRActionItem& lr_action_item(size_t state, const Symbol& terminal) {
     return actionTable_[actionIndex(state, terminalMap_.at(terminal))];
@@ -83,10 +87,11 @@ class LRGenericTable {
     actionTable_ = {states.size() * terminalMap_.size(),
                     {LRActionType::ERROR, 0}};
     gotoTable_ = vector<size_t>(states.size() * nonterminalMap_.size(), 0);
+
+    states_ = states.size();
   }
 };
 
-// TODO propably delete
 class SLRTable : public LRGenericTable {
  public:
   SLRTable() {}
@@ -96,11 +101,11 @@ class SLRTable : public LRGenericTable {
     const follow_t follow = create_follow(grammar, empty, first);
     initialize_maps(grammar);
     LR0StateMachine sm(grammar);
-    initialize_tables(sm.states);
+    initialize_tables(sm.states());
 
-    for (size_t i = 0; i < sm.states.size(); ++i) {
-      for (auto&& item : sm.states[i]) {
-        slr_insert(i, item, sm.transitions[i], grammar, follow);
+    for (size_t i = 0; i < sm.states().size(); ++i) {
+      for (auto&& item : sm.states()[i]) {
+        slr_insert(i, item, sm.transitions()[i], grammar, follow);
       }
     }
   }
@@ -128,7 +133,7 @@ class SLRTable : public LRGenericTable {
     auto&& rule = item.rule();
     auto&& mark = item.mark();
     // special S' -> S. item
-    if (rule.nonterminal() == grammar.starting_symbol() && mark == 1) {
+    if (rule == grammar.augmented_starting_rule() && mark == 1) {
       lr_action_item(state, Symbol::eof()) = {LRActionType::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
       size_t ni = grammar.nonterminal_index(rule.nonterminal());

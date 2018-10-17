@@ -35,7 +35,7 @@ class LexicalAnalyzer {
   an input reader must be set before it is.
   */
   LexicalAnalyzer() {}
-  LexicalAnalyzer(InputReader& reader) : reader_(&reader) {}
+  explicit LexicalAnalyzer(InputReader& reader) : reader_(&reader) {}
   virtual ~LexicalAnalyzer() noexcept = default;
 
   /**
@@ -60,7 +60,7 @@ class LexicalAnalyzer {
   /**
   \brief Resets the internal state.
   */
-  virtual void reset() noexcept {
+  void reset() noexcept {
     clear_error();
     location_ = Location::invalid();
     if (reader_) {
@@ -112,10 +112,10 @@ class LexicalAnalyzer {
       return Symbol::eof();
     }
 
-    while (!isspace(c) && c != std::char_traits<char>::eof()) {
+    do {
       name += c;
       c = get();
-    }
+    } while (!isspace(c) && c != std::char_traits<char>::eof());
     reader_->unget();
 
     return token(name, Attribute{attribute++});

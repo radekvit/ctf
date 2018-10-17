@@ -59,7 +59,7 @@ class InputReader {
     is_ = &is;
     streamName_ = streamName;
     inputBuffer_.reset();
-    currentLocation_ = {streamName};
+    currentLocation_ = Location{streamName};
   }
   /**
   \brief Gets the next character.
@@ -131,7 +131,7 @@ class InputReader {
   /**
   \brief Reset the reader state. This operation resets the internal position.
   */
-  void reset() { currentLocation_ = {currentLocation_.fileName}; }
+  void reset() { currentLocation_ = Location{currentLocation_.fileName}; }
 
  private:
   /**
@@ -246,7 +246,7 @@ class InputReader {
       size_t index = character(location) - rollback - charBuffer_.begin();
       // underflow check, return first location
       if (index > (size_t(character(location) - charBuffer_.begin()))) {
-        return {location.fileName};
+        return Location{location.fileName};
       }
       // find first line after the current
       auto it = std::upper_bound(
@@ -371,7 +371,7 @@ class InputReader {
   /**
   \brief The current read position location.
   */
-  Location currentLocation_ = {streamName_};
+  Location currentLocation_{streamName_};
   /**
   \brief The input buffer object. Stores all read characters.
   */

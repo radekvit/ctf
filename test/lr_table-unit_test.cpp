@@ -14,23 +14,16 @@ static TranslationGrammar grammar{{
                                       {"S"_nt, {"A"_nt}},
                                       {"A"_nt, {"i"_t}},
                                       {"A"_nt, {"("_t, "S"_nt, ")"_t}},
+                                      {"S'"_nt, {"S"_nt}},
                                   },
-                                  "S"_nt};
+                                  "S'"_nt};
 
 TEST_CASE("SLRTable construction and deletion", "[SLRTable]") {
-  auto empty = ctf::create_empty(grammar);
-  auto first = ctf::create_first(grammar, empty);
-  auto follow = ctf::create_follow(grammar, empty, first);
-
-  REQUIRE_NOTHROW(SLRTable(grammar, follow));
+  REQUIRE_NOTHROW(SLRTable(grammar));
 }
 
 TEST_CASE("SLRTable base", "[SLRTable]") {
-  auto empty = ctf::create_empty(grammar);
-  auto first = ctf::create_first(grammar, empty);
-  auto follow = ctf::create_follow(grammar, empty, first);
-
-  SLRTable table{grammar, follow};
+  SLRTable table{grammar};
   size_t state = 0;
 
   // check some of the table contents

@@ -39,9 +39,7 @@ inline string default_LL_error_message(
                      top.name() + "'.";
       break;
     case Type::NONTERMINAL:
-      errorString += "Unexpected token '" + token.name() +
-                     "' "
-                     "when deriving '" +
+      errorString += "Unexpected token '" + token.name() + "' when deriving '" +
                      top.name() + "'; expected one of:\n";
       for (auto&& expected : first) {
         errorString += "'" + expected.name() + "', ";
@@ -223,7 +221,7 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
     // used to speed up output_ linear search
     auto obegin = output_.begin();
 
-    while (1) {
+    while (true) {
       const Symbol& top = input_.top();
       size_t ruleIndex;
       switch (top.type()) {
@@ -432,7 +430,7 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
     // used to speed up output_ linear search
     auto obegin = output_.begin();
 
-    while (1) {
+    while (true) {
       Symbol& top = input_.top();
       set<size_t> applicableRules;
       switch (top.type()) {
