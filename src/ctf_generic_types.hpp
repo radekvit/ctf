@@ -324,9 +324,28 @@ class tstack {
   \returns The element that was on the top of the tstack before its removal.
   */
   T pop() noexcept {
-    T temp{list_.front()};
+    T temp{std::move(list_.front())};
     list_.pop_front();
-    return temp;
+    return std::move(temp);
+  }
+  /**
+  \brief Get a reference to the bottom element of the tstack.
+  \returns A reference to the bottom element of the tstack.
+  */
+  T& bottom() noexcept { return list_.back(); }
+  /**
+  \brief Get a constant reference to the bottom element of the tstack.
+  \returns A const reference to the bottom element of the tstack.
+  */
+  const T& bottom() const noexcept { return list_.back(); }
+  /**
+  \brief Pops the bottom element from the tstack and returns it.
+  \returns The element that was on the bottom of the tstack before its removal.
+  */
+  T pop_bottom() noexcept {
+    T temp{std::move(list_.front())};
+    list_.pop_back();
+    return std::move(temp);
   }
   /**
   \brief Searches for an element between a given position and the end.

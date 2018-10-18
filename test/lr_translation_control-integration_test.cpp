@@ -2,6 +2,7 @@
 
 #include "../src/ctf_lr_translation_control.hpp"
 
+#include <iostream>
 #include <sstream>
 
 using ctf::LexicalAnalyzer;
@@ -13,12 +14,13 @@ using ctf::vector;
 using ctf::string;
 using ctf::Symbol;
 using ctf::InputReader;
+using ctf::Location;
 
 using namespace ctf::literals;
 
 TEST_CASE("SLRTranslationTest", "[SLRTranslationControl]") {
   TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
-	tg.make_augmented();
+  tg.make_augmented();
   LexicalAnalyzer a;
   SLRTranslationControl(a, tg);
 }
@@ -50,10 +52,18 @@ TEST_CASE("Regular translation") {
 
   LexicalAnalyzer a;
   std::stringstream in;
-  in << "( ( ( i ) ) o ( i o ( i ) ) )";
+  // expected output:
+  // 2 4 1 2 3 4 1 2 3 3 eof
+  in << "( i o ( i o i ) ) ";
   InputReader r{in};
   a.set_reader(r);
   SLRTranslationControl slr(a, tg);
   slr.run();
-	REQUIRE(slr.output().size() == 17);
+  REQUIRE(slr.output().size() == 11);
+  auto it = slr.output().begin();
+  Symbol os = *it++;
+  REQUIRE(os == "2"_t);
+  os = *it++;
+  REQUIRE(os == "4"_t);
+  REQUIRE(os.location() == Location(1, 1));
 }

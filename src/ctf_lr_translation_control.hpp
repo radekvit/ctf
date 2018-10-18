@@ -11,6 +11,7 @@
 #include "ctf_table_sets.hpp"
 #include "ctf_translation_control.hpp"
 
+#include <iostream>
 namespace ctf {
 class LRTranslationControlGeneral : public TranslationControl {
  public:
@@ -42,6 +43,7 @@ class LRTranslationControlGeneral : public TranslationControl {
   \param[in] obegin Iterator to the first Symbol of the output of the applied
   Rule.
   \param[in] targets Indices of the target actions for all input terminals.
+  \param[in] outputSize The size of the output for target generation.
   \param[out] attributeActions Targets to append incoming terminal's attributes.
 
   The added iterators point to input terminal attribute targets.
@@ -49,13 +51,15 @@ class LRTranslationControlGeneral : public TranslationControl {
   void create_attibute_actions(
       tstack<Symbol>::iterator obegin,
       const vector<set<size_t>>& targets,
+      size_t outputSize,
       tstack<vector<tstack<Symbol>::iterator>>& attributeActions) {
-    for (auto& target : reverse(targets)) {
+    for (auto& target : targets) {
       vector<tstack<Symbol>::iterator> iterators;
       for (auto& i : target) {
         auto oit = obegin;
-        for (size_t x = 0; x < i; ++x)
-          ++oit;
+        for (size_t x = 0; x < outputSize - i; ++x) {
+          --oit;
+        }
         if (oit->type() == Symbol::Type::TERMINAL)
           iterators.push_back(oit);
       }
@@ -103,7 +107,6 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     set_grammar(tg);
     set_lexical_analyzer(la);
   }
-
 
   /**
   \brief Runs the translation. Output symbols are stored in output_.
@@ -161,28 +164,29 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   void produce_output(const vector<size_t> appliedRules) {
     tstack<vector<tstack<Symbol>::iterator>> attributeActions;
 
-    input_.push(Symbol::eof());
+    input_.push(translationGrammar_->starting_symbol());
     output_.push(Symbol::eof());
     output_.push(translationGrammar_->starting_symbol());
-    size_t tokenIndex = 0;
 
     auto obegin = output_.begin();
 
+    auto tokenIt = ++tokens_.crbegin();
     for (auto&& ruleIndex : reverse(appliedRules)) {
       auto& rule = translationGrammar_->rules()[ruleIndex];
-
+      input_.replace_last(rule.nonterminal(), rule.input());
       obegin = output_.replace_last(rule.nonterminal(), rule.output(), obegin);
-      create_attibute_actions(obegin, rule.actions(), attributeActions);
-    }
-    // apply attribute actions
-    for (const Symbol& token : tokens_) {
-      if (token == Symbol::eof()) {
-        break;
+      create_attibute_actions(
+          obegin, rule.actions(), rule.output().size(), attributeActions);
+
+      // apply attribute actions for all current rightmost terminals
+      for (auto workingTerminalIt = input_.crbegin();
+           workingTerminalIt != input_.crend() &&
+           workingTerminalIt->type() == Symbol::Type::TERMINAL;
+           ++tokenIt, ++workingTerminalIt, input_.pop_bottom()) {
+        for (auto symbolIt : attributeActions.pop()) {
+          symbolIt->set_attribute(*tokenIt);
+        }
       }
-      for (auto it : attributeActions.pop()) {
-        it->set_attribute(token);
-      }
-      ++tokenIndex;
     }
   }
 
