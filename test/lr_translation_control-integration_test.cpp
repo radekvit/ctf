@@ -67,3 +67,27 @@ TEST_CASE("Regular translation") {
   REQUIRE(os == "4"_t);
   REQUIRE(os.location() == Location(1, 1));
 }
+
+
+TEST_CASE("Failed translation") {
+  TranslationGrammar tg{
+      {
+          {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
+          {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
+          {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
+          {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
+          {"S'"_nt, {"S"_nt}},
+      },
+      "S'"_nt};
+
+  LexicalAnalyzer a;
+  std::stringstream in;
+  std::stringstream err;
+  in << "( i o )";
+  InputReader r{in};
+  a.set_reader(r);
+  SLRTranslationControl slr(a, tg);
+  slr.set_error_stream(err);
+  slr.run();
+  REQUIRE(slr.error());
+}

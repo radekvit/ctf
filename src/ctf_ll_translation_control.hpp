@@ -229,7 +229,6 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
           if (token == Symbol::eof()) {
             return;
           } else {
-            set_error();
             add_error(top, token, lastDerivedNonterminal);
             return;
           }
@@ -242,7 +241,6 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
             input_.pop();
             token = next_token();
           } else {
-            set_error();
             add_error(top, token, lastDerivedNonterminal);
             if (!error_recovery(
                     lastDerivedNonterminal, token, attributeActions))
@@ -261,7 +259,6 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
             input_.replace(input_.begin(), rule.input());
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
-            set_error();
             add_error(top, token, lastDerivedNonterminal);
             if (!error_recovery(
                     lastDerivedNonterminal, token, attributeActions))
@@ -438,7 +435,6 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
           if (token == Symbol::eof()) {
             return;
           } else {
-            set_error();
             add_error(top, token, lastDerivedNonterminal);
             return;
           }
@@ -452,7 +448,6 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
             token = next_token();
           } else {
             if (!roll_back(attributeActions, obegin)) {
-              set_error();
               add_error(top, token, lastDerivedNonterminal);
               if (!error_recovery(
                       lastDerivedNonterminal, token, attributeActions))
@@ -483,7 +478,6 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
             create_attibute_actions(obegin, rule.actions(), attributeActions);
           } else {
             if (!roll_back(attributeActions, obegin)) {
-              set_error();
               add_error(top, token, lastDerivedNonterminal);
               if (!error_recovery(
                       lastDerivedNonterminal, token, attributeActions))

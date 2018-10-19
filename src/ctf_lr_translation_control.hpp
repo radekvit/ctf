@@ -69,14 +69,8 @@ class LRTranslationControlGeneral : public TranslationControl {
 
   void set_error() { errorFlag_ = true; }
 
-  void add_error(const Symbol& top,
-                 const Symbol& token,
-                 const Symbol& lastDerivedNonterminal) {
+  void add_error(const Symbol& token, const string& message) {
     set_error();
-    (void)top;
-    (void)token;
-    (void)lastDerivedNonterminal;
-    string message{"parsing error"};
     err() << token.location().to_string() << ": " << message << "\n";
   }
 
@@ -151,9 +145,9 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
           produce_output(appliedRules);
           return;
         case LRActionType::ERROR:
-          set_error();
-          // TODO error message
-          return;
+          add_error(token, error_message(state, token));
+          if (!error_recovery(state, token))
+            return;
       }
     }
   }
@@ -198,6 +192,27 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   void set_grammar(const TranslationGrammar& tg) override {
     translationGrammar_ = &tg;
     create_lr_table();
+  }
+
+  // TODO allow example-based error messages 
+  string error_message(size_t state, const Symbol& token) {
+    string message = "Unexpected symbol '";
+    message += token.type() == Symbol::Type::EOI ? string("EOF") : token.name();
+    message += "'\nexpected one of";
+    for (auto& terminal: translationGrammar_->terminals()) {
+      if (lrTable_.lr_action(state, terminal).type != LRActionType::ERROR) {
+        message += " '";
+        message += terminal.name() + "'";
+      }
+    }
+    message += "\n";
+    return std::move(message);
+  }
+
+  bool error_recovery(size_t state, const Symbol& token) {
+    (void)state;
+    (void)token;
+    return false;
   }
 
  protected:
