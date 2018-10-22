@@ -31,14 +31,9 @@ TEST_CASE("Symbol Construction", "[Symbol]") {
   REQUIRE(s.name() == "nter");
   REQUIRE(s.attribute().empty());
 
-  s = "spec"_s;
-  REQUIRE(s.type() == Symbol::Type::SPECIAL);
-  REQUIRE(s.name() == "spec");
-  REQUIRE(s.attribute().empty());
-
   s = Symbol::eof();
   REQUIRE(s.type() == Symbol::Type::EOI);
-  REQUIRE(s.name() == "");
+  REQUIRE(s.name() == "EOF");
 }
 
 TEST_CASE("operators", "[Symbol]") {

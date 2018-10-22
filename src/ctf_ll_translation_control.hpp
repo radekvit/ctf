@@ -212,8 +212,9 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
 
     input_.push(Symbol::eof());
     output_.push(Symbol::eof());
-    input_.push(translationGrammar_->starting_symbol());
-    output_.push(translationGrammar_->starting_symbol());
+    // add actual starting symbol
+    input_.push(translationGrammar_->starting_rule().input()[0]);
+    output_.push(translationGrammar_->starting_rule().output()[0]);
 
     Symbol token = next_token();
 

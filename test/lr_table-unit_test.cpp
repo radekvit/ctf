@@ -14,9 +14,8 @@ static TranslationGrammar grammar{{
                                       {"S"_nt, {"A"_nt}},
                                       {"A"_nt, {"i"_t}},
                                       {"A"_nt, {"("_t, "S"_nt, ")"_t}},
-                                      {"S'"_nt, {"S"_nt}},
                                   },
-                                  "S'"_nt};
+                                  "S"_nt};
 
 TEST_CASE("SLRTable construction and deletion", "[SLRTable]") {
   REQUIRE_NOTHROW(SLRTable(grammar));

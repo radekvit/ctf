@@ -10,6 +10,8 @@ using ctf::TranslationGrammar;
 using Rule = TranslationGrammar::Rule;
 using ctf::LR0StateMachine;
 using ctf::SLRTranslationControl;
+using ctf::LALRTranslationControl;
+
 using ctf::vector;
 using ctf::string;
 using ctf::Symbol;
@@ -20,15 +22,13 @@ using namespace ctf::literals;
 
 TEST_CASE("SLRTranslationTest", "[SLRTranslationControl]") {
   TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
-  tg.make_augmented();
   LexicalAnalyzer a;
   SLRTranslationControl(a, tg);
 }
 
-TEST_CASE("Empty translation") {
+TEST_CASE("Empty SLR translation", "[SLRTranslationControl]") {
   LexicalAnalyzer a;
   TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
-  tg.make_augmented();
   std::stringstream in;
   InputReader r{in};
   a.set_reader(r);
@@ -39,7 +39,7 @@ TEST_CASE("Empty translation") {
   REQUIRE(slr.output().top() == Symbol::eof());
 }
 
-TEST_CASE("Regular translation") {
+TEST_CASE("Regular SLR translation", "[SLRTranslationControl]") {
   TranslationGrammar tg{
       {
           {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
@@ -54,7 +54,7 @@ TEST_CASE("Regular translation") {
   std::stringstream in;
   // expected output:
   // 2 4 1 2 3 4 1 2 3 3 eof
-  in << "( i o ( i o i ) ) ";
+  in << "( i o ( i o i ) )";
   InputReader r{in};
   a.set_reader(r);
   SLRTranslationControl slr(a, tg);
@@ -68,8 +68,7 @@ TEST_CASE("Regular translation") {
   REQUIRE(os.location() == Location(1, 1));
 }
 
-
-TEST_CASE("Failed translation") {
+TEST_CASE("Failed SLR translation", "[SLRTranslationControl]") {
   TranslationGrammar tg{
       {
           {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
@@ -83,11 +82,24 @@ TEST_CASE("Failed translation") {
   LexicalAnalyzer a;
   std::stringstream in;
   std::stringstream err;
-  in << "( i o )";
+  in << "( ( i o i ) ) )";
   InputReader r{in};
   a.set_reader(r);
   SLRTranslationControl slr(a, tg);
   slr.set_error_stream(err);
   slr.run();
   REQUIRE(slr.error());
+}
+
+TEST_CASE("LALR empty translation", "[LALTTranslationControl]") {
+  LexicalAnalyzer a;
+  TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
+  std::stringstream in;
+  InputReader r{in};
+  a.set_reader(r);
+  LALRTranslationControl lalr(a, tg);
+  lalr.run();
+  // only eof
+  REQUIRE(lalr.output().size() == 1);
+  REQUIRE(lalr.output().top() == Symbol::eof());
 }

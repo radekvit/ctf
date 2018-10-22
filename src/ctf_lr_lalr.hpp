@@ -25,15 +25,6 @@ struct hash<tuple<tuple<size_t, size_t>, tuple<size_t, ctf::Symbol>>> {
     return hash<size_t>{}(i + k) ^ hash<size_t>{}(j) + hash<ctf::Symbol>{}(s);
   }
 };
-
-template <>
-struct hash<tuple<size_t, size_t>> {
-  size_t operator()(const tuple<size_t, size_t>& t) const noexcept {
-    const size_t i = get<0>(t);
-    const size_t j = get<1>(t);
-    return hash<size_t>{}(i) ^ hash<size_t>{}(j);
-  }
-};
 }  // namespace std
 
 namespace ctf::lalr {
@@ -215,16 +206,20 @@ inline set<tuple<tuple<size_t, size_t>, tuple<size_t, Symbol>>> get_lookback(
   return std::move(lookback);
 }
 
-inline unordered_map<tuple<size_t, size_t>, set<Symbol>> get_la(
+inline vector<vector<set<Symbol>>> get_la(
+    size_t stateCount,
+    size_t ruleCount,
     const unordered_map<tuple<size_t, Symbol>, set<Symbol>>& follow,
     const set<tuple<tuple<size_t, size_t>, tuple<size_t, Symbol>>>& lookback) {
-  unordered_map<tuple<size_t, size_t>, set<Symbol>> la{{}};
+  vector<vector<set<Symbol>>> la(stateCount, vector(ruleCount, set<Symbol>{}));
   for (auto&& tuple : lookback) {
     auto it = follow.find(std::get<1>(tuple));
     if (it == follow.end()) {
       continue;
     }
-    la[std::get<0>(tuple)] = set_union(la[std::get<0>(tuple)], it->second);
+    auto i1 = std::get<0>(std::get<0>(tuple));
+    auto i2 = std::get<1>(std::get<0>(tuple));
+    la[i1][i2] = set_union(la[i1][i2], it->second);
   }
   return std::move(la);
 }
@@ -264,7 +259,8 @@ struct LALRRelations {
       , lookback(lalr::get_lookback(sm, grammar))
       , read(lalr::digraph(reads, directReads, xsize, xmapper))
       , follow(lalr::digraph(includes, read, xsize, xmapper))
-      , la(lalr::get_la(follow, lookback)) {}
+      , la(lalr::get_la(
+            sm.states().size(), grammar.rules().size(), follow, lookback)) {}
 
  private:
   size_t xsize;
@@ -280,7 +276,7 @@ struct LALRRelations {
   unordered_map<tuple<size_t, Symbol>, set<Symbol>> read;
   unordered_map<tuple<size_t, Symbol>, set<Symbol>> follow;
 
-  unordered_map<tuple<size_t, size_t>, set<Symbol>> la;
+  vector<vector<set<Symbol>>> la;
 };
 
 class LALRStateMachine {

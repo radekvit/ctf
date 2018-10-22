@@ -60,7 +60,7 @@ TEST_CASE("LR0StateMachine correctness", "[LR0StateMachine]") {
       {Item(rules[0], 2), Item(rules[2], 0), Item(rules[3], 0)},
   };
   REQUIRE(sm.states()[0] ==
-          Item(grammar.augmented_starting_rule(), 0).closure(grammar));
+          Item(grammar.starting_rule(), 0).closure(grammar));
   // check correctness of at least a part of the state machine
   activeState = 0;
   // i transition from 0

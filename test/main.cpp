@@ -14,9 +14,6 @@ std::ostream& operator<<(std::ostream& os, const Symbol& s) {
     case Symbol::Type::EOI:
       os << "EOF";
       break;
-    case Symbol::Type::SPECIAL:
-      os << "SPECIAL: ";
-      break;
     default:
       os << "SYMBOL: ";
       break;

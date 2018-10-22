@@ -21,7 +21,7 @@ class Item {
     closure_ = {*this};
     // item with the mark at the last position or a mark before the
     if (mark_ == rule_->input().size() ||
-        rule_->input()[mark_].type() == Symbol::Type::TERMINAL) {
+        rule_->input()[mark_].type() != Symbol::Type::NONTERMINAL) {
       return closure_;
     }
 
@@ -82,7 +82,7 @@ namespace ctf {
 class LR0StateMachine {
  public:
   explicit LR0StateMachine(const TranslationGrammar& grammar) {
-    auto& startingRule = grammar.augmented_starting_rule();
+    auto& startingRule = grammar.starting_rule();
 
     states_.push_back(lr0::Item{startingRule, 0}.closure(grammar));
     transitions_.push_back({});
@@ -90,7 +90,7 @@ class LR0StateMachine {
     for (size_t i = 0; i < states_.size(); ++i) {
       auto&& state = states_[i];
       // get all nonempty closures
-      auto&& statetransitions_ = next_states_(grammar, state);
+      auto&& statetransitions_ = next_states(grammar, state);
       // add transitions_
       for (auto&& transitionPair : statetransitions_) {
         const Symbol& symbol = transitionPair.first;
@@ -107,7 +107,7 @@ class LR0StateMachine {
   }
 
  protected:
-  unordered_map<Symbol, lr0::State> next_states_(
+  unordered_map<Symbol, lr0::State> next_states(
       const TranslationGrammar& grammar, const lr0::State& state) {
     unordered_map<Symbol, lr0::State> result;
 

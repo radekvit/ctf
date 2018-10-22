@@ -77,10 +77,10 @@ class LRGenericTable {
     for (size_t i = 0; i < tg.nonterminals().size(); ++i) {
       nonterminalMap_.insert(std::make_pair(tg.nonterminals()[i], i));
     }
+    // eof is a terminal in augmented grammars
     for (size_t i = 0; i < tg.terminals().size(); ++i) {
       terminalMap_.insert(std::make_pair(tg.terminals()[i], i));
     }
-    terminalMap_.insert(std::make_pair(Symbol::eof(), tg.terminals().size()));
   }
 
   void initialize_tables(const vector<set<lr0::Item>>& states) {
@@ -111,20 +111,6 @@ class SLRTable : public LRGenericTable {
   }
 
  protected:
-  size_t insert_state(vector<set<lr0::Item>>& states,
-                      vector<unordered_map<Symbol, size_t>>& transitions,
-                      const set<lr0::Item>& state) {
-    auto it = std::find(states.begin(), states.end(), state);
-    if (it == states.end()) {
-      // insert
-      states.push_back(state);
-      transitions.push_back({});
-      return states.size() - 1;
-    } else {
-      return it - states.begin();
-    }
-  }
-
   void slr_insert(size_t state,
                   const lr0::Item& item,
                   const unordered_map<Symbol, size_t>& transitionMap,
@@ -132,8 +118,8 @@ class SLRTable : public LRGenericTable {
                   const follow_t& follow) {
     auto&& rule = item.rule();
     auto&& mark = item.mark();
-    // special S' -> S. item
-    if (rule == grammar.augmented_starting_rule() && mark == 1) {
+    // special S' -> S.EOF item
+    if (rule == grammar.starting_rule() && mark == 1) {
       lr_action_item(state, Symbol::eof()) = {LRActionType::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
       size_t ni = grammar.nonterminal_index(rule.nonterminal());
@@ -161,11 +147,56 @@ class SLRTable : public LRGenericTable {
 };
 
 class LALRTable : public LRGenericTable {
+ public:
   LALRTable() {}
   LALRTable(const TranslationGrammar& grammar) {
     const empty_t empty = create_empty(grammar);
     LALRStateMachine sm(grammar, empty);
-    // TODO
+    const LR0StateMachine& sm0 = sm.state_machine();
+    auto&& la = sm.relations().la;
+
+    initialize_maps(grammar);
+    initialize_tables(sm0.states());
+
+    for (size_t i = 0; i < sm0.states().size(); ++i) {
+      for (auto&& item : sm0.states()[i]) {
+        lalr_insert(i, item, sm0.transitions()[i], grammar, la[i]);
+      }
+    }
+  }
+
+ protected:
+  void lalr_insert(size_t state,
+                   const lr0::Item& item,
+                   const unordered_map<Symbol, size_t>& transitionMap,
+                   const TranslationGrammar& grammar,
+                   const vector<set<Symbol>>& la) {
+    auto&& rule = item.rule();
+    auto&& mark = item.mark();
+    // special S' -> S.EOF item
+    if (rule == grammar.starting_rule() && mark == 1) {
+      lr_action_item(state, Symbol::eof()) = {LRActionType::SUCCESS, 0};
+    } else if (mark == rule.input().size()) {
+      for (auto&& terminal : la[rule.id]) {
+        if (lr_action(state, terminal).type != LRActionType::ERROR) {
+          throw std::invalid_argument(
+              "Constructing LALRTable from a non-LALR(1) TranslationGrammar.");
+        }
+        lr_action_item(state, terminal) = {LRActionType::REDUCE, rule.id};
+      }
+    } else if (rule.input()[mark].type() == Symbol::Type::NONTERMINAL) {
+      auto&& nonterminal = rule.input()[mark];
+      size_t nextState = transitionMap.at(nonterminal);
+      lr_goto_item(state, nonterminal) = nextState;
+    } else if (rule.input()[mark].type() == Symbol::Type::TERMINAL) {
+      auto&& terminal = rule.input()[mark];
+      size_t nextState = transitionMap.at(terminal);
+      if (lr_action(state, terminal).type != LRActionType::ERROR) {
+        throw std::invalid_argument(
+            "Constructing SLRTable from a non-SLR TranslationGrammar.");
+      }
+      lr_action_item(state, terminal) = {LRActionType::SHIFT, nextState};
+    }
   }
 };
 

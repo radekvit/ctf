@@ -11,7 +11,6 @@ methods.
 #include <ostream>
 #include <stdexcept>
 #include <utility>
-
 #include "ctf_base.hpp"
 
 namespace ctf {
@@ -71,7 +70,7 @@ class TranslationGrammar {
               "More assigned actions than symbols in output when "
               "constructing class TranslationGrammar::Rule.");
         for (auto i : target) {
-          if (i > output_.size() || output_[i].type() != Symbol::Type::TERMINAL)
+          if (i > output_.size() || output_[i].type() == Symbol::Type::NONTERMINAL)
             throw std::invalid_argument(
                 "Attribute target not an output terminal when constructing "
                 "class TranslationGrammar::Rule.");
@@ -93,7 +92,7 @@ class TranslationGrammar {
       size_t target = 0;
       // attribute actions have the same size as the number of terminals
       for (size_t i = 0; i < attributeActions_.size(); ++i, ++target) {
-        while (output_[target].type() != Symbol::Type::TERMINAL)
+        while (output_[target].type() == Symbol::Type::NONTERMINAL)
           ++target;
         attributeActions_[i].insert(target);
       }
@@ -176,7 +175,7 @@ class TranslationGrammar {
     \brief Attribute copying from input to output when applying this rule.
     Implicitly
     created to copy no attributes.
-     */
+    */
     vector<set<size_t>> attributeActions_;
 
     /**
@@ -188,16 +187,10 @@ class TranslationGrammar {
       for (auto& s : input_) {
         if (s.type() == Symbol::Type::NONTERMINAL)
           inputNonterminals.push_back(s);
-        else if (s.type() != Symbol::Type::TERMINAL &&
-                 s.type() != Symbol::Type::SPECIAL)
-          throw std::invalid_argument("Unknown symbol type in Rule input.");
       }
       for (auto& s : output_) {
         if (s.type() == Symbol::Type::NONTERMINAL)
           outputNonterminals.push_back(s);
-        else if (s.type() != Symbol::Type::TERMINAL &&
-                 s.type() != Symbol::Type::SPECIAL)
-          throw std::invalid_argument("Unknown symbol type in Rule output.");
       }
       if (inputNonterminals != outputNonterminals)
         throw std::invalid_argument(
@@ -209,7 +202,7 @@ class TranslationGrammar {
     size_t count_input_terminals() const {
       size_t count = 0;
       for (auto& s : input_) {
-        if (s.type() == Symbol::Type::TERMINAL)
+        if (s.type() != Symbol::Type::NONTERMINAL)
           count++;
       }
       return count;
@@ -225,12 +218,16 @@ class TranslationGrammar {
 
   /**
   \brief Constructs an empty TranslationGrammar. Implicit starting symbol is
-  "E"_nt.
+  "S'"_nt.
   */
-  TranslationGrammar() : starting_symbol_("E"_nt) {}
+  TranslationGrammar()
+      : terminals_({Symbol::eof()})
+      , nonterminals_({"S"_nt, "S'"_nt})
+      , rules_({Rule("S'"_nt, {"S"_nt, Symbol::eof()})})
+      , starting_symbol_("S'"_nt) {}
   /**
-  \brief Constructs a TranslationGrammar, takes terminals and nonterminals from
-  the rules' inputs and starting symbol.
+  \brief Constructs a TranslationGrammar, takes terminals and nonterminals
+  from the rules' inputs and starting symbol.
 
   \param[in] rules A vector of rules. Duplicates will be erased, even with
   different atttribute actions.
@@ -262,8 +259,8 @@ class TranslationGrammar {
         }  // switch
       }    // for all input
     }      // for all rules
-    make_set(terminals_);
     make_set(nonterminals_);
+    make_augmented();
     mark_rules();
   }
   /**
@@ -339,33 +336,13 @@ class TranslationGrammar {
         }  // switch
       }    // for all input
     }      // for all rules
+    make_set(nonterminals_);
+    make_augmented();
     mark_rules();
   }
 
   ~TranslationGrammar() = default;
 
-  /**
-   * Transforms a translation grammar into an augmented translation grammar.
-   */
-  void make_augmented() {
-    // create new unique starting symbol
-    std::string newStartingName = starting_symbol().name() + '\'';
-    auto newStartingNonterminal = Nonterminal(newStartingName);
-    auto it = std::lower_bound(
-        nonterminals_.begin(), nonterminals_.end(), newStartingNonterminal);
-    while (it != nonterminals_.end() && *it == newStartingNonterminal) {
-      newStartingName += '\'';
-      newStartingNonterminal = Nonterminal(newStartingName);
-    }
-
-    // insert rule S' -> (S, S)
-    rules_.push_back({newStartingNonterminal, {starting_symbol()}});
-    // add S' to nonterminals
-    nonterminals_.push_back(newStartingNonterminal);
-    make_set(nonterminals_);
-    // make S' the new starting symbol
-    starting_symbol_ = newStartingNonterminal;
-  }
   /**
   \brief Returns an empty string of symbols.
   */
@@ -383,7 +360,7 @@ class TranslationGrammar {
   vector<Rule>& rules() { return rules_; }
   const vector<Rule>& rules() const { return rules_; }
 
-  const Rule& augmented_starting_rule() const { return rules_.back(); }
+  const Rule& starting_rule() const { return rules_.back(); }
 
   Symbol& starting_symbol() { return starting_symbol_; }
   const Symbol& starting_symbol() const { return starting_symbol_; }
@@ -437,6 +414,32 @@ class TranslationGrammar {
     for (size_t i = 0; i < rules_.size(); ++i) {
       rules_[i].id = i;
     }
+  }
+
+  /**
+   * Transforms a translation grammar into an augmented translation grammar.
+   */
+  void make_augmented() {
+    // create new unique starting symbol
+    std::string newStartingName = starting_symbol().name();
+    Symbol newStartingNonterminal = Symbol::eof();
+    auto it = nonterminals_.begin();
+    do {
+      newStartingName += '\'';
+      newStartingNonterminal = Nonterminal(newStartingName);
+      it = std::lower_bound(
+          nonterminals_.begin(), nonterminals_.end(), newStartingNonterminal);
+    } while (it != nonterminals_.end() && *it == newStartingNonterminal);
+    // insert rule S' -> (S eof, S eof)
+    rules_.push_back(
+        {newStartingNonterminal, {starting_symbol(), Symbol::eof()}});
+    // add S' to nonterminals
+    nonterminals_.push_back(newStartingNonterminal);
+    terminals_.push_back(Symbol::eof());
+    make_set(terminals_);
+    make_set(nonterminals_);
+    // make S' the new starting symbol
+    starting_symbol_ = newStartingNonterminal;
   }
 };
 }  // namespace ctf

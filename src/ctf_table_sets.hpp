@@ -35,6 +35,7 @@ inline empty_t create_empty(const TranslationGrammar& tg) {
       bool isempty = true;
       for (auto& s : r.input()) {
         switch (s.type()) {
+          case Symbol::Type::EOI:
           case Symbol::Type::TERMINAL:
             isempty = false;
             break;
@@ -82,6 +83,7 @@ inline first_t create_first(const TranslationGrammar& tg,
             changed |= first[i].modify_set_union(first[nonterm_i]);
             isEmpty = empty[nonterm_i];
             break;
+          case Symbol::Type::EOI:
           case Symbol::Type::TERMINAL:
             changed |= first[i].insert(symbol).inserted;
             isEmpty = false;
@@ -106,7 +108,8 @@ inline follow_t create_follow(const TranslationGrammar& tg,
                               const empty_t& empty,
                               const first_t& first) {
   follow_t follow = {tg.nonterminals().size(), set<Symbol>{}};
-  follow[tg.nonterminal_index(tg.starting_symbol())].insert(Symbol::eof());
+  follow[tg.nonterminal_index(tg.starting_rule().input()[0])].insert(
+      Symbol::eof());
 
   bool changed = false;
   do {
@@ -133,7 +136,7 @@ inline follow_t create_follow(const TranslationGrammar& tg,
           default:
             break;
         }
-        /* if empty = false */
+        /* if empty == false */
         if (s.type() != Symbol::Type::NONTERMINAL ||
             !empty[tg.nonterminal_index(s)]) {
           compoundEmpty = false;
@@ -141,6 +144,7 @@ inline follow_t create_follow(const TranslationGrammar& tg,
             case Symbol::Type::NONTERMINAL:
               compoundFirst = first[ti];
               break;
+            case Symbol::Type::EOI:
             case Symbol::Type::TERMINAL:
               compoundFirst = {s};
               break;
@@ -148,7 +152,7 @@ inline follow_t create_follow(const TranslationGrammar& tg,
               break;
           }
         }
-        /* empty = true, nonterminal*/
+        /* empty == true, nonterminal*/
         else {
           compoundFirst.modify_set_union(first[ti]);
         }
@@ -177,6 +181,7 @@ inline predict_t create_predict(const TranslationGrammar& tg,
     for (auto& s : reverse(r.input())) {
       size_t i;
       switch (s.type()) {
+        case Symbol::Type::EOI:
         case Symbol::Type::TERMINAL:
           compoundEmpty = false;
           compoundFirst = set<Symbol>({s});

@@ -328,15 +328,7 @@ class Symbol {
     \brief End of input
     */
     EOI,
-    /**
-    \brief Denotes a symbol with special meaning for translation control or
-    output generator.
-    */
-    SPECIAL,
   };
-#if 0
-  Symbol(): Symbol(Symbol::eof()) {}
-#endif
   /**
   \brief Constructs a Symbol with a given type. If specified, sets Symbol's name
   and attribute.
@@ -387,6 +379,10 @@ class Symbol {
   May be invalidated by constructing a Symbol with a previously unused name.
   */
   const string& name() const {
+    static const std::string eof = "EOF";
+    if (type() == Type::EOI) {
+      return eof;
+    }
 #ifdef CTF_MULTITHREAD
     return name_;
 #else
@@ -552,14 +548,6 @@ inline Symbol operator""_t(const char* s, size_t) { return Terminal({s}); }
 \returns Symbol with type Terminal and given name.
 */
 inline Symbol operator""_nt(const char* s, size_t) { return Nonterminal({s}); }
-/**
-\brief Returns a Symbol of Type::Special with given name.
-\param[in] s C string representing the name of the returned Symbol.
-\returns Symbol with type Special and given name.
-*/
-inline Symbol operator""_s(const char* s, size_t) {
-  return Symbol(Symbol::Type::SPECIAL, {s});
-}
 }  // namespace literals
 #endif
 

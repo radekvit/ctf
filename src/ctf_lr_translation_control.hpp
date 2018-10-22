@@ -6,6 +6,7 @@
 #ifndef CTF_LR_TRANSLATION_CONTROL_H
 #define CTF_LR_TRANSLATION_CONTROL_H
 
+#include "ctf_lr_lalr.hpp"
 #include "ctf_lr_lr0.hpp"
 #include "ctf_lr_table.hpp"
 #include "ctf_table_sets.hpp"
@@ -159,12 +160,11 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     tstack<vector<tstack<Symbol>::iterator>> attributeActions;
 
     input_.push(translationGrammar_->starting_symbol());
-    output_.push(Symbol::eof());
     output_.push(translationGrammar_->starting_symbol());
 
     auto obegin = output_.begin();
 
-    auto tokenIt = ++tokens_.crbegin();
+    auto tokenIt = tokens_.crbegin();
     for (auto&& ruleIndex : reverse(appliedRules)) {
       auto& rule = translationGrammar_->rules()[ruleIndex];
       input_.replace_last(rule.nonterminal(), rule.input());
@@ -175,7 +175,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
       // apply attribute actions for all current rightmost terminals
       for (auto workingTerminalIt = input_.crbegin();
            workingTerminalIt != input_.crend() &&
-           workingTerminalIt->type() == Symbol::Type::TERMINAL;
+           workingTerminalIt->type() != Symbol::Type::NONTERMINAL;
            ++tokenIt, ++workingTerminalIt, input_.pop_bottom()) {
         for (auto symbolIt : attributeActions.pop()) {
           symbolIt->set_attribute(*tokenIt);
@@ -194,12 +194,15 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     create_lr_table();
   }
 
-  // TODO allow example-based error messages 
+  // TODO allow example-based error messages
   string error_message(size_t state, const Symbol& token) {
     string message = "Unexpected symbol '";
     message += token.type() == Symbol::Type::EOI ? string("EOF") : token.name();
-    message += "'\nexpected one of";
-    for (auto& terminal: translationGrammar_->terminals()) {
+    message += "'\nexpected one of:";
+    if (lrTable_.lr_action(state, Symbol::eof()).type != LRActionType::ERROR) {
+      message += " EOF";
+    }
+    for (auto& terminal : translationGrammar_->terminals()) {
       if (lrTable_.lr_action(state, terminal).type != LRActionType::ERROR) {
         message += " '";
         message += terminal.name() + "'";
@@ -237,6 +240,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
 };
 
 using SLRTranslationControl = LRTranslationControlTemplate<SLRTable>;
+using LALRTranslationControl = LRTranslationControlTemplate<LALRTable>;
 
 }  // namespace ctf
 #endif

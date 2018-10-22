@@ -25,9 +25,6 @@ TEST_CASE("Rule construction", "[TranslationGrammar::Rule]") {
   REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t}, {}, {{0}}), std::invalid_argument);
   REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t, "X"_nt}, {"X"_nt}, {{0}}),
                     std::invalid_argument);
-  REQUIRE_THROWS_AS(Rule("NT"_nt, {Symbol::eof()}, {"x"_t}),
-                    std::invalid_argument);
-  REQUIRE_THROWS_AS(Rule("NT"_nt, {}, {Symbol::eof()}), std::invalid_argument);
   REQUIRE_THROWS_AS(Rule("NT"_nt, {"X"_nt, "Y"_nt}, {"Y"_nt, "X"_nt}),
                     std::invalid_argument);
 }
@@ -83,7 +80,7 @@ TEST_CASE("TranslationGrammar construction", "[TranslationGrammar]") {
   REQUIRE_NOTHROW(TranslationGrammar({}, "X"_nt));
   REQUIRE_NOTHROW(TranslationGrammar({{"X"_nt, {}}}, "X"_nt));
   REQUIRE_NOTHROW(TranslationGrammar(
-      {{"X"_nt, {"X"_nt, "X"_t}}, {"X"_nt, {"x"_t, "X"_t, "special"_s}}},
+      {{"X"_nt, {"X"_nt, "X"_t}}, {"X"_nt, {"x"_t, "X"_t}}},
       "X"_nt));
   REQUIRE_THROWS_AS(TranslationGrammar({}, {}, {}, "X"_nt),
                     std::invalid_argument);
@@ -98,7 +95,7 @@ TEST_CASE("TranslationGrammar construction", "[TranslationGrammar]") {
   REQUIRE_NOTHROW(TranslationGrammar(
       {"X"_nt},
       {"x"_t},
-      {{"X"_nt, {"X"_nt, "X"_nt}}, {"X"_nt, {"x"_t, "X"_nt, "special"_s}}},
+      {{"X"_nt, {"X"_nt, "X"_nt}}, {"X"_nt, {"x"_t, "X"_nt}}},
       "X"_nt));
 }
 TEST_CASE("TranslationGrammar basic", "[TranslationGrammar]") {
@@ -114,8 +111,8 @@ TEST_CASE("TranslationGrammar basic", "[TranslationGrammar]") {
           {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
       },
       "E"_nt};
-  vector<Symbol> expectedTerminals{"+"_t, "("_t, ")"_t, "*"_t, "i"_t};
-  vector<Symbol> expectedNonterminals{"E"_nt, "E'"_nt, "F"_nt, "T"_nt, "T'"_nt};
+  vector<Symbol> expectedTerminals{Symbol::eof(), "+"_t, "("_t, ")"_t, "*"_t, "i"_t};
+  vector<Symbol> expectedNonterminals{"E"_nt, "E'"_nt, "E''"_nt, "F"_nt, "T"_nt, "T'"_nt};
   std::sort(expectedTerminals.begin(), expectedTerminals.end());
   std::sort(expectedNonterminals.begin(), expectedNonterminals.end());
 

@@ -111,7 +111,6 @@ class LLGenericTable {
     for (size_t i = 0; i < tg.terminals().size(); ++i) {
       terminalMap_.insert(std::make_pair(tg.terminals()[i], i));
     }
-    terminalMap_.insert(std::make_pair(Symbol::eof(), tg.terminals().size()));
 
     /* fill table */
     for (size_t i = 0; i < tg.rules().size(); ++i) {
