@@ -12,7 +12,6 @@
 #include "ctf_table_sets.hpp"
 #include "ctf_translation_control.hpp"
 
-#include <iostream>
 namespace ctf {
 class LRTranslationControlGeneral : public TranslationControl {
  public:
@@ -176,10 +175,12 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
       for (auto workingTerminalIt = input_.crbegin();
            workingTerminalIt != input_.crend() &&
            workingTerminalIt->type() != Symbol::Type::NONTERMINAL;
-           ++tokenIt, ++workingTerminalIt, input_.pop_bottom()) {
+           ++tokenIt) {
         for (auto symbolIt : attributeActions.pop()) {
           symbolIt->set_attribute(*tokenIt);
         }
+        input_.pop_bottom();
+        workingTerminalIt = input_.crbegin();
       }
     }
   }

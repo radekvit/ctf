@@ -70,7 +70,8 @@ class TranslationGrammar {
               "More assigned actions than symbols in output when "
               "constructing class TranslationGrammar::Rule.");
         for (auto i : target) {
-          if (i > output_.size() || output_[i].type() == Symbol::Type::NONTERMINAL)
+          if (i > output_.size() ||
+              output_[i].type() == Symbol::Type::NONTERMINAL)
             throw std::invalid_argument(
                 "Attribute target not an output terminal when constructing "
                 "class TranslationGrammar::Rule.");

@@ -109,7 +109,7 @@ class LexicalAnalyzer {
       c = get();
     }
     if (c == std::char_traits<char>::eof()) {
-      return Symbol::eof();
+      return token_eof();
     }
 
     do {
@@ -184,7 +184,16 @@ class LexicalAnalyzer {
   \returns A terminal Symbol with the current stored location_.
   */
   Symbol token(const string& name, const Attribute& attr = Attribute{}) {
-    return Terminal(name, attr, location_);
+    return std::move(Terminal(name, attr, location_));
+  }
+
+  /**
+  \brief Constructs an EOI Symbol and inserts the current symbol location automatically.
+
+  \returns An EOI Symbol with the current stored location_.
+  */
+  Symbol token_eof() {
+    return std::move(Symbol(Symbol::Type::EOI, "", Attribute{}, location_));
   }
 
   /**

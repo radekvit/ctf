@@ -95,11 +95,14 @@ TEST_CASE("LALR empty translation", "[LALTTranslationControl]") {
   LexicalAnalyzer a;
   TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
   std::stringstream in;
+  std::stringstream err;
   InputReader r{in};
   a.set_reader(r);
   LALRTranslationControl lalr(a, tg);
+  lalr.set_error_stream(err);
   lalr.run();
   // only eof
+  std::cout << err.str() << "\n";
   REQUIRE(lalr.output().size() == 1);
   REQUIRE(lalr.output().top() == Symbol::eof());
 }

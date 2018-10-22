@@ -89,6 +89,7 @@ inline unordered_map<tuple<size_t, Symbol>, set<Symbol>> get_direct_reads(
       for (auto&& transitionPair : sm.transitions()[nextState]) {
         auto& nextSymbol = transitionPair.first;
         switch (auto type = nextSymbol.type(); type) {
+          case Symbol::Type::EOI:
           case Symbol::Type::TERMINAL:
             directReads[{state, symbol}].insert(nextSymbol);
             break;
