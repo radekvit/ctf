@@ -9,11 +9,9 @@
 #include <any>
 #include <ostream>
 #include <stdexcept>
+#include <mutex>
 
 #include "ctf_generic_types.hpp"
-#ifdef CTF_MULTITHREAD
-#include <mutex>
-#endif
 
 namespace ctf {
 
@@ -329,11 +327,9 @@ class Symbol {
   \param[in] name Name of constructed Symbol. Defaults to "". "" is only valid for Type::EOI.
   \param[in] atr Attribute of constructed Symbol.
   */
-  Symbol(Type type, const string& name = "") : type_(static_cast<unsigned char>(type)), id_(name_index(name)) {
+  Symbol(Type type, const string& name = "")
+      : type_(static_cast<unsigned char>(type)), id_(name_index(name)) {
     assert(type == Symbol::Type::EOI || name != "");
-#ifdef CTF_MULTITHREAD
-    name_ = name;
-#endif
   }
   /**
   \brief Default destructor.
@@ -351,19 +347,13 @@ class Symbol {
   /**
   \brief Returns a const reference to name.
   \returns A const reference to name.
-
-  May be invalidated by constructing a Symbol with a previously unused name.
   */
   const string& name() const {
     static const std::string eof = "EOF";
     if (type() == Type::EOI) {
       return eof;
     }
-#ifdef CTF_MULTITHREAD
-    return name_;
-#else
     return nameMap()[id_];
-#endif
   }
   /**
   \brief Returns the type of the symbol.
@@ -382,7 +372,6 @@ class Symbol {
   ///@{
   friend bool operator<(const Symbol& lhs, const Symbol& rhs) {
     static_assert(sizeof(Symbol) == sizeof(size_t), "Symbol must match size_t size");
-
     return reinterpret_cast<const size_t&>(lhs) < reinterpret_cast<const size_t&>(rhs);
   }
 
@@ -420,13 +409,6 @@ class Symbol {
   */
   size_t id_ : sizeof(size_t) * 8 - 2;
 
-#ifdef CTF_MULTITHREAD
-  /**
-  \brief Storing the name of the symbol for multithread applications.
-  */
-  string name_;
-#endif
-
   /**
   \brief Inserts a name into static maps and returns its index.
   */
@@ -445,7 +427,6 @@ class Symbol {
   }
 
  private:
-#ifdef CTF_MULTITHREAD
   /**
   \brief Gets the mutex for Symbol name insertion.
   */
@@ -453,13 +434,13 @@ class Symbol {
     static std::mutex nl;
     return nl;
   }
-#endif
+
   inline static unordered_map<string, size_t>& reverseNameMap() {
     static unordered_map<string, size_t> rnm;
     return rnm;
   }
-  inline static vector<string>& nameMap() {
-    static vector<string> nm;
+  inline static deque<string>& nameMap() {
+    static deque<string> nm;
     return nm;
   }
 };
@@ -509,9 +490,7 @@ class Token {
   */
   const Location& location() const { return location_; }
 
-  friend bool operator<(const Token& lhs, const Token& rhs) {
-    return lhs.symbol() < rhs.symbol();
-  }
+  friend bool operator<(const Token& lhs, const Token& rhs) { return lhs.symbol() < rhs.symbol(); }
 
   friend bool operator==(const Token& lhs, const Token& rhs) {
     return lhs.symbol() == rhs.symbol();
@@ -556,9 +535,7 @@ class Token {
 \param[in] attribute Attribute of returned Symbol. Defaults to "".
 \returns A Symbol with type Terminal, given name and given attribute.
 */
-inline Symbol Terminal(const string& name) {
-  return Symbol(Symbol::Type::TERMINAL, name);
-}
+inline Symbol Terminal(const string& name) { return Symbol(Symbol::Type::TERMINAL, name); }
 /**
 \brief Returns a Symbol with Type::Nonterminal, given name and attribute.
 \param[in] name Name of returned symbol.
