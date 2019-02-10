@@ -7,7 +7,7 @@ using Rule = TranslationGrammar::Rule;
 using ctf::lr0::Item;
 using ctf::lr0::State;
 using ctf::LR0StateMachine;
-using ctf::set;
+using ctf::vector_set;
 using ctf::vector;
 
 using namespace ctf::literals;
@@ -29,7 +29,7 @@ TEST_CASE("lr0::Item construction", "[lr0::Item]") {
 TEST_CASE("lr0::Item operations", "[lr0::Item]") {
   Item i{grammar.rules()[4], 0};
 
-  set<Item> requiredClosure{
+  vector_set<Item> requiredClosure{
       {grammar.rules()[0], 0},
       {grammar.rules()[1], 0},
       {grammar.rules()[2], 0},

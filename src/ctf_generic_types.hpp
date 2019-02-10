@@ -8,6 +8,7 @@ this project.
 #define CTF_GENERIC_TYPES_H
 
 #include <algorithm>
+#include <cassert>
 #include <functional>
 #include <list>
 #include <map>
@@ -47,8 +48,8 @@ faster.
 
 The API is the same as std::set.
 */
-template <typename T, class Compare = std::less<T>>
-class set {
+template <typename T, class Compare = std::less<T>, class Equals = std::equal_to<T>>
+class vector_set {
  public:
   using value_type = T;
   using size_type = size_t;
@@ -69,21 +70,23 @@ class set {
     iterator it;
   };
 
-  set() : compare_(Compare()) {}
-  explicit set(const Compare& compare) : compare_(compare) {}
-  set(std::initializer_list<T> il, const Compare& compare = Compare())
-      : elements_(il), compare_(compare) {
-    std::sort(elements_.begin(), elements_.end(), Compare());
-    auto newEnd = std::unique(elements_.begin(), elements_.end());
+  vector_set() : compare_(Compare()), equals_(Equals()) {}
+  explicit vector_set(const Compare& compare) : compare_(compare), equals_(Equals()) {}
+  vector_set(std::initializer_list<T> il,
+             const Compare& compare = Compare(),
+             const Equals& equals = Equals())
+      : elements_(il), compare_(compare), equals_(equals) {
+    std::sort(elements_.begin(), elements_.end(), compare_);
+    auto newEnd = std::unique(elements_.begin(), elements_.end(), equals_);
     elements_.erase(newEnd, elements_.end());
   }
 
-  set(const set&) = default;
-  set(set&&) = default;
+  vector_set(const vector_set&) = default;
+  vector_set(vector_set&&) = default;
 
-  set& operator=(const set&) = default;
-  // set& operator=(const set&&) noexcept = default;
-  set& operator=(std::initializer_list<T> il) {
+  vector_set& operator=(const vector_set&) = default;
+  vector_set& operator=(vector_set&&) = default;
+  vector_set& operator=(std::initializer_list<T> il) {
     elements_ = il;
     std::sort(elements_.begin(), elements_.end(), Compare());
     auto newEnd = std::unique(elements_.begin(), elements_.end());
@@ -114,9 +117,15 @@ class set {
 
   void clear() noexcept { elements_.clear(); }
 
+  void shrink_to_fit() { elements_.shrink_to_fit(); }
+
+  T& operator[](size_t i) & noexcept { return elements_[i]; }
+  const T& operator[](size_t i) const& noexcept { return elements_[i]; }
+  T&& operator[](size_t i) && noexcept { return std::move(elements_[i]); }
+
   insert_return_type insert(const T& element) {
     auto it = lower_bound(element);
-    if (it == elements_.end() || !equals(*it, element)) {
+    if (it == elements_.end() || !equals_(*it, element)) {
       return {true, elements_.insert(it, element)};
     }
     return {false, elements_.end()};
@@ -124,7 +133,7 @@ class set {
 
   insert_return_type insert(T&& element) {
     auto it = lower_bound(element);
-    if (it == elements_.end() || !equals(*it, element)) {
+    if (it == elements_.end() || !equals_(*it, element)) {
       return {true, elements_.insert(it, element)};
     }
     return {false, elements_.end()};
@@ -132,7 +141,7 @@ class set {
 
   bool erase(const T& element) noexcept {
     auto it = lower_bound(element);
-    if (it == elements_.end() || !equals(*it, element)) {
+    if (it == elements_.end() || !equals_(*it, element)) {
       return false;
     }
     elements_.erase(it);
@@ -141,100 +150,96 @@ class set {
 
   void erase(iterator it) { elements_.erase(it); }
 
-  void swap(set& other) {
+  void swap(vector_set& other) {
     elements_.swap(other.elements_);
     std::swap(compare_, other.compare_);
   }
 
   bool contains(const T& element) const noexcept {
     auto it = lower_bound(element);
-    return it != elements_.end() && equals(*it, element);
+    return it != elements_.end() && equals_(*it, element);
   }
 
   size_t count(const T& element) noexcept { return find(element) ? 1 : 0; }
 
   iterator find(const T& element) noexcept {
     auto it = lower_bound(element);
-    if (it != end() && equals(*it, element))
+    if (it != end() && equals_(*it, element))
       return it;
     return end();
   }
 
   const_iterator find(const T& element) const noexcept {
     auto it = lower_bound(element);
-    if (it != end() && equals(*it, element))
+    if (it != end() && equals_(*it, element))
       return it;
     return end();
   }
 
   iterator lower_bound(const T& element) noexcept {
-    return std::lower_bound(begin(), end(), element);
+    return std::lower_bound(begin(), end(), element, compare_);
   }
 
   const_iterator lower_bound(const T& element) const noexcept {
-    return std::lower_bound(begin(), end(), element);
+    return std::lower_bound(begin(), end(), element, compare_);
   }
 
   iterator upper_bound(const T& element) noexcept {
-    return std::upper_bound(begin(), end(), element);
+    return std::upper_bound(begin(), end(), element, compare_);
   }
 
   const_iterator upper_bound(const T& element) const noexcept {
-    return std::upper_bound(begin(), end(), element);
+    return std::upper_bound(begin(), end(), element, compare_);
   }
 
-  Compare& compare() { return compare_; }
-
-  friend bool operator==(const set& lhs, const set& rhs) {
+  friend bool operator==(const vector_set& lhs, const vector_set& rhs) {
     return lhs.elements_ == rhs.elements_;
   }
-  friend bool operator!=(const set& lhs, const set& rhs) {
-    return !(lhs == rhs);
-  }
-  friend bool operator<=(const set& lhs, const set& rhs) {
+  friend bool operator!=(const vector_set& lhs, const vector_set& rhs) { return !(lhs == rhs); }
+  friend bool operator<=(const vector_set& lhs, const vector_set& rhs) {
     for (auto&& e : lhs.elements_) {
       if (!rhs.contains(e))
         return false;
     }
     return true;
   }
-  friend bool operator>=(const set& lhs, const set& rhs) { return rhs <= lhs; }
-  friend bool operator<(const set& lhs, const set& rhs) {
+  friend bool operator>=(const vector_set& lhs, const vector_set& rhs) { return rhs <= lhs; }
+  friend bool operator<(const vector_set& lhs, const vector_set& rhs) {
     return lhs <= rhs && lhs != rhs;
   }
-  friend bool operator>(const set& lhs, const set& rhs) { return rhs < lhs; }
+  friend bool operator>(const vector_set& lhs, const vector_set& rhs) { return rhs < lhs; }
 
-  friend bool subset(const set& lhs, const set& rhs) { return lhs <= rhs; }
-  friend bool proper_subset(const set& lhs, const set& rhs) {
-    return lhs < rhs;
-  }
-  friend bool disjoint(const set& lhs, const set& rhs) {
+  friend bool subset(const vector_set& lhs, const vector_set& rhs) { return lhs <= rhs; }
+  friend bool proper_subset(const vector_set& lhs, const vector_set& rhs) { return lhs < rhs; }
+  friend bool disjoint(const vector_set& lhs, const vector_set& rhs) {
     return !(lhs <= rhs) && !(lhs >= rhs);
   }
 
-  friend set set_union(const set& lhs, const set& rhs) {
+  friend vector_set set_union(const vector_set& lhs, const vector_set& rhs) {
     vector<T> vec;
     vec.reserve(lhs.size() + rhs.size());
     std::set_union(lhs.begin(),
                    lhs.end(),
                    rhs.begin(),
                    rhs.end(),
-                   std::back_inserter<vector<T>>(vec));
-    return set(vec, lhs.compare_);
+                   std::back_inserter<vector<T>>(vec),
+                   lhs.compare_);
+    return vector_set(vec, lhs.compare_, lhs.equals_);
   }
 
-  friend set set_intersection(const set& lhs, const set& rhs) {
+  friend vector_set set_intersection(const vector_set& lhs, const vector_set& rhs) {
     vector<T> vec;
     vec.reserve(lhs.size());
     std::set_intersection(lhs.begin(),
                           lhs.end(),
                           rhs.begin(),
                           rhs.end(),
-                          std::back_inserter<vector<T>>(vec));
-    return set(vec, lhs.compare_);
+                          std::back_inserter<vector<T>>(vec),
+                          lhs.compare_);
+    return vector_set(vec, lhs.compare_, lhs.equals_);
   }
 
-  bool modify_set_union(const set& other) {
+  bool modify_set_union(const vector_set& other) {
     size_type oldSize = size();
     *this = set_union(*this, other);
     return oldSize != size();
@@ -244,13 +249,12 @@ class set {
   vector<T> elements_;
 
   Compare compare_;
+  Equals equals_;
 
-  set(vector<T>& vec, Compare compare) : elements_(vec), compare_(compare) {}
-  set(vector<T>&& vec, Compare&& compare) : elements_(vec), compare_(compare) {}
-
-  bool equals(const T& lhs, const T& rhs) const {
-    return !compare_(lhs, rhs) && !compare_(rhs, lhs);
-  }
+  vector_set(vector<T>& vec, Compare compare, Equals equals)
+      : elements_(vec), compare_(compare), equals_(equals) {}
+  vector_set(vector<T>&& vec, Compare&& compare, Equals&& equals)
+      : elements_(vec), compare_(compare), equals_(equals) {}
 };
 
 /**
@@ -360,8 +364,9 @@ class tstack {
   */
   iterator search(const T& target,
                   iterator from,
-                  bool (*predicate)(const T&, const T&) =
-                      [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
+                  bool (*predicate)(const T&, const T&) = [](auto& lhs, auto& rhs) {
+                    return lhs == rhs;
+                  }) {
     iterator it;
     for (it = from; it != list_.end(); ++it) {
       if (predicate(*it, target))
@@ -382,8 +387,7 @@ class tstack {
   */
   const_iterator search(const T& target,
                         const_iterator from,
-                        bool (*predicate)(const T&, const T&) = [](auto& lhs,
-                                                                   auto& rhs) {
+                        bool (*predicate)(const T&, const T&) = [](auto& lhs, auto& rhs) {
                           return lhs == rhs;
                         }) const {
     const_iterator it;
@@ -404,8 +408,9 @@ class tstack {
   equal to tstack::end().
   */
   iterator search(const T& target,
-                  bool (*predicate)(const T&, const T&) =
-                      [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
+                  bool (*predicate)(const T&, const T&) = [](auto& lhs, auto& rhs) {
+                    return lhs == rhs;
+                  }) {
     return search(target, begin(), predicate);
   }
   /**
@@ -419,8 +424,7 @@ class tstack {
   equal to tstack::cend().
   */
   const_iterator search(const T& target,
-                        bool (*predicate)(const T&, const T&) = [](auto& lhs,
-                                                                   auto& rhs) {
+                        bool (*predicate)(const T&, const T&) = [](auto& lhs, auto& rhs) {
                           return lhs == rhs;
                         }) const {
     return search(target, begin(), predicate);
@@ -438,8 +442,9 @@ class tstack {
   */
   iterator search_last(const T& target,
                        iterator from,
-                       bool (*predicate)(const T&, const T&) =
-                           [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
+                       bool (*predicate)(const T&, const T&) = [](auto& lhs, auto& rhs) {
+                         return lhs == rhs;
+                       }) {
     iterator it;
     for (it = from; it != list_.begin(); --it) {
       if (predicate(*it, target))
@@ -462,10 +467,9 @@ class tstack {
   */
   const_iterator search_last(const T& target,
                              const_iterator from,
-                             bool (*predicate)(const T&, const T&) =
-                                 [](auto& lhs, auto& rhs) {
-                                   return lhs == rhs;
-                                 }) const {
+                             bool (*predicate)(const T&, const T&) = [](auto& lhs, auto& rhs) {
+                               return lhs == rhs;
+                             }) const {
     const_iterator it;
     for (it = from; it != list_.cbegin(); --it) {
       if (predicate(*it, target))
@@ -485,8 +489,9 @@ class tstack {
   element fits the criteria, the returned iterator is equal to tstack::end().
   */
   iterator search_last(const T& target,
-                       bool (*predicate)(const T&, const T&) =
-                           [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
+                       bool (*predicate)(const T&, const T&) = [](auto& lhs, auto& rhs) {
+                         return lhs == rhs;
+                       }) {
     if (begin() == end())
       return end();
     return search(target, --end(), predicate);
@@ -502,10 +507,9 @@ class tstack {
   tstack::cend().
   */
   const_iterator search_last(const T& target,
-                             bool (*predicate)(const T&, const T&) =
-                                 [](auto& lhs, auto& rhs) {
-                                   return lhs == rhs;
-                                 }) const {
+                             bool (*predicate)(const T&, const T&) = [](auto& lhs, auto& rhs) {
+                               return lhs == rhs;
+                             }) const {
     if (begin() == end())
       return end();
     return search(target, --end(), predicate);
@@ -564,8 +568,9 @@ class tstack {
   template <class TS>
   iterator replace(const T& target,
                    const TS& string,
-                   bool (*predicate)(const T&, const T&) =
-                       [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
+                   bool (*predicate)(const T&, const T&) = [](auto& lhs, auto& rhs) {
+                     return lhs == rhs;
+                   }) {
     return replace(search(target, predicate), string).begin;
   }
   /**
@@ -589,8 +594,9 @@ class tstack {
   iterator replace(const T& target,
                    const TS& string,
                    iterator from,
-                   bool (*predicate)(const T&, const T&) =
-                       [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
+                   bool (*predicate)(const T&, const T&) = [](auto& lhs, auto& rhs) {
+                     return lhs == rhs;
+                   }) {
     return replace(search(target, from, predicate), string).begin;
   }
   /**
@@ -613,8 +619,9 @@ class tstack {
   template <class TS>
   iterator replace_last(const T& target,
                         const TS& string,
-                        bool (*predicate)(const T&, const T&) =
-                            [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
+                        bool (*predicate)(const T&, const T&) = [](auto& lhs, auto& rhs) {
+                          return lhs == rhs;
+                        }) {
     return replace(search_last(target, predicate), string).end;
   }
   /**
@@ -638,8 +645,9 @@ class tstack {
   iterator replace_last(const T& target,
                         const TS& string,
                         iterator from,
-                        bool (*predicate)(const T&, const T&) =
-                            [](auto& lhs, auto& rhs) { return lhs == rhs; }) {
+                        bool (*predicate)(const T&, const T&) = [](auto& lhs, auto& rhs) {
+                          return lhs == rhs;
+                        }) {
     return replace(search_last(target, from, predicate), string).end;
   }
   /**
@@ -728,9 +736,7 @@ class tstack {
   friend bool operator<=(const tstack<T>& lhs, const tstack<T>& rhs) noexcept {
     return lhs == rhs || lhs < rhs;
   }
-  friend bool operator>=(const tstack<T>& lhs, const tstack<T>& rhs) noexcept {
-    return rhs <= lhs;
-  }
+  friend bool operator>=(const tstack<T>& lhs, const tstack<T>& rhs) noexcept { return rhs <= lhs; }
   ///@}
 
  protected:

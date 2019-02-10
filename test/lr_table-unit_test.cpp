@@ -35,5 +35,6 @@ TEST_CASE("SLRTable base", "[SLRTable]") {
   REQUIRE(table.lr_action(state, Symbol::eof()).type == LRActionType::REDUCE);
 
   state = table.lr_goto(0, "S"_nt);
+  state = table.lr_action(state, Symbol::eof()).argument;
   REQUIRE(table.lr_action(state, Symbol::eof()).type == LRActionType::SUCCESS);
 }

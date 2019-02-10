@@ -32,9 +32,7 @@ class InputReader {
   \param[in] is The input stream to be used by InputReader.
   \param[in] streamName The name of the input stream.
   */
-  InputReader(std::istream& is, const string& streamName = "") {
-    set_stream(is, streamName);
-  }
+  InputReader(std::istream& is, const string& streamName = "") { set_stream(is, streamName); }
 
   /**
   \brief Returns a pointer to the assigned stream.
@@ -204,9 +202,7 @@ class InputReader {
 
     \returns A vector of all characters on that row.
     */
-    string get_line(size_t row) const {
-      return {line_begin(row - 1), line_end(row - 1)};
-    }
+    string get_line(size_t row) const { return {line_begin(row - 1), line_end(row - 1)}; }
 
     /**
     \brief Returns a line of characters. The line is extracted from the location
@@ -216,17 +212,13 @@ class InputReader {
 
     \returns A vector of all characters on the row in location.
     */
-    string get_line(const Location& location) const {
-      return get_line(location.row);
-    }
+    string get_line(const Location& location) const { return get_line(location.row); }
     /**
     \brief Get the whole input as a string.
 
     \returns A string containing all read characters.
     */
-    string get_all() const {
-      return transform<vector<char>, string>(charBuffer_);
-    }
+    string get_all() const { return transform<vector<char>, string>(charBuffer_); }
     /**
     \brief Returns the location after n-character rollback from a previous
     location.
@@ -239,8 +231,7 @@ class InputReader {
     If the rollback is more characters than has been read, the location of the
     first character in the buffer is returned.
     */
-    Location unget(const Location& location, size_t rollback = 1) const
-        noexcept {
+    Location unget(const Location& location, size_t rollback = 1) const noexcept {
       const auto begin = lineStartBuffer_.begin();
       // index of rolled back character
       size_t index = character(location) - rollback - charBuffer_.begin();
@@ -249,8 +240,7 @@ class InputReader {
         return Location{location.fileName};
       }
       // find first line after the current
-      auto it = std::upper_bound(
-          lineStartBuffer_.begin(), lineStartBuffer_.end(), index);
+      auto it = std::upper_bound(lineStartBuffer_.begin(), lineStartBuffer_.end(), index);
       --it;
       return {uint64_t(it - begin) + 1, index - *it + 1, location.fileName};
     }
@@ -352,8 +342,7 @@ class InputReader {
     */
     vector<char>::const_iterator line_end(size_t line) const noexcept {
       // no next line info, ends at end of buffer
-      if (line == std::numeric_limits<size_t>::max() ||
-          line + 1 >= lineStartBuffer_.size()) {
+      if (line == std::numeric_limits<size_t>::max() || line + 1 >= lineStartBuffer_.size()) {
         return charBuffer_.cend();
       }
       // ends at beginning of next line

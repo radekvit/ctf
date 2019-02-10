@@ -44,9 +44,7 @@ class LexicalAnalyzer {
   \returns True when the lexical analyzer is ready to receive input. False
   otherwise.
   */
-  bool has_input() const noexcept {
-    return reader_ != nullptr && reader_->stream() != nullptr;
-  }
+  bool has_input() const noexcept { return reader_ != nullptr && reader_->stream() != nullptr; }
   /**
   \brief Sets the reader.
 
@@ -81,7 +79,7 @@ class LexicalAnalyzer {
   \returns A token from the input stream.
   */
   Symbol get_token() {
-    location_ = Location::invalid();
+    reset_location();
     return read_token();
   }
 
@@ -106,8 +104,10 @@ class LexicalAnalyzer {
     // first character
     int c = get();
     while (std::isspace(c)) {
+      reset_location();
       c = get();
     }
+
     if (c == std::char_traits<char>::eof()) {
       return token_eof();
     }
@@ -188,13 +188,12 @@ class LexicalAnalyzer {
   }
 
   /**
-  \brief Constructs an EOI Symbol and inserts the current symbol location automatically.
+  \brief Constructs an EOI Symbol and inserts the current symbol location
+  automatically.
 
   \returns An EOI Symbol with the current stored location_.
   */
-  Symbol token_eof() {
-    return std::move(Symbol(Symbol::Type::EOI, "", Attribute{}, location_));
-  }
+  Symbol token_eof() { return std::move(Symbol(Symbol::Type::EOI, "", Attribute{}, location_)); }
 
   /**
   \brief Returns a reference to the error flag.
@@ -220,8 +219,7 @@ class LexicalAnalyzer {
   */
   std::ostream& err() {
     if (!error_) {
-      throw std::runtime_error(
-          "ctf::OutputGenerator::err() error stream not set.");
+      throw std::runtime_error("ctf::OutputGenerator::err() error stream not set.");
     }
     return *error_;
   }

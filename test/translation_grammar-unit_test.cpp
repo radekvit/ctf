@@ -5,7 +5,7 @@
 #include "../src/ctf_translation_grammar.hpp"
 
 using ctf::vector;
-using ctf::set;
+using ctf::vector_set;
 using ctf::Symbol;
 using ctf::TranslationGrammar;
 using Rule = ctf::TranslationGrammar::Rule;
@@ -17,7 +17,7 @@ TEST_CASE("Rule construction", "[TranslationGrammar::Rule]") {
   REQUIRE_NOTHROW(Rule("NT"_nt, {"x"_t, "y"_t}));
   REQUIRE_NOTHROW(Rule("NT"_nt, {"X"_nt, "X"_nt, "x"_t}));
   REQUIRE(Rule("NT"_nt, {"X"_nt, "X"_nt, "x"_t}).actions() ==
-          vector<set<size_t>>{{2}});
+          vector<vector_set<size_t>>{{2}});
   REQUIRE_NOTHROW(Rule("NT"_nt, {"x"_t, "y"_t}, {"y"_t, "y"_t}, {{}, {0, 1}}));
 
   REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t}, {}, {{}, {}}),
@@ -34,7 +34,7 @@ TEST_CASE("Rule basics", "[TranslationGrammar::Rule]") {
             {"a"_t, "A"_nt, "B"_nt, "b"_t},
             {"A"_nt, "b"_t, "a"_t, "B"_nt},
             {{1}, {2}});
-  vector<set<size_t>> expectedActions{{1}, {2}};
+  vector<vector_set<size_t>> expectedActions{{1}, {2}};
   REQUIRE(rule.actions() == expectedActions);
   REQUIRE(rule.nonterminal() == "NT"_nt);
   vector<Symbol> expectedIn{"a"_t, "A"_nt, "B"_nt, "b"_t};

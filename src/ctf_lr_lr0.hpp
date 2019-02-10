@@ -12,8 +12,13 @@ class Item {
   using Rule = TranslationGrammar::Rule;
 
   Item(const Rule& rule, size_t mark) : rule_(&rule), mark_(mark) {}
+  Item(const Item& item) = default;
+  Item(Item&& item) = default;
 
-  const set<Item>& closure(const TranslationGrammar& grammar) const {
+  Item& operator=(const Item& other) = default;
+  Item& operator=(Item&& other) = default;
+
+  const vector_set<Item>& closure(const TranslationGrammar& grammar) const {
     // already calculated closure
     if (closure_.size() != 0) {
       return closure_;
@@ -25,15 +30,14 @@ class Item {
       return closure_;
     }
 
-    set<Symbol> expandedNonterminals;
-    set<Item> items{closure_};
-    set<Item> newItems;
+    vector_set<Symbol> expandedNonterminals;
+    vector_set<Item> items{closure_};
+    vector_set<Item> newItems;
     while (!items.empty()) {
       // expand all new items for nonterminals we haven't expanded yet
       for (auto&& item : items) {
         const auto& input = item.rule().input();
-        if (item.mark() != input.size() &&
-            input[item.mark()].type() == Symbol::Type::NONTERMINAL &&
+        if (item.mark() != input.size() && input[item.mark()].type() == Symbol::Type::NONTERMINAL &&
             !expandedNonterminals.contains(input[item.mark()])) {
           const auto& nonterminal = input[item.mark()];
           expandedNonterminals.insert(nonterminal);
@@ -57,24 +61,45 @@ class Item {
   const Rule& rule() const noexcept { return *rule_; }
   size_t mark() const noexcept { return mark_; }
 
+  bool reduce() const noexcept { return mark() == rule().input().size(); }
+  bool has_next() const noexcept { return mark() < rule().input().size(); }
+
+  Item next() const noexcept { return Item(rule(), mark() + 1); }
+
   friend bool operator<(const Item& lhs, const Item& rhs) {
-    return *lhs.rule_ < *rhs.rule_ ||
-           (*lhs.rule_ == *rhs.rule_ && lhs.mark_ < rhs.mark_);
+    return *lhs.rule_ < *rhs.rule_ || (*lhs.rule_ == *rhs.rule_ && lhs.mark_ < rhs.mark_);
   }
 
   friend bool operator==(const Item& lhs, const Item& rhs) {
-    return lhs.mark_ == rhs.mark_ &&
-           (lhs.rule_ == rhs.rule_ || *lhs.rule_ == *rhs.rule_);
+    return lhs.mark_ == rhs.mark_ && (lhs.rule_ == rhs.rule_ || *lhs.rule_ == *rhs.rule_);
   }
+
+  string to_string() const {
+    string result = rule().nonterminal().to_string() + " -> (";
+    size_t i = 0;
+    for (; i < mark(); ++i) {
+      result += ' ';
+      result += rule().input()[i].to_string();
+    }
+    result += " .";
+    for (; i < rule().input().size(); ++i) {
+      result += ' ';
+      result += rule().input()[i].to_string();
+    }
+    result += " )";
+    return result;
+  }
+
+  explicit operator string() const { return to_string(); }
 
  private:
   const Rule* rule_;
   size_t mark_;
 
-  mutable set<Item> closure_;
+  mutable vector_set<Item> closure_;
 };
 
-using State = set<Item>;
+using State = vector_set<Item>;
 
 }  // namespace ctf::lr0
 
@@ -102,13 +127,11 @@ class LR0StateMachine {
   }
 
   const vector<lr0::State>& states() const { return states_; }
-  const vector<unordered_map<Symbol, size_t>>& transitions() const {
-    return transitions_;
-  }
+  const vector<unordered_map<Symbol, size_t>>& transitions() const { return transitions_; }
 
  protected:
-  unordered_map<Symbol, lr0::State> next_states(
-      const TranslationGrammar& grammar, const lr0::State& state) {
+  unordered_map<Symbol, lr0::State> next_states(const TranslationGrammar& grammar,
+                                                const lr0::State& state) {
     unordered_map<Symbol, lr0::State> result;
 
     for (auto&& item : state) {

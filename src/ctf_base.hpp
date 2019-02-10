@@ -38,16 +38,15 @@ class Attribute {
   */
   Attribute(Attribute&&) noexcept = default;
   /**
-  \brief Constructs Attribute from a rvalue reference.
+  \brief Constructs Attribute from a reference to T.
 
   \tparam T The type of stored object.
   */
-  template <typename T,
-            typename = typename std::enable_if<
-                !std::is_same<typename std::remove_reference<T>::type,
-                              Attribute>::value &&
-                !std::is_same<typename std::remove_reference<T>::type,
-                              const Attribute>::value>::type>
+  template <
+      typename T,
+      typename = typename std::enable_if<
+          !std::is_same<typename std::remove_reference<T>::type, Attribute>::value &&
+          !std::is_same<typename std::remove_reference<T>::type, const Attribute>::value>::type>
   Attribute(T&& arg) : storage_(arg) {}
 
   /**
@@ -164,8 +163,7 @@ class Attribute {
 
   /**
   \name Comparison operators
-  \brief If compared to the same type, it compares the contents of Attribute to
-  the other value.
+  \brief If compared to the same type, it compares the contents of Attribute to the other value.
 
   \returns True when the operands are of the same type and they are equal.
   */
@@ -196,8 +194,8 @@ class TranslationException : public std::runtime_error {
 /**
 \brief POD struct holding location coordinates.
 
-Valid row and col numbers start at 1. Zero value row or col values are equal to
-the invalid() constant.
+Valid row and col numbers start at 1. Zero value row or col values are equal to the invalid()
+constant.
 **/
 struct Location {
   /**
@@ -222,18 +220,15 @@ struct Location {
   */
   Location(uint64_t _row, uint64_t _col, string _fileName = "")
       : row(_row), col(_col), fileName(_fileName) {
-    if (row == 0 || col == 0) {
-      throw std::invalid_argument(
-          "ctf::Location constructed with row or col with value 0.");
-    }
+    assert(row != 0);
+    assert(col != 0);
   }
   /**
   \brief Implicit first location constructor.
 
   \param[in] _fileName The name of the source file.
   */
-  explicit Location(string _fileName = "")
-      : row(1), col(1), fileName(_fileName) {}
+  explicit Location(string _fileName = "") : row(1), col(1), fileName(_fileName) {}
   Location(const Location&) = default;
   Location(Location&&) noexcept = default;
   ~Location() = default;
@@ -277,9 +272,7 @@ struct Location {
   True
   otherwise.
   */
-  friend bool operator!=(const Location& lhs, const Location& rhs) {
-    return !(lhs == rhs);
-  }
+  friend bool operator!=(const Location& lhs, const Location& rhs) { return !(lhs == rhs); }
 
   /**
   \brief Creates a string from this Location.
@@ -295,6 +288,11 @@ struct Location {
 
   explicit operator string() const { return to_string(); }
 
+  friend std::ostream& operator<<(std::ostream& os, const Location& location) {
+    os << location.to_string();
+    return os;
+  }
+
  private:
   /**
   \brief Constructs an invalid Location.
@@ -303,8 +301,8 @@ struct Location {
 };
 
 /**
-\brief A single symbol in the translation process. May represent a Terminal,
-Nonterminal or end of input.
+\brief A single symbol in the translation process. May represent a Terminal, Nonterminal or end of
+input.
 */
 class Symbol {
  public:
@@ -313,28 +311,22 @@ class Symbol {
   */
   enum class Type : unsigned char {
     /**
-    \brief Undefined type
+    \brief Nonterminal symbol
     */
-    UNKNOWN,
+    NONTERMINAL = 0,
     /**
     \brief Terminal symbol
     */
-    TERMINAL,
-    /**
-    \brief Nonterminal symbol
-    */
-    NONTERMINAL,
+    TERMINAL = 1,
     /**
     \brief End of input
     */
-    EOI,
+    EOI = 3,
   };
   /**
-  \brief Constructs a Symbol with a given type. If specified, sets Symbol's name
-  and attribute.
+  \brief Constructs a Symbol with a given type. If specified, sets Symbol's name and attribute.
   \param[in] type Type of constructed Symbol.
-  \param[in] name Name of constructed Symbol. Defaults to "". "" is only valid
-  for Type::EOI.
+  \param[in] name Name of constructed Symbol. Defaults to "". "" is only valid for Type::EOI.
   \param[in] atr Attribute of constructed Symbol.
   */
   Symbol(Type type,
@@ -342,23 +334,11 @@ class Symbol {
          const Attribute& atr = Attribute{},
          const Location& loc = Location::invalid())
       : type_(type), id_(name_index(name)), attribute_(atr), location_(loc) {
-    if (type != Symbol::Type::EOI && name == "")
-      throw std::invalid_argument(
-          "Empty name when constructing non-EOI Symbol.");
+    assert(type == Symbol::Type::EOI || name != "");
 #ifdef CTF_MULTITHREAD
     name_ = name;
 #endif
   }
-  /**
-  \brief Constructs a Symbol with unspecified type. Sets Symbol's name and if
-  specified, sets attribute.
-  \param[in] name Name of constructed Symbol.
-  \param[in] atr Attribute of constructed Symbol. Defaults to "".
-  */
-  Symbol(const string& name,
-         const Attribute& atr = Attribute{},
-         const Location& loc = Location::invalid())
-      : Symbol(Type::UNKNOWN, name, atr, loc) {}
   /**
   \brief Default destructor.
   */
@@ -429,30 +409,32 @@ class Symbol {
   */
   ///@{
   friend bool operator<(const Symbol& lhs, const Symbol& rhs) {
-    return lhs.type_ < rhs.type_ ||
-           (lhs.type_ == rhs.type_ && lhs.id_ < rhs.id_);
+    return lhs.type_ < rhs.type_ || (lhs.type_ == rhs.type_ && lhs.id_ < rhs.id_);
   }
 
   friend bool operator==(const Symbol& lhs, const Symbol& rhs) {
     return lhs.type_ == rhs.type_ && lhs.id_ == rhs.id_;
   }
 
-  friend bool operator!=(const Symbol& lhs, const Symbol& rhs) {
-    return !(lhs == rhs);
-  }
+  friend bool operator!=(const Symbol& lhs, const Symbol& rhs) { return !(lhs == rhs); }
 
-  friend bool operator>(const Symbol& lhs, const Symbol& rhs) {
-    return rhs < lhs;
-  }
+  friend bool operator>(const Symbol& lhs, const Symbol& rhs) { return rhs < lhs; }
 
-  friend bool operator<=(const Symbol& lhs, const Symbol& rhs) {
-    return lhs == rhs || lhs < rhs;
-  }
+  friend bool operator<=(const Symbol& lhs, const Symbol& rhs) { return lhs == rhs || lhs < rhs; }
 
-  friend bool operator>=(const Symbol& lhs, const Symbol& rhs) {
-    return rhs <= lhs;
-  }
+  friend bool operator>=(const Symbol& lhs, const Symbol& rhs) { return rhs <= lhs; }
   ///@}
+
+  string to_string() const {
+    using namespace std::literals;
+
+    if (type() == Type::EOI) {
+      return "Symbol::eof()";
+    }
+    return "\""s + name() + "\"" + (type() == Type::NONTERMINAL ? "_nt" : "_t");
+  }
+
+  explicit operator std::string() const { return to_string(); }
 
  protected:
   /**
@@ -531,9 +513,7 @@ inline Symbol Terminal(const string& name,
 \param[in] name Name of returned symbol.
 \returns A Symbol with type Nonterminal and given name.
 */
-inline Symbol Nonterminal(const string& name) {
-  return Symbol(Symbol::Type::NONTERMINAL, name);
-}
+inline Symbol Nonterminal(const string& name) { return Symbol(Symbol::Type::NONTERMINAL, name); }
 #ifndef CTF_NO_QUOTE_OPERATORS
 inline namespace literals {
 /**
@@ -554,9 +534,7 @@ inline Symbol operator""_nt(const char* s, size_t) { return Nonterminal({s}); }
 }  // namespace ctf
 
 namespace std {
-inline void swap(ctf::Attribute& lhs, ctf::Attribute& rhs) noexcept {
-  lhs.swap(rhs);
-}
+inline void swap(ctf::Attribute& lhs, ctf::Attribute& rhs) noexcept { lhs.swap(rhs); }
 
 template <>
 struct hash<ctf::Symbol> {

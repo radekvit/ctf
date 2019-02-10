@@ -50,18 +50,14 @@ class TranslationControl {
 
   \param[in] la LexicalAnalyzer to be set.
   */
-  virtual void set_lexical_analyzer(LexicalAnalyzer& la) {
-    lexicalAnalyzer_ = &la;
-  }
+  virtual void set_lexical_analyzer(LexicalAnalyzer& la) { lexicalAnalyzer_ = &la; }
 
   /**
   \brief Sets translation grammar.
 
   \param[in] tg Translation grammar to be set.
   */
-  virtual void set_grammar(const TranslationGrammar& tg) {
-    translationGrammar_ = &tg;
-  }
+  virtual void set_grammar(const TranslationGrammar& tg) { translationGrammar_ = &tg; }
 
   /**
   \brief Set the error stream.
@@ -123,8 +119,7 @@ class TranslationControl {
   */
   std::ostream& err() {
     if (!error_) {
-      throw std::runtime_error(
-          "ctf::TranslationControl::err() error stream not set.");
+      throw std::runtime_error("ctf::TranslationControl::err() error stream not set.");
     }
     return *error_;
   }

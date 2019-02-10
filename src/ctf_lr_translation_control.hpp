@@ -6,6 +6,7 @@
 #ifndef CTF_LR_TRANSLATION_CONTROL_H
 #define CTF_LR_TRANSLATION_CONTROL_H
 
+#include <iostream>
 #include "ctf_lr_lalr.hpp"
 #include "ctf_lr_lr0.hpp"
 #include "ctf_lr_table.hpp"
@@ -48,11 +49,10 @@ class LRTranslationControlGeneral : public TranslationControl {
 
   The added iterators point to input terminal attribute targets.
   */
-  void create_attibute_actions(
-      tstack<Symbol>::iterator obegin,
-      const vector<set<size_t>>& targets,
-      size_t outputSize,
-      tstack<vector<tstack<Symbol>::iterator>>& attributeActions) {
+  void create_attibute_actions(tstack<Symbol>::iterator obegin,
+                               const vector<vector_set<size_t>>& targets,
+                               size_t outputSize,
+                               tstack<vector<tstack<Symbol>::iterator>>& attributeActions) {
     for (auto& target : targets) {
       vector<tstack<Symbol>::iterator> iterators;
       for (auto& i : target) {
@@ -162,14 +162,12 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     output_.push(translationGrammar_->starting_symbol());
 
     auto obegin = output_.begin();
-
     auto tokenIt = tokens_.crbegin();
     for (auto&& ruleIndex : reverse(appliedRules)) {
       auto& rule = translationGrammar_->rules()[ruleIndex];
       input_.replace_last(rule.nonterminal(), rule.input());
       obegin = output_.replace_last(rule.nonterminal(), rule.output(), obegin);
-      create_attibute_actions(
-          obegin, rule.actions(), rule.output().size(), attributeActions);
+      create_attibute_actions(obegin, rule.actions(), rule.output().size(), attributeActions);
 
       // apply attribute actions for all current rightmost terminals
       for (auto workingTerminalIt = input_.crbegin();
@@ -177,12 +175,14 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
            workingTerminalIt->type() != Symbol::Type::NONTERMINAL;
            ++tokenIt) {
         for (auto symbolIt : attributeActions.pop()) {
+          std::cout << "setting location: " << tokenIt->location().to_string() << "\n";
           symbolIt->set_attribute(*tokenIt);
         }
         input_.pop_bottom();
         workingTerminalIt = input_.crbegin();
       }
     }
+    assert(attributeActions.empty());
   }
 
   /**

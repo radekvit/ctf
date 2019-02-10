@@ -11,12 +11,10 @@ using namespace std::string_literals;
 
 TEST_CASE("Symbol Construction", "[Symbol]") {
   using ctf::Symbol;
-  Symbol s(Symbol::Type::UNKNOWN, "name", "a"s);
-  REQUIRE(s.type() == Symbol::Type::UNKNOWN);
+  Symbol s(Symbol::Type::TERMINAL, "name", "a"s);
+  REQUIRE(s.type() == Symbol::Type::TERMINAL);
   REQUIRE(s.name() == "name");
   REQUIRE(s.attribute() == "a"s);
-
-  REQUIRE_THROWS_AS(s = Symbol(""), std::invalid_argument);
 
   using namespace ctf::literals;
   using ctf::Attribute;
@@ -53,7 +51,7 @@ TEST_CASE("operators", "[Symbol]") {
   REQUIRE_FALSE(s2 != s2);
   REQUIRE(s4 > s2);
   REQUIRE(s4 >= s2);
-  REQUIRE(s3 >= s2);
+  REQUIRE(s3 <= s2);
   REQUIRE_FALSE(s2 >= s4);
   REQUIRE(s2 <= s4);
 }

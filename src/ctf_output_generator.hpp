@@ -106,8 +106,7 @@ class OutputGenerator {
   */
   std::ostream& os() const {
     if (!os_) {
-      throw std::runtime_error(
-          "ctf::OutputGenerator::os() output stream not set.");
+      throw std::runtime_error("ctf::OutputGenerator::os() output stream not set.");
     }
     return *os_;
   }
@@ -126,8 +125,7 @@ class OutputGenerator {
   */
   std::ostream& err() {
     if (!error_) {
-      throw std::runtime_error(
-          "ctf::OutputGenerator::err() error stream not set.");
+      throw std::runtime_error("ctf::OutputGenerator::err() error stream not set.");
     }
     return *error_;
   }
@@ -137,8 +135,7 @@ class OutputGenerator {
   \brief Outputs an error message with the location automatically printed before
   it.
   */
-  void error_message(const tstack<Symbol>::const_iterator it,
-                     const string& message) {
+  void error_message(const tstack<Symbol>::const_iterator it, const string& message) {
     err() << it->location().to_string() << ": " << message << "\n";
   }
 

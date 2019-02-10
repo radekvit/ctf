@@ -97,12 +97,8 @@ class LLGenericTable {
 
   void initialize(const TranslationGrammar& tg, const predict_t& predict) {
     initialize_invalid(tg);
-    table_ =
-        row(tg.nonterminals().size() * (tg.terminals().size() + 1), invalid_);
-    if (predict.size() != tg.rules().size())
-      throw std::invalid_argument(
-          "Mismatched predict and TranslationGrammar.rules "
-          "sizes when constructing a decision table.");
+    table_ = row(tg.nonterminals().size() * (tg.terminals().size() + 1), invalid_);
+    assert(predict.size() == tg.rules().size());
 
     // create index maps for terminals and nonterminals
     for (size_t i = 0; i < tg.nonterminals().size(); ++i) {
@@ -120,10 +116,7 @@ class LLGenericTable {
 
       for (auto& t : terminals) {
         auto tit = terminalMap_.find(t);
-        if (tit == terminalMap_.end())
-          throw std::invalid_argument(
-              "Terminal in predict not a terminal in translation grammar when "
-              "constructing a decision table.");
+        assert(tit != terminalMap_.end());
 
         size_t ti = tit->second;
         insert_rule(i, index(ni, ti));
@@ -136,23 +129,18 @@ class LLGenericTable {
 \brief Class containing rule indices to be used in a LL controlled translation.
 */
 class LLTable : public LLGenericTable<size_t> {
-  void initialize_invalid(const TranslationGrammar& tg) override {
-    invalid_ = tg.rules().size();
-  }
+  void initialize_invalid(const TranslationGrammar& tg) override { invalid_ = tg.rules().size(); }
 
   void insert_rule(const size_t insertedRule, const size_t i) override {
     // a rule is already present
     if (table_[i] != invalid_) {
-      throw std::invalid_argument(
-          "Constructing LLTable from a non-LL TranslationGrammar.");
+      throw std::invalid_argument("Constructing LLTable from a non-LL TranslationGrammar.");
     }
     table_[i] = insertedRule;
   }
 
  public:
-  LLTable(const TranslationGrammar& tg, const predict_t& predict) {
-    initialize(tg, predict);
-  }
+  LLTable(const TranslationGrammar& tg, const predict_t& predict) { initialize(tg, predict); }
 
   LLTable() { invalid_ = 0; }
 };
@@ -174,7 +162,7 @@ class PriorityLLTable : public LLTable {
   }
 };
 
-class GeneralLLTable : public LLGenericTable<set<size_t>> {
+class GeneralLLTable : public LLGenericTable<vector_set<size_t>> {
  public:
   GeneralLLTable(const TranslationGrammar& tg, const predict_t& predict) {
     initialize(tg, predict);

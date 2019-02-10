@@ -6,9 +6,9 @@
 namespace ctf {
 
 using empty_t = vector<bool>;
-using first_t = vector<set<Symbol>>;
-using follow_t = vector<set<Symbol>>;
-using predict_t = vector<set<Symbol>>;
+using first_t = vector<vector_set<Symbol>>;
+using follow_t = vector<vector_set<Symbol>>;
+using predict_t = vector<vector_set<Symbol>>;
 
 /**
 \brief Creates Empty set for each nonterminal.
@@ -63,9 +63,8 @@ inline empty_t create_empty(const TranslationGrammar& tg) {
 First contains all characters that can be at the first position of any string
 derived from this nonterminal.
 */
-inline first_t create_first(const TranslationGrammar& tg,
-                            const empty_t& empty) {
-  first_t first = {tg.nonterminals().size(), set<Symbol>{}};
+inline first_t create_first(const TranslationGrammar& tg, const empty_t& empty) {
+  first_t first = {tg.nonterminals().size(), vector_set<Symbol>{}};
 
   bool changed = false;
   do {
@@ -107,9 +106,8 @@ sentential form from the starting nonterminal.
 inline follow_t create_follow(const TranslationGrammar& tg,
                               const empty_t& empty,
                               const first_t& first) {
-  follow_t follow = {tg.nonterminals().size(), set<Symbol>{}};
-  follow[tg.nonterminal_index(tg.starting_rule().input()[0])].insert(
-      Symbol::eof());
+  follow_t follow = {tg.nonterminals().size(), vector_set<Symbol>{}};
+  follow[tg.nonterminal_index(tg.starting_rule().input()[0])].insert(Symbol::eof());
 
   bool changed = false;
   do {
@@ -120,7 +118,7 @@ inline follow_t create_follow(const TranslationGrammar& tg,
       /* empty set of all symbols to the right of the current one */
       bool compoundEmpty = true;
       /* first set of all symbols to the right of the current symbol */
-      set<Symbol> compoundFirst;
+      vector_set<Symbol> compoundFirst;
       /* track symbols from back */
       for (auto& s : reverse(r.input())) {
         // index of nonterminal in input string, only valid with
@@ -130,15 +128,13 @@ inline follow_t create_follow(const TranslationGrammar& tg,
           case Symbol::Type::NONTERMINAL:
             ti = tg.nonterminal_index(s);
             changed |= follow[ti].modify_set_union(compoundFirst);
-            changed |=
-                (compoundEmpty && follow[ti].modify_set_union(follow[i]));
+            changed |= (compoundEmpty && follow[ti].modify_set_union(follow[i]));
             break;
           default:
             break;
         }
         /* if empty == false */
-        if (s.type() != Symbol::Type::NONTERMINAL ||
-            !empty[tg.nonterminal_index(s)]) {
+        if (s.type() != Symbol::Type::NONTERMINAL || !empty[tg.nonterminal_index(s)]) {
           compoundEmpty = false;
           switch (s.type()) {
             case Symbol::Type::NONTERMINAL:
@@ -175,8 +171,8 @@ inline predict_t create_predict(const TranslationGrammar& tg,
                                 const follow_t& follow) {
   predict_t predict;
   for (auto& r : tg.rules()) {
-    set<Symbol> compoundFirst;
-    set<Symbol> rfollow = follow[tg.nonterminal_index(r.nonterminal())];
+    vector_set<Symbol> compoundFirst;
+    vector_set<Symbol> rfollow = follow[tg.nonterminal_index(r.nonterminal())];
     bool compoundEmpty = true;
     for (auto& s : reverse(r.input())) {
       size_t i;
@@ -184,7 +180,7 @@ inline predict_t create_predict(const TranslationGrammar& tg,
         case Symbol::Type::EOI:
         case Symbol::Type::TERMINAL:
           compoundEmpty = false;
-          compoundFirst = set<Symbol>({s});
+          compoundFirst = vector_set<Symbol>({s});
           break;
         case Symbol::Type::NONTERMINAL:
           i = tg.nonterminal_index(s);
@@ -207,12 +203,12 @@ inline predict_t create_predict(const TranslationGrammar& tg,
   return predict;
 }
 
-inline set<Symbol> string_first(const TranslationGrammar& grammar,
-                                const empty_t& empty,
-                                const first_t& first,
-                                const std::vector<Symbol>& symbols) {
+inline vector_set<Symbol> string_first(const TranslationGrammar& grammar,
+                                       const empty_t& empty,
+                                       const first_t& first,
+                                       const std::vector<Symbol>& symbols) {
   using Type = Symbol::Type;
-  set<Symbol> result;
+  vector_set<Symbol> result;
   for (auto&& symbol : symbols) {
     switch (symbol.type()) {
       case Type::TERMINAL:
