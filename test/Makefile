@@ -8,6 +8,7 @@ $(shell mkdir -p $(OBJ))
 
 HEADERS=$(wildcard $(INCLUDE)/*.hpp)
 OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
+DEPENDENCIES = $(OBJFILES:%.o=%.d)
 
 .PHONY: all format clean debug build test
 
@@ -24,8 +25,8 @@ deploy: build
 $(APPNAME): $(OBJFILES)
 	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
 
-$(OBJ)/%.o: $(SRC)/%.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJ)/%.o: $(SRC)/%.cpp
+	$(CXX) -MMD -MP $(CXXFLAGS) -c $< -o $@
 
 clean:
 	-rm -rf $(OBJ) $(APPNAME)
@@ -36,3 +37,5 @@ format:
 test: debug
 test:
 	./$(APPNAME)
+
+-include $(DEPENDENCIES)
