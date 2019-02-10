@@ -74,11 +74,11 @@ class LexicalAnalyzer {
   bool error() const noexcept { return errorFlag_; }
 
   /**
-  \brief Gets next Symbol from stream and resets symbol location.
+  \brief Resets location and gets next Token from the input stream.
 
   \returns A token from the input stream.
   */
-  Symbol get_token() {
+  Token get_token() {
     reset_location();
     return read_token();
   }
@@ -98,7 +98,7 @@ class LexicalAnalyzer {
   Default implementation; reading a token name until a whitespace or EOF is
   read. Adds a size_t attribute to each token denoting its number.
   */
-  virtual Symbol read_token() {
+  virtual Token read_token() {
     static size_t attribute = 0;
     string name;
     // first character
@@ -183,8 +183,8 @@ class LexicalAnalyzer {
 
   \returns A terminal Symbol with the current stored location_.
   */
-  Symbol token(const string& name, const Attribute& attr = Attribute{}) {
-    return std::move(Terminal(name, attr, location_));
+  Token token(const string& name, const Attribute& attr = Attribute{}) {
+    return Token(Terminal(name), attr, location_);
   }
 
   /**
@@ -193,7 +193,7 @@ class LexicalAnalyzer {
 
   \returns An EOI Symbol with the current stored location_.
   */
-  Symbol token_eof() { return std::move(Symbol(Symbol::Type::EOI, "", Attribute{}, location_)); }
+  Token token_eof() { return Token(Symbol::eof(), Attribute{}, location_); }
 
   /**
   \brief Returns a reference to the error flag.

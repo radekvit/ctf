@@ -6,8 +6,6 @@
 #include "ctf_table_sets.hpp"
 #include "ctf_translation_grammar.hpp"
 
-#include <iostream>
-
 namespace ctf::lr1 {
 
 struct LookaheadSource {
@@ -88,8 +86,10 @@ class Item {
   bool reduce() const noexcept { return item_.reduce(); }
   bool has_next() const noexcept { return item_.has_next(); }
   Item next(const LookaheadSource& las) const {
-    vector_set<LookaheadSource> lookaheads{las};
-    if (mark() == 1 || (mark() == 0 && generated_lookaheads().empty())) {
+    vector_set<LookaheadSource> lookaheads;
+    if ((mark() == 0 && !generated_lookaheads().empty()) || mark() == 1) {
+      lookaheads.insert(las);
+    } else {
       lookaheads = lookaheads_;
     }
     return Item(item_.next(), lookaheads);
@@ -252,12 +252,12 @@ class StateMachine {
 
     string to_string() const {
       string result = std::to_string(id()) + ": {\n";
-      for (auto&& item: items()) {
+      for (auto&& item : items()) {
         result += '\t';
         result += item.to_string() + '\n';
       }
       result += "\t-----\n";
-      for(auto&& [symbol, next]: transitions()) {
+      for (auto&& [symbol, next] : transitions()) {
         result += '\t';
         result += symbol.to_string() + ": " + std::to_string(next) + '\n';
       }
@@ -265,9 +265,7 @@ class StateMachine {
       return result;
     }
 
-    explicit operator string() const {
-      return to_string();
-    }
+    explicit operator string() const { return to_string(); }
 
    private:
     // isocore identifier
@@ -282,7 +280,7 @@ class StateMachine {
   };
 
   StateMachine(const TranslationGrammar& grammar)
-      : grammar_(&grammar), empty_(create_empty(grammar)), first_(create_first(grammar, empty_)) {
+      : StateMachine(grammar, create_empty(grammar), create_first(grammar, empty_)) {
     // initial item S' -> .S$
     insert_state({Item({grammar.starting_rule(), 0}, {}, {Symbol::eof()})});
     // recursively expand all states: dfs
@@ -303,6 +301,9 @@ class StateMachine {
 
   map<vector_set<Item>, vector<size_t>> isocoreMap_;
 
+  StateMachine(const TranslationGrammar& grammar, empty_t empty, first_t first)
+      : grammar_(&grammar), empty_(std::move(empty)), first_(std::move(first)) {}
+
   const TranslationGrammar& grammar() const noexcept { return *grammar_; }
 
   tuple<size_t, bool> insert_state(const vector_set<Item>& isocore) {
@@ -312,11 +313,6 @@ class StateMachine {
     if (newState.mergable()) {
       // try to merge with another state
       auto& isocoreStates = isocoreMap_[isocore];
-      std::cout << "found " << isocoreStates.size() << " isocores for {";
-      for (auto&& item: isocore) {
-        std::cout << " " << item.to_string();
-      }
-      std::cout << " }\n";
       if (isocoreStates.empty()) {
         // new mergable isocore
         isocoreStates.push_back(i);
@@ -327,7 +323,6 @@ class StateMachine {
         // check existing states with this isocore
         auto [other, merged] = merge(isocoreStates, newState);
         if (merged) {
-          std::cout << "merged " << i << " to " << other << "\n";
           return {other, false};
         }
         // no matching state found, insert as new
@@ -382,19 +377,18 @@ class StateMachine {
     // stop infinite loops
     lookaheadMap[source] = {};
     // get all sources
-    for (auto&& item : state.items()) {
-      vector_set<Symbol> symbols(item.generated_lookaheads());
-      for (auto&& nextSource : item.lookaheads()) {
-        auto it = lookaheadMap.find(nextSource);
-        if (it == lookaheadMap.end()) {
-          // recursive source not resolved yet
-          lookahead_lookup(nextSource, lookaheadMap);
-          it = lookaheadMap.find(nextSource);
-        }
-        symbols = set_union(symbols, it->second);
+    auto&& item = state.items()[source.item];
+    vector_set<Symbol> symbols(item.generated_lookaheads());
+    for (auto&& nextSource : item.lookaheads()) {
+      auto it = lookaheadMap.find(nextSource);
+      if (it == lookaheadMap.end()) {
+        // recursive source not resolved yet
+        lookahead_lookup(nextSource, lookaheadMap);
+        it = lookaheadMap.find(nextSource);
       }
-      lookaheadMap[source] = std::move(symbols);
+      symbols = set_union(symbols, it->second);
     }
+    lookaheadMap[source] = std::move(symbols);
   }
 
   void expand_state(size_t i) {
@@ -406,8 +400,6 @@ class StateMachine {
         expand_state(id);
       }
     }
-    std::cout << states_[i].to_string();
-
   }
 
   // goes through all relative lookaheads and changes them to generated lookaheads
@@ -424,6 +416,7 @@ class StateMachine {
             it = lookaheadMap.find(source);
           }
           item.generated_lookaheads() = set_union(item.generated_lookaheads(), it->second);
+          // TODO set lookup in map
         }
         // remove all relative lookaheads from this item
         item.lookaheads().clear();

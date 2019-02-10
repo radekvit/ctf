@@ -195,24 +195,33 @@ class vector_set {
   friend bool operator==(const vector_set& lhs, const vector_set& rhs) {
     return lhs.elements_ == rhs.elements_;
   }
-  friend bool operator!=(const vector_set& lhs, const vector_set& rhs) { return !(lhs == rhs); }
-  friend bool operator<=(const vector_set& lhs, const vector_set& rhs) {
-    for (auto&& e : lhs.elements_) {
-      if (!rhs.contains(e))
-        return false;
-    }
-    return true;
+  friend bool operator!=(const vector_set& lhs, const vector_set& rhs) {
+    return lhs.elements_ != rhs.elements_;
   }
-  friend bool operator>=(const vector_set& lhs, const vector_set& rhs) { return rhs <= lhs; }
   friend bool operator<(const vector_set& lhs, const vector_set& rhs) {
-    return lhs <= rhs && lhs != rhs;
+    return lhs.elements_ < rhs.elements_;
+  }
+  friend bool operator<=(const vector_set& lhs, const vector_set& rhs) {
+    return lhs.elements_ <= rhs.elements_;
+  }
+  friend bool operator>=(const vector_set& lhs, const vector_set& rhs) {
+    return lhs.elements_ >= rhs.elements_;
   }
   friend bool operator>(const vector_set& lhs, const vector_set& rhs) { return rhs < lhs; }
 
-  friend bool subset(const vector_set& lhs, const vector_set& rhs) { return lhs <= rhs; }
-  friend bool proper_subset(const vector_set& lhs, const vector_set& rhs) { return lhs < rhs; }
+  friend bool subset(const vector_set& lhs, const vector_set& rhs) {
+    for (auto&& e : lhs.elements_) {
+      if (!rhs.contains(e)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  friend bool proper_subset(const vector_set& lhs, const vector_set& rhs) {
+    return lhs.elements_.size() < rhs.elements_.size() && subset(lhs, rhs);
+  }
   friend bool disjoint(const vector_set& lhs, const vector_set& rhs) {
-    return !(lhs <= rhs) && !(lhs >= rhs);
+    return set_intersection(lhs, rhs).size() == 0;
   }
 
   friend vector_set set_union(const vector_set& lhs, const vector_set& rhs) {

@@ -40,6 +40,16 @@ TEST_CASE("lr0::Item operations", "[lr0::Item]") {
   REQUIRE(i.closure(grammar) == requiredClosure);
 }
 
+TEST_CASE("lr0::Item comparison operators", "[lr0::Item]") {
+  Item item1(grammar.rules()[0], 1);
+  Item item2(grammar.rules()[0], 1);
+  Item item3(grammar.rules()[0], 0);
+
+  REQUIRE(item1 == item2);
+  REQUIRE(item1 < item3);
+  REQUIRE(!(item3 < item1));
+}
+
 TEST_CASE("LR0StateMachine correctness", "[LR0StateMachine]") {
   LR0StateMachine sm{grammar};
   auto& rules = grammar.rules();

@@ -18,20 +18,16 @@ class Item {
   Item& operator=(const Item& other) = default;
   Item& operator=(Item&& other) = default;
 
-  const vector_set<Item>& closure(const TranslationGrammar& grammar) const {
-    // already calculated closure
-    if (closure_.size() != 0) {
-      return closure_;
-    }
-    closure_ = {*this};
+  vector_set<Item> closure(const TranslationGrammar& grammar) const {
+    vector_set<Item> closure = {*this};
     // item with the mark at the last position or a mark before the
     if (mark_ == rule_->input().size() ||
         rule_->input()[mark_].type() != Symbol::Type::NONTERMINAL) {
-      return closure_;
+      return closure;
     }
 
     vector_set<Symbol> expandedNonterminals;
-    vector_set<Item> items{closure_};
+    vector_set<Item> items{closure};
     vector_set<Item> newItems;
     while (!items.empty()) {
       // expand all new items for nonterminals we haven't expanded yet
@@ -45,7 +41,7 @@ class Item {
           for (auto&& rule : grammar.rules()) {
             if (rule.nonterminal() == nonterminal) {
               newItems.insert({rule, 0});
-              closure_.insert({rule, 0});
+              closure.insert({rule, 0});
             }
           }
         }
@@ -53,10 +49,8 @@ class Item {
       items.swap(newItems);
       newItems.clear();
     }
-    return closure_;
+    return closure;
   }
-
-  void clear_closure() const noexcept { closure_.clear(); }
 
   const Rule& rule() const noexcept { return *rule_; }
   size_t mark() const noexcept { return mark_; }
@@ -66,12 +60,13 @@ class Item {
 
   Item next() const noexcept { return Item(rule(), mark() + 1); }
 
+  // only valid comparing items with the same rule sources
   friend bool operator<(const Item& lhs, const Item& rhs) {
-    return *lhs.rule_ < *rhs.rule_ || (*lhs.rule_ == *rhs.rule_ && lhs.mark_ < rhs.mark_);
+    return lhs.mark() > rhs.mark() || (lhs.mark() == rhs.mark() && lhs.rule_ < rhs.rule_);
   }
 
   friend bool operator==(const Item& lhs, const Item& rhs) {
-    return lhs.mark_ == rhs.mark_ && (lhs.rule_ == rhs.rule_ || *lhs.rule_ == *rhs.rule_);
+    return lhs.mark_ == rhs.mark_ && lhs.rule_ == rhs.rule_;
   }
 
   string to_string() const {
@@ -95,8 +90,6 @@ class Item {
  private:
   const Rule* rule_;
   size_t mark_;
-
-  mutable vector_set<Item> closure_;
 };
 
 using State = vector_set<Item>;

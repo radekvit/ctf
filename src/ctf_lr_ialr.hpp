@@ -43,8 +43,8 @@ class StateMachine {
     bool mergable() const noexcept { return mergable_; }
     bool has_reduce() const noexcept { return reduce_; }
 
-    vector<size_t>& reduce_targets() noexcept { return reduceTargets_; }
-    const vector<size_t>& reduce_targets() const noexcept { return reduceTargets_; }
+    vector_set<size_t>& reduce_targets() noexcept { return reduceTargets_; }
+    const vector_set<size_t>& reduce_targets() const noexcept { return reduceTargets_; }
 
    private:
     // isocore identifier
@@ -55,7 +55,7 @@ class StateMachine {
     // state transitions
     unordered_map<Symbol, size_t> transitions_;
 
-    vector<size_t> reduceTargets_;
+    vector_set<size_t> reduceTargets_;
 
     bool mergable_ = false;
     bool reduce_ = false;

@@ -8,9 +8,18 @@ using Item = ctf::lr1::Item;
 
 class StateMachine : public ctf::lr1::StateMachine {
  public:
-  // the same constructor
-  using ctf::lr1::StateMachine::StateMachine;
+  // use the same constructors
+  StateMachine(const TranslationGrammar& grammar)
+      : ctf::lr1::StateMachine(grammar, create_empty(grammar), create_first(grammar, empty_)) {
+    // initial item S' -> .S$
+    insert_state({Item({grammar.starting_rule(), 0}, {}, {Symbol::eof()})});
+    // recursively expand all states: dfs
+    expand_state(0);
+    // push all lookaheads to their items
+    finalize_lookaheads();
+  }
 
+ protected:
   tuple<size_t, bool> merge(const std::vector<size_t>& existingStates,
                             const State& newState) override {
     assert(existingStates.size() == 1);

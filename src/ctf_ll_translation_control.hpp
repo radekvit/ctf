@@ -18,8 +18,8 @@ combination.
 \param[in] top The current top symbol.
 \param[in] token The incoming token.
 */
-inline string default_LL_error_message(const Symbol& top,
-                                       const Symbol& token,
+inline string default_LL_error_message(const Token& top,
+                                       const Token& token,
                                        [[maybe_unused]] const Symbol& lastDerivedNonterminal,
                                        [[maybe_unused]] bool empty,
                                        [[maybe_unused]] const vector_set<Symbol>& first,
@@ -60,8 +60,8 @@ inline string default_LL_error_message(const Symbol& top,
 
 class LLTranslationControlGeneral : public TranslationControl {
  public:
-  using error_message_function = std::function<string(const Symbol& top,
-                                                      const Symbol& token,
+  using error_message_function = std::function<string(const Token& top,
+                                                      const Token& token,
                                                       const Symbol& lastDerived,
                                                       bool empty,
                                                       const vector_set<Symbol>& first,
@@ -136,11 +136,11 @@ class LLTranslationControlGeneral : public TranslationControl {
 
   The added iterators point to input terminal attribute targets.
   */
-  void create_attibute_actions(tstack<Symbol>::iterator obegin,
+  void create_attibute_actions(tstack<Token>::iterator obegin,
                                const vector<vector_set<size_t>>& targets,
-                               tstack<vector<tstack<Symbol>::iterator>>& attributeActions) {
+                               tstack<vector<tstack<Token>::iterator>>& attributeActions) {
     for (auto& target : reverse(targets)) {
-      vector<tstack<Symbol>::iterator> iterators;
+      vector<tstack<Token>::iterator> iterators;
       for (auto& i : target) {
         auto oit = obegin;
         for (size_t x = 0; x < i; ++x)
@@ -158,7 +158,7 @@ class LLTranslationControlGeneral : public TranslationControl {
 
   void set_error() { errorFlag_ = true; }
 
-  void add_error(const Symbol& top, const Symbol& token, const Symbol& lastDerivedNonterminal) {
+  void add_error(const Token& top, const Token& token, const Symbol& lastDerivedNonterminal) {
     set_error();
     string message;
     if (top.type() == Symbol::Type::NONTERMINAL) {
@@ -195,7 +195,7 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
 
     input_.clear();
     output_.clear();
-    tstack<vector<tstack<Symbol>::iterator>> attributeActions;
+    tstack<vector<tstack<Token>::iterator>> attributeActions;
 
     // last derived nonterminal
     Symbol lastDerivedNonterminal = translationGrammar_->starting_symbol();
@@ -206,14 +206,14 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
     input_.push(translationGrammar_->starting_rule().input()[0]);
     output_.push(translationGrammar_->starting_rule().output()[0]);
 
-    Symbol token = next_token();
+    Token token = next_token();
 
     // iterator to the first symbol of the last inserted string
     // used to speed up output_ linear search
     auto obegin = output_.begin();
 
     while (true) {
-      const Symbol& top = input_.top();
+      const Token& top = input_.top();
       size_t ruleIndex;
       switch (top.type()) {
         case Symbol::Type::EOI:
@@ -238,10 +238,10 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
           }
           break;
         case Type::NONTERMINAL:
-          ruleIndex = llTable_.rule_index(top, token);
+          ruleIndex = llTable_.rule_index(top.symbol(), token.symbol());
           if (ruleIndex < translationGrammar_->rules().size()) {
             // we derive this terminal
-            lastDerivedNonterminal = top;
+            lastDerivedNonterminal = top.symbol();
 
             auto& rule = translationGrammar_->rules()[ruleIndex];
 
@@ -294,8 +294,8 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
   \returns True if the error recovery succeeded.
   */
   virtual bool error_recovery(const Symbol& lastDerivedNonterminal,
-                              Symbol& token,
-                              tstack<vector<tstack<Symbol>::iterator>>& attributeActions) {
+                              Token& token,
+                              tstack<vector<tstack<Token>::iterator>>& attributeActions) {
     using Type = Symbol::Type;
 
     size_t ruleIndex = 0;
@@ -309,7 +309,7 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
     }
     // pop stack until a rule is applicable or the same token is on top
     while (true) {
-      Symbol& top = input_.top();
+      Token& top = input_.top();
       switch (top.type()) {
         case Type::EOI:
           return false;
@@ -320,7 +320,7 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
           attributeActions.pop();
           break;
         case Type::NONTERMINAL:
-          ruleIndex = llTable_.rule_index(top, token);
+          ruleIndex = llTable_.rule_index(top.symbol(), token.symbol());
           if (ruleIndex < translationGrammar_->rules().size()) {
             return true;
           }
@@ -344,29 +344,29 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
   using LLTableType = GeneralLLTable;
 
  protected:
-  vector<Symbol> tokens_;
+  vector<Token> tokens_;
 
   size_t tokenPosition_ = 0;
 
   struct ParseState {
-    tstack<Symbol> input;
-    tstack<Symbol> output;
+    tstack<Token> input;
+    tstack<Token> output;
     size_t tokenPosition;
     vector_set<size_t> rules;
-    tstack<vector<tstack<Symbol>::iterator>> attributeActions;
+    tstack<vector<tstack<Token>::iterator>> attributeActions;
   };
 
   tstack<ParseState> parseStates_;
 
-  Symbol next_token() override {
+  Token next_token() override {
     while (tokenPosition_ >= tokens_.size()) {
       tokens_.push_back(TranslationControl::next_token());
     }
     return tokens_[tokenPosition_++];
   }
 
-  bool roll_back(tstack<vector<tstack<Symbol>::iterator>>& attributeActions,
-                 tstack<Symbol>::iterator& obegin) {
+  bool roll_back(tstack<vector<tstack<Token>::iterator>>& attributeActions,
+                 tstack<Token>::iterator& obegin) {
     if (parseStates_.empty())
       return false;
     auto&& previousState = parseStates_.pop();
@@ -397,7 +397,7 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
 
     input_.clear();
     output_.clear();
-    tstack<vector<tstack<Symbol>::iterator>> attributeActions;
+    tstack<vector<tstack<Token>::iterator>> attributeActions;
 
     // last derived nonterminal
     Symbol lastDerivedNonterminal = translationGrammar_->starting_symbol();
@@ -407,14 +407,14 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
     input_.push(translationGrammar_->starting_symbol());
     output_.push(translationGrammar_->starting_symbol());
 
-    Symbol token = next_token();
+    Token token = next_token();
 
     // iterator to the first symbol of the last inserted string
     // used to speed up output_ linear search
     auto obegin = output_.begin();
 
     while (true) {
-      Symbol& top = input_.top();
+      Token& top = input_.top();
       vector_set<size_t> applicableRules;
       switch (top.type()) {
         case Symbol::Type::EOI:
@@ -443,10 +443,10 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
           }
           break;
         case Type::NONTERMINAL:
-          applicableRules = llTable_.rule_index(top, token);
+          applicableRules = llTable_.rule_index(top.symbol(), token.symbol());
           if (!applicableRules.empty()) {
             // we derive this terminal
-            lastDerivedNonterminal = top;
+            lastDerivedNonterminal = top.symbol();
             auto& rule = translationGrammar_->rules()[*(applicableRules.begin())];
 
             if (applicableRules.size() > 1) {
@@ -500,7 +500,7 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
     llTable_ = LLTableType(*translationGrammar_, predict_);
   }
 
-  virtual bool error_recovery(const Symbol&, Symbol&, tstack<vector<tstack<Symbol>::iterator>>&) {
+  virtual bool error_recovery(const Symbol&, Token&, tstack<vector<tstack<Token>::iterator>>&) {
     return false;
   }
 };

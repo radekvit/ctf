@@ -72,13 +72,13 @@ class OutputGenerator {
   /**
   \brief Outputs a token to the given stream.
 
-  \param[in] tokens Symbols to be output.
+  \param[in] tokens Output Tokens.
 
   The default output implementation.
   */
-  virtual void output(const tstack<Symbol>& terminals) {
+  virtual void output(const tstack<Token>& tokens) {
     auto& os = this->os();
-    for (auto& t : terminals) {
+    for (auto& t : tokens) {
       if (t == Symbol::eof())
         return;
       os << t.name();
@@ -135,7 +135,7 @@ class OutputGenerator {
   \brief Outputs an error message with the location automatically printed before
   it.
   */
-  void error_message(const tstack<Symbol>::const_iterator it, const string& message) {
+  void error_message(const tstack<Token>::const_iterator it, const string& message) {
     err() << it->location().to_string() << ": " << message << "\n";
   }
 
@@ -145,7 +145,7 @@ class OutputGenerator {
     throw SemanticException("Semantic error encountered.");
   }
 
-  void fatal_error(tstack<Symbol>::const_iterator it, const string& message) {
+  void fatal_error(tstack<Token>::const_iterator it, const string& message) {
     error_message(it, message);
     set_error();
     throw SemanticException("Semantic error encountered.");

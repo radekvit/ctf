@@ -329,11 +329,7 @@ class Symbol {
   \param[in] name Name of constructed Symbol. Defaults to "". "" is only valid for Type::EOI.
   \param[in] atr Attribute of constructed Symbol.
   */
-  Symbol(Type type,
-         const string& name = "",
-         const Attribute& atr = Attribute{},
-         const Location& loc = Location::invalid())
-      : type_(type), id_(name_index(name)), attribute_(atr), location_(loc) {
+  Symbol(Type type, const string& name = "") : type_(static_cast<unsigned char>(type)), id_(name_index(name)) {
     assert(type == Symbol::Type::EOI || name != "");
 #ifdef CTF_MULTITHREAD
     name_ = name;
@@ -370,34 +366,10 @@ class Symbol {
 #endif
   }
   /**
-  \brief Returns a reference to attribute.
-  \returns A reference to attribute.
+  \brief Returns the type of the symbol.
+  \returns The symbol's type.
   */
-  Attribute& attribute() { return attribute_; }
-  /**
-  \brief Returns a const reference to attribute.
-  \returns A const reference to attribute.
-  */
-  const Attribute& attribute() const { return attribute_; }
-  /**
-  \brief Returns a const reference to type.
-  \returns A const reference to type.
-  */
-  const Type& type() const { return type_; }
-  /**
-  \brief Returns the Symbol's location.
-  \returns The Symbol's original location.
-  */
-  const Location& location() const { return location_; }
-
-  /**
-  \brief Merges symbol's attribute and sets location if not set.
-  */
-  void set_attribute(const Symbol& other) {
-    attribute_ = other.attribute();
-    if (location_ == Location::invalid())
-      location_ = other.location();
-  }
+  Type type() const { return Type(type_); }
 
   /**
   \name Comparison operators
@@ -409,18 +381,20 @@ class Symbol {
   */
   ///@{
   friend bool operator<(const Symbol& lhs, const Symbol& rhs) {
-    return lhs.type_ < rhs.type_ || (lhs.type_ == rhs.type_ && lhs.id_ < rhs.id_);
+    static_assert(sizeof(Symbol) == sizeof(size_t), "Symbol must match size_t size");
+
+    return reinterpret_cast<const size_t&>(lhs) < reinterpret_cast<const size_t&>(rhs);
   }
 
   friend bool operator==(const Symbol& lhs, const Symbol& rhs) {
-    return lhs.type_ == rhs.type_ && lhs.id_ == rhs.id_;
+    return reinterpret_cast<const size_t&>(lhs) == reinterpret_cast<const size_t&>(rhs);
   }
 
   friend bool operator!=(const Symbol& lhs, const Symbol& rhs) { return !(lhs == rhs); }
 
   friend bool operator>(const Symbol& lhs, const Symbol& rhs) { return rhs < lhs; }
 
-  friend bool operator<=(const Symbol& lhs, const Symbol& rhs) { return lhs == rhs || lhs < rhs; }
+  friend bool operator<=(const Symbol& lhs, const Symbol& rhs) { return !(lhs > rhs); }
 
   friend bool operator>=(const Symbol& lhs, const Symbol& rhs) { return rhs <= lhs; }
   ///@}
@@ -429,7 +403,7 @@ class Symbol {
     using namespace std::literals;
 
     if (type() == Type::EOI) {
-      return "Symbol::eof()";
+      return "EOF";
     }
     return "\""s + name() + "\"" + (type() == Type::NONTERMINAL ? "_nt" : "_t");
   }
@@ -440,19 +414,11 @@ class Symbol {
   /**
   \brief Type of this Symbol.
   */
-  Type type_;
+  unsigned char type_ : 2;
   /**
   \brief Id of this Symbol.
   */
-  size_t id_;
-  /**
-  \brief Attribute of this Symbol. Only valid for some types.
-  */
-  Attribute attribute_;
-  /**
-  \brief Location of the origin of this Symbol.
-  */
-  Location location_;
+  size_t id_ : sizeof(size_t) * 8 - 2;
 
 #ifdef CTF_MULTITHREAD
   /**
@@ -497,16 +463,101 @@ class Symbol {
     return nm;
   }
 };
+
+class Token {
+ public:
+  Token(const Symbol::Type type,
+        const string& name = "",
+        const Attribute& atr = Attribute{},
+        const Location& loc = Location::invalid())
+      : symbol_(type, name), attribute_(atr), location_(loc) {}
+  Token(const Symbol symbol,
+        const Attribute& atr = Attribute{},
+        const Location& loc = Location::invalid())
+      : symbol_(symbol), attribute_(atr), location_(loc) {}
+  /**
+  \brief Merges symbol's attribute and sets location if not set.
+  */
+  void set_attribute(const Token& other) {
+    attribute_ = other.attribute();
+    if (location_ == Location::invalid())
+      location_ = other.location();
+  }
+
+  Symbol& symbol() noexcept { return symbol_; }
+  const Symbol& symbol() const noexcept { return symbol_; }
+
+  size_t id() const noexcept { return symbol_.id(); }
+  Symbol::Type type() const noexcept { return symbol_.type(); }
+
+  const string& name() const noexcept { return symbol_.name(); }
+
+  /**
+  \brief Returns a reference to attribute.
+  \returns A reference to attribute.
+  */
+  Attribute& attribute() { return attribute_; }
+  /**
+  \brief Returns a const reference to attribute.
+  \returns A const reference to attribute.
+  */
+  const Attribute& attribute() const { return attribute_; }
+
+  /**
+  \brief Returns the Token's location.
+  \returns The Token's original location.
+  */
+  const Location& location() const { return location_; }
+
+  friend bool operator<(const Token& lhs, const Token& rhs) {
+    return lhs.symbol() < rhs.symbol();
+  }
+
+  friend bool operator==(const Token& lhs, const Token& rhs) {
+    return lhs.symbol() == rhs.symbol();
+  }
+
+  friend bool operator!=(const Token& lhs, const Token& rhs) { return !(lhs == rhs); }
+
+  friend bool operator>(const Token& lhs, const Token& rhs) { return rhs < lhs; }
+
+  friend bool operator<=(const Token& lhs, const Token& rhs) { return !(lhs > rhs); }
+
+  friend bool operator>=(const Token& lhs, const Token& rhs) { return rhs <= lhs; }
+
+  string to_string() const {
+    string result;
+    if (location() != Location::invalid()) {
+      result = location().to_string() + ": ";
+    }
+    result += symbol_.to_string();
+    return result;
+  }
+
+  explicit operator string() const { return to_string(); }
+
+  explicit operator Symbol() const { return symbol(); }
+
+ private:
+  Symbol symbol_;
+  /**
+  \brief Attribute of this Symbol. Only valid for some types of symbols.
+  */
+  Attribute attribute_;
+  /**
+  \brief Location of the origin of this Token.
+  */
+  Location location_;
+};
+
 /**
 \brief Returns a Symbol with Type::Terminal, given name and attribute.
 \param[in] name Name of returned symbol.
 \param[in] attribute Attribute of returned Symbol. Defaults to "".
 \returns A Symbol with type Terminal, given name and given attribute.
 */
-inline Symbol Terminal(const string& name,
-                       const Attribute& attribute = Attribute{},
-                       const Location& loc = Location::invalid()) {
-  return Symbol(Symbol::Type::TERMINAL, name, attribute, loc);
+inline Symbol Terminal(const string& name) {
+  return Symbol(Symbol::Type::TERMINAL, name);
 }
 /**
 \brief Returns a Symbol with Type::Nonterminal, given name and attribute.

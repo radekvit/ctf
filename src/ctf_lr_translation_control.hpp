@@ -5,7 +5,6 @@
 */
 #ifndef CTF_LR_TRANSLATION_CONTROL_H
 #define CTF_LR_TRANSLATION_CONTROL_H
-
 #include <iostream>
 #include "ctf_lr_lalr.hpp"
 #include "ctf_lr_lr0.hpp"
@@ -49,18 +48,18 @@ class LRTranslationControlGeneral : public TranslationControl {
 
   The added iterators point to input terminal attribute targets.
   */
-  void create_attibute_actions(tstack<Symbol>::iterator obegin,
+  void create_attibute_actions(tstack<Token>::iterator obegin,
                                const vector<vector_set<size_t>>& targets,
                                size_t outputSize,
-                               tstack<vector<tstack<Symbol>::iterator>>& attributeActions) {
+                               tstack<vector<tstack<Token>::iterator>>& attributeActions) {
     for (auto& target : targets) {
-      vector<tstack<Symbol>::iterator> iterators;
+      vector<tstack<Token>::iterator> iterators;
       for (auto& i : target) {
         auto oit = obegin;
         for (size_t x = 0; x < outputSize - i; ++x) {
           --oit;
         }
-        if (oit->type() == Symbol::Type::TERMINAL)
+        if (oit->type() == Symbol::Type::TERMINAL || oit->type() == Symbol::Type::EOI)
           iterators.push_back(oit);
       }
       attributeActions.push(iterators);
@@ -69,7 +68,7 @@ class LRTranslationControlGeneral : public TranslationControl {
 
   void set_error() { errorFlag_ = true; }
 
-  void add_error(const Symbol& token, const string& message) {
+  void add_error(const Token& token, const string& message) {
     set_error();
     err() << token.location().to_string() << ": " << message << "\n";
   }
@@ -120,10 +119,10 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
 
     pushdown.push_back(state);
 
-    Symbol token = next_token();
+    Token token = next_token();
 
     while (true) {
-      switch (auto&& item = lrTable_.lr_action(state, token); item.type) {
+      switch (auto&& item = lrTable_.lr_action(state, token.symbol()); item.type) {
         case LRActionType::SHIFT:
           state = item.argument;
           pushdown.push_back(state);
@@ -155,11 +154,14 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   /**
    * Iterates over reversed rules and applies them in a top-down manner.
    */
-  void produce_output(const vector<size_t> appliedRules) {
-    tstack<vector<tstack<Symbol>::iterator>> attributeActions;
+  void produce_output(const vector<size_t>& appliedRules) {
+    tstack<vector<tstack<Token>::iterator>> attributeActions;
 
     input_.push(translationGrammar_->starting_symbol());
     output_.push(translationGrammar_->starting_symbol());
+
+    // remove extra eof
+    tokens_.pop_back();
 
     auto obegin = output_.begin();
     auto tokenIt = tokens_.crbegin();
@@ -175,7 +177,6 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
            workingTerminalIt->type() != Symbol::Type::NONTERMINAL;
            ++tokenIt) {
         for (auto symbolIt : attributeActions.pop()) {
-          std::cout << "setting location: " << tokenIt->location().to_string() << "\n";
           symbolIt->set_attribute(*tokenIt);
         }
         input_.pop_bottom();
@@ -196,7 +197,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   }
 
   // TODO allow example-based error messages
-  string error_message(size_t state, const Symbol& token) {
+  string error_message(size_t state, const Token& token) {
     string message = "Unexpected symbol '";
     message += token.type() == Symbol::Type::EOI ? string("EOF") : token.name();
     message += "'\nexpected one of:";
@@ -213,7 +214,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     return std::move(message);
   }
 
-  bool error_recovery(size_t state, const Symbol& token) {
+  bool error_recovery(size_t state, const Token& token) {
     (void)state;
     (void)token;
     return false;
@@ -227,14 +228,14 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   /**
   \brief All read tokens
   */
-  vector<Symbol> tokens_;
+  vector<Token> tokens_;
 
   /**
   Creates all predictive sets and creates a new LR table.
   */
   void create_lr_table() { lrTable_ = LRTableType(*translationGrammar_); }
 
-  Symbol next_token() override {
+  Token next_token() override {
     tokens_.push_back(TranslationControl::next_token());
     return tokens_.back();
   }
@@ -242,6 +243,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
 
 using SLRTranslationControl = LRTranslationControlTemplate<SLRTable>;
 using LALRTranslationControl = LRTranslationControlTemplate<LALRTable>;
+using LR1TranslationControl = LRTranslationControlTemplate<LR1Table>;
 
 }  // namespace ctf
 #endif

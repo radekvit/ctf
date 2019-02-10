@@ -11,10 +11,12 @@ using Rule = TranslationGrammar::Rule;
 using ctf::LR0StateMachine;
 using ctf::SLRTranslationControl;
 using ctf::LALRTranslationControl;
+using ctf::LR1TranslationControl;
 
 using ctf::vector;
 using ctf::string;
 using ctf::Symbol;
+using ctf::Token;
 using ctf::InputReader;
 using ctf::Location;
 
@@ -37,6 +39,7 @@ TEST_CASE("Empty SLR translation", "[SLRTranslationControl]") {
   // only eof
   REQUIRE(slr.output().size() == 1);
   REQUIRE(slr.output().top() == Symbol::eof());
+  REQUIRE(slr.output().top().location() == Location(1, 1));
 }
 
 TEST_CASE("Regular SLR translation", "[SLRTranslationControl]") {
@@ -46,9 +49,8 @@ TEST_CASE("Regular SLR translation", "[SLRTranslationControl]") {
           {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
           {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
           {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
-          {"S'"_nt, {"S"_nt}},
       },
-      "S'"_nt};
+      "S"_nt};
 
   LexicalAnalyzer a;
   std::stringstream in;
@@ -61,11 +63,36 @@ TEST_CASE("Regular SLR translation", "[SLRTranslationControl]") {
   slr.run();
   REQUIRE(slr.output().size() == 11);
   auto it = slr.output().begin();
-  Symbol os = *it++;
+  Token os = *it++;
   REQUIRE(os == "2"_t);
   os = *it++;
   REQUIRE(os == "4"_t);
   REQUIRE(os.location() == Location(1, 1));
+  os = *it++;
+  REQUIRE(os == "1"_t);
+  REQUIRE(os.location() == Location(1, 5));
+  os = *it++;
+  REQUIRE(os == "2"_t);
+  os = *it++;
+  REQUIRE(os == "3"_t);
+  REQUIRE(os.location() == Location(1, 3));
+  os = *it++;
+  REQUIRE(os == "4"_t);
+  REQUIRE(os.location() == Location(1, 7));
+  os = *it++;
+  REQUIRE(os == "1"_t);
+  REQUIRE(os.location() == Location(1, 11));
+  os = *it++;
+  REQUIRE(os == "2"_t);
+  os = *it++;
+  REQUIRE(os == "3"_t);
+  REQUIRE(os.location() == Location(1, 9));
+  os = *it++;
+  REQUIRE(os == "3"_t);
+  REQUIRE(os.location() == Location(1, 13));
+  os = *it++;
+  REQUIRE(os == Symbol::eof());
+  REQUIRE(os.location() == Location(1, 18));
 }
 
 TEST_CASE("Failed SLR translation", "[SLRTranslationControl]") {
@@ -75,9 +102,8 @@ TEST_CASE("Failed SLR translation", "[SLRTranslationControl]") {
           {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
           {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
           {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
-          {"S'"_nt, {"S"_nt}},
       },
-      "S'"_nt};
+      "S"_nt};
 
   LexicalAnalyzer a;
   std::stringstream in;
@@ -90,7 +116,7 @@ TEST_CASE("Failed SLR translation", "[SLRTranslationControl]") {
   slr.run();
   REQUIRE(slr.error());
 }
-/*
+
 TEST_CASE("LALR empty translation", "[LALRTranslationControl]") {
   LexicalAnalyzer a;
   TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
@@ -103,8 +129,9 @@ TEST_CASE("LALR empty translation", "[LALRTranslationControl]") {
   lalr.run();
   REQUIRE(lalr.output().size() == 1);
   REQUIRE(lalr.output().top() == Symbol::eof());
+  REQUIRE(lalr.output().top().location() == Location(1, 1));
 }
-*/
+
 TEST_CASE("LALR full translation", "[LALRTranslationControl]") {
     TranslationGrammar tg{
       {
@@ -112,9 +139,8 @@ TEST_CASE("LALR full translation", "[LALRTranslationControl]") {
           {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
           {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
           {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
-          {"S'"_nt, {"S"_nt}},
       },
-      "S'"_nt};
+      "S"_nt};
 
   LexicalAnalyzer a;
   std::stringstream in;
@@ -123,13 +149,181 @@ TEST_CASE("LALR full translation", "[LALRTranslationControl]") {
   in << "( i o ( i o i ) )";
   InputReader r{in};
   a.set_reader(r);
-  LALRTranslationControl slr(a, tg);
-  slr.run();
-  REQUIRE(slr.output().size() == 11);
-  auto it = slr.output().begin();
-  Symbol os = *it++;
+  LALRTranslationControl lalr(a, tg);
+  lalr.run();
+  REQUIRE(lalr.output().size() == 11);
+  auto it = lalr.output().begin();
+  Token os = *it++;
   REQUIRE(os == "2"_t);
   os = *it++;
   REQUIRE(os == "4"_t);
   REQUIRE(os.location() == Location(1, 1));
+    os = *it++;
+  REQUIRE(os == "1"_t);
+  REQUIRE(os.location() == Location(1, 5));
+  os = *it++;
+  REQUIRE(os == "2"_t);
+  os = *it++;
+  REQUIRE(os == "3"_t);
+  REQUIRE(os.location() == Location(1, 3));
+  os = *it++;
+  REQUIRE(os == "4"_t);
+  REQUIRE(os.location() == Location(1, 7));
+  os = *it++;
+  REQUIRE(os == "1"_t);
+  REQUIRE(os.location() == Location(1, 11));
+  os = *it++;
+  REQUIRE(os == "2"_t);
+  os = *it++;
+  REQUIRE(os == "3"_t);
+  REQUIRE(os.location() == Location(1, 9));
+  os = *it++;
+  REQUIRE(os == "3"_t);
+  REQUIRE(os.location() == Location(1, 13));
+  os = *it++;
+  REQUIRE(os == Symbol::eof());
+  REQUIRE(os.location() == Location(1, 18));
+}
+
+TEST_CASE("LALR non-SLR translation", "[LALRTranslationControl]") {
+  TranslationGrammar tg{
+      {
+          {"S"_nt, {"A"_nt, "a"_t}},
+          {"S"_nt, {"b"_t, "A"_nt, "c"_nt}},
+          {"S"_nt, {"d"_t, "c"_t}},
+          {"S"_nt, {"b"_t, "d"_t, "a"_t}},
+          {"A"_nt, {"d"_t}},
+      },
+      "S"_nt};
+
+  LexicalAnalyzer a;
+  std::stringstream in;
+  // expected output:
+  // d c eof
+  in << "d  c";
+  InputReader r{in};
+  a.set_reader(r);
+  LALRTranslationControl lalr(a, tg);
+  lalr.run();
+  REQUIRE(lalr.output().size() == 3);
+
+  auto it = lalr.output().begin();
+  Token os = *it++;
+  REQUIRE(os == "d"_t);
+  REQUIRE(os.location() == Location(1, 1));
+  os = *it++;
+  REQUIRE(os == "c"_t);
+  REQUIRE(os.location() == Location(1, 4));
+  os = *it++;
+  REQUIRE(os == Symbol::eof());
+  REQUIRE(os.location() == Location(1, 5));
+}
+
+TEST_CASE("LR(1) empty translation", "[LR1TranslationControl]") {
+  LexicalAnalyzer a;
+  TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
+  std::stringstream in;
+  std::stringstream err;
+  InputReader r{in};
+  a.set_reader(r);
+  LR1TranslationControl lr1(a, tg);
+  lr1.set_error_stream(err);
+  lr1.run();
+  REQUIRE(lr1.output().size() == 1);
+  REQUIRE(lr1.output().top() == Symbol::eof());
+  REQUIRE(lr1.output().top().location() == Location(1, 1));
+}
+
+TEST_CASE("LR(1) full translation", "[LR1TranslationControl]") {
+    TranslationGrammar tg{
+      {
+          {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
+          {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
+          {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
+          {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
+      },
+      "S"_nt};
+
+  LexicalAnalyzer a;
+  std::stringstream in;
+  // expected output:
+  // 2 4 1 2 3 4 1 2 3 3 eof
+  in << "( i o ( i o i ) )";
+  InputReader r{in};
+  a.set_reader(r);
+  LR1TranslationControl lr1(a, tg);
+  lr1.run();
+  REQUIRE(lr1.output().size() == 11);
+  auto it = lr1.output().begin();
+  Token os = *it++;
+  REQUIRE(os == "2"_t);
+  os = *it++;
+  REQUIRE(os == "4"_t);
+  REQUIRE(os.location() == Location(1, 1));
+    os = *it++;
+  REQUIRE(os == "1"_t);
+  REQUIRE(os.location() == Location(1, 5));
+  os = *it++;
+  REQUIRE(os == "2"_t);
+  os = *it++;
+  REQUIRE(os == "3"_t);
+  REQUIRE(os.location() == Location(1, 3));
+  os = *it++;
+  REQUIRE(os == "4"_t);
+  REQUIRE(os.location() == Location(1, 7));
+  os = *it++;
+  REQUIRE(os == "1"_t);
+  REQUIRE(os.location() == Location(1, 11));
+  os = *it++;
+  REQUIRE(os == "2"_t);
+  os = *it++;
+  REQUIRE(os == "3"_t);
+  REQUIRE(os.location() == Location(1, 9));
+  os = *it++;
+  REQUIRE(os == "3"_t);
+  REQUIRE(os.location() == Location(1, 13));
+  os = *it++;
+  REQUIRE(os == Symbol::eof());
+  REQUIRE(os.location() == Location(1, 18));
+}
+
+// S -> aEa | bEb | aFb | bFa
+// E -> e
+// F -> e
+
+TEST_CASE("LR(1) full non-LALR translation", "[LR1TranslationControl]") {
+    TranslationGrammar tg{
+      {
+          {"S"_nt, {"e"_t, "E"_nt, "a"_t}},
+          {"S"_nt, {"b"_t, "E"_nt, "b"_t}},
+          {"S"_nt, {"a"_t, "F"_nt, "b"_t}},
+          {"S"_nt, {"b"_t, "F"_nt, "a"_t}},
+          {"E"_nt, {"e"_t}},
+          {"F"_nt, {"e"_t}},
+      },
+      "S"_nt};
+
+  LexicalAnalyzer a;
+  std::stringstream in;
+  // expected output:
+  // a e b eof
+  in << "a   e   b";
+  InputReader r{in};
+  a.set_reader(r);
+  LR1TranslationControl lr1(a, tg);
+  lr1.run();
+  REQUIRE(lr1.output().size() == 4);
+  auto it = lr1.output().begin();
+  Token os = *it++;
+  REQUIRE(os == "a"_t);
+  REQUIRE(os.location() == Location(1, 1));
+  os = *it++;
+  REQUIRE(os == "e"_t);
+  REQUIRE(os.location() == Location(1, 5));
+    os = *it++;
+  REQUIRE(os == "b"_t);
+  REQUIRE(os.location() == Location(1, 9));
+  os = *it++;
+  REQUIRE(os == Symbol::eof());
+  REQUIRE(os.location() == Location(1, 10));
 }

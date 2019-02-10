@@ -76,7 +76,7 @@ class TranslationControl {
 
   \returns All output symbols.
   */
-  virtual const tstack<Symbol>& output() const noexcept { return output_; }
+  virtual const tstack<Token>& output() const noexcept { return output_; }
 
  protected:
   /**
@@ -97,12 +97,12 @@ class TranslationControl {
   /**
   \brief Tstack of input symbols.
   */
-  tstack<Symbol> input_;
+  tstack<Token> input_;
 
   /**
   \brief Tstack of output symbols.
   */
-  tstack<Symbol> output_;
+  tstack<Token> output_;
 
   /**
   \brief Error flag.
@@ -112,7 +112,7 @@ class TranslationControl {
   /**
   \brief Returns the next token obtained from lexicalAnalyzer_.
   */
-  virtual Symbol next_token() { return lexicalAnalyzer_->get_token(); }
+  virtual Token next_token() { return lexicalAnalyzer_->get_token(); }
 
   /**
   \brief Get the error stream.
