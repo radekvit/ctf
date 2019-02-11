@@ -161,7 +161,7 @@ class LLTranslationControlGeneral : public TranslationControl {
   void add_error(const Token& top, const Token& token, const Symbol& lastDerivedNonterminal) {
     set_error();
     string message;
-    if (top.type() == Symbol::Type::NONTERMINAL) {
+    if (top.nonterminal()) {
       // find predict and follow
       auto& nonterminals = translationGrammar_->nonterminals();
       size_t i = std::find(nonterminals.begin(), nonterminals.end(), top) - nonterminals.begin();

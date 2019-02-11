@@ -7,9 +7,9 @@
 #define CTF_BASE_H
 
 #include <any>
+#include <mutex>
 #include <ostream>
 #include <stdexcept>
-#include <mutex>
 
 #include "ctf_generic_types.hpp"
 
@@ -321,16 +321,17 @@ class Symbol {
     */
     EOI = 3,
   };
+
+  Symbol(Type type, size_t id = 0) noexcept : type_(static_cast<unsigned char>(type)), id_(id) {}
   /**
   \brief Constructs a Symbol with a given type. If specified, sets Symbol's name and attribute.
   \param[in] type Type of constructed Symbol.
-  \param[in] name Name of constructed Symbol. Defaults to "". "" is only valid for Type::EOI.
+  \param[in] name Name of constructed Symbol. Defaults to "". "EOF" is the only valid name for Type::EOI.
   \param[in] atr Attribute of constructed Symbol.
   */
-  Symbol(Type type, const string& name = "")
-      : type_(static_cast<unsigned char>(type)), id_(name_index(name)) {
-    assert(type == Symbol::Type::EOI || name != "");
-  }
+  Symbol(Type type, const string& name)
+      : type_(static_cast<unsigned char>(type)), id_(name_index(name)) {}
+
   /**
   \brief Default destructor.
   */
@@ -349,10 +350,6 @@ class Symbol {
   \returns A const reference to name.
   */
   const string& name() const {
-    static const std::string eof = "EOF";
-    if (type() == Type::EOI) {
-      return eof;
-    }
     return nameMap()[id_];
   }
   /**
@@ -360,6 +357,9 @@ class Symbol {
   \returns The symbol's type.
   */
   Type type() const { return Type(type_); }
+
+  bool terminal() const noexcept { return Type(type_) == Type::TERMINAL; }
+  bool nonterminal() const noexcept { return Type(type_) == Type::NONTERMINAL; }
 
   /**
   \name Comparison operators
@@ -392,7 +392,7 @@ class Symbol {
     using namespace std::literals;
 
     if (type() == Type::EOI) {
-      return "EOF";
+      return name();
     }
     return "\""s + name() + "\"" + (type() == Type::NONTERMINAL ? "_nt" : "_t");
   }
@@ -426,6 +426,13 @@ class Symbol {
     return it->second;
   }
 
+  // invalidates all Symbol names
+  static void flush_symbols() {
+    nameMap() = {"EOF"};
+    reverseNameMap().clear();
+    reverseNameMap()["EOF"] = 0;
+  }
+
  private:
   /**
   \brief Gets the mutex for Symbol name insertion.
@@ -436,22 +443,17 @@ class Symbol {
   }
 
   inline static unordered_map<string, size_t>& reverseNameMap() {
-    static unordered_map<string, size_t> rnm;
+    static unordered_map<string, size_t> rnm{{"EOF", 0}};
     return rnm;
   }
   inline static deque<string>& nameMap() {
-    static deque<string> nm;
+    static deque<string> nm{"EOF"};
     return nm;
   }
 };
 
 class Token {
  public:
-  Token(const Symbol::Type type,
-        const string& name = "",
-        const Attribute& atr = Attribute{},
-        const Location& loc = Location::invalid())
-      : symbol_(type, name), attribute_(atr), location_(loc) {}
   Token(const Symbol symbol,
         const Attribute& atr = Attribute{},
         const Location& loc = Location::invalid())
@@ -472,6 +474,9 @@ class Token {
   Symbol::Type type() const noexcept { return symbol_.type(); }
 
   const string& name() const noexcept { return symbol_.name(); }
+
+  bool terminal() const noexcept { return symbol_.terminal(); }
+  bool nonterminal() const noexcept { return symbol_.nonterminal(); }
 
   /**
   \brief Returns a reference to attribute.
@@ -536,13 +541,16 @@ class Token {
 \returns A Symbol with type Terminal, given name and given attribute.
 */
 inline Symbol Terminal(const string& name) { return Symbol(Symbol::Type::TERMINAL, name); }
+inline Symbol Terminal(size_t id) { return Symbol(Symbol::Type::TERMINAL, id); }
 /**
 \brief Returns a Symbol with Type::Nonterminal, given name and attribute.
 \param[in] name Name of returned symbol.
 \returns A Symbol with type Nonterminal and given name.
 */
 inline Symbol Nonterminal(const string& name) { return Symbol(Symbol::Type::NONTERMINAL, name); }
-#ifndef CTF_NO_QUOTE_OPERATORS
+inline Symbol Nonterminal(const size_t id) { return Symbol(Symbol::Type::NONTERMINAL, id); }
+
+#ifndef CTF_NO_LITERALS
 inline namespace literals {
 /**
 \brief Returns a Symbol of Type::Terminal with given name.
@@ -550,12 +558,18 @@ inline namespace literals {
 \returns Symbol with type Terminal and given name.
 */
 inline Symbol operator""_t(const char* s, size_t) { return Terminal({s}); }
+inline Symbol operator""_t(unsigned long long int id) {
+  return Symbol(Symbol::Type::TERMINAL, static_cast<size_t>(id));
+}
 /**
 \brief Returns a Symbol of Type::Nonterminal with given name.
 \param[in] s C string representing the name of the returned Symbol.
 \returns Symbol with type Terminal and given name.
 */
 inline Symbol operator""_nt(const char* s, size_t) { return Nonterminal({s}); }
+inline Symbol operator""_nt(unsigned long long int id) {
+  return Symbol(Symbol::Type::NONTERMINAL, static_cast<size_t>(id));
+}
 }  // namespace literals
 #endif
 

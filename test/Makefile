@@ -19,9 +19,6 @@ build: $(APPNAME)
 debug: CXXFLAGS+=-g -O0
 debug: build
 
-deploy: CXXFLAGS+=-O3 -DNDEBUG
-deploy: build
-
 $(APPNAME): $(OBJFILES)
 	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
 
@@ -34,7 +31,7 @@ clean:
 format:
 	clang-format -style=file -i *.cpp
 
-test: debug
+test: all
 test:
 	./$(APPNAME)
 

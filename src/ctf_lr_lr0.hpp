@@ -33,7 +33,7 @@ class Item {
       // expand all new items for nonterminals we haven't expanded yet
       for (auto&& item : items) {
         const auto& input = item.rule().input();
-        if (item.mark() != input.size() && input[item.mark()].type() == Symbol::Type::NONTERMINAL &&
+        if (item.mark() != input.size() && input[item.mark()].nonterminal() &&
             !expandedNonterminals.contains(input[item.mark()])) {
           const auto& nonterminal = input[item.mark()];
           expandedNonterminals.insert(nonterminal);

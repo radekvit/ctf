@@ -19,7 +19,7 @@ TEST_CASE("LLTable construction", "[LLTable]") {
   }
 
   SECTION("empty TranslationGrammar") {
-    REQUIRE_NOTHROW(LLTable({}, {{Symbol::eof()}}));
+    REQUIRE_NOTHROW(LLTable({}, {{Symbol::eof()}, {Symbol::eof()}}));
   }
 
   SECTION("non-LL Translation Grammar") {

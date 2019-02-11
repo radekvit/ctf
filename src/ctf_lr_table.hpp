@@ -130,7 +130,7 @@ class SLRTable : public LRGenericTable {
         }
         lr_action_item(state, terminal) = {LRActionType::REDUCE, rule.id};
       }
-    } else if (rule.input()[mark].type() == Symbol::Type::NONTERMINAL) {
+    } else if (rule.input()[mark].nonterminal()) {
       auto&& nonterminal = rule.input()[mark];
       size_t nextState = transitionMap.at(nonterminal);
       lr_goto_item(state, nonterminal) = nextState;
@@ -179,7 +179,7 @@ class LR1GenericTable : public LRGenericTable {
         }
         lr_action_item(state, terminal) = {LRActionType::REDUCE, rule.id};
       }
-    } else if (rule.input()[mark].type() == Symbol::Type::NONTERMINAL) {
+    } else if (rule.input()[mark].nonterminal()) {
       auto&& nonterminal = rule.input()[mark];
       size_t nextState = transitionMap.at(nonterminal);
       lr_goto_item(state, nonterminal) = nextState;

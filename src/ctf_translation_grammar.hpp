@@ -7,11 +7,12 @@ methods.
 #ifndef CTF_TRANSLATION_GRAMMAR_H
 #define CTF_TRANSLATION_GRAMMAR_H
 
+#include "ctf_base.hpp"
+
 #include <functional>
 #include <ostream>
 #include <stdexcept>
 #include <utility>
-#include "ctf_base.hpp"
 
 namespace ctf {
 
@@ -68,7 +69,7 @@ class TranslationGrammar {
               "More assigned actions than symbols in output when constructing class "
               "TranslationGrammar::Rule.");
         for (auto i : target) {
-          if (i > output_.size() || output_[i].type() == Symbol::Type::NONTERMINAL)
+          if (i > output_.size() || output_[i].nonterminal())
             throw std::invalid_argument(
                 "Attribute target not an output terminal when constructing class "
                 "TranslationGrammar::Rule.");
@@ -89,7 +90,7 @@ class TranslationGrammar {
       size_t target = 0;
       // attribute actions have the same size as the number of terminals
       for (size_t i = 0; i < attributeActions_.size(); ++i, ++target) {
-        while (output_[target].type() == Symbol::Type::NONTERMINAL)
+        while (output_[target].nonterminal())
           ++target;
         attributeActions_[i].insert(target);
       }
@@ -191,11 +192,11 @@ class TranslationGrammar {
       vector<Symbol> inputNonterminals;
       vector<Symbol> outputNonterminals;
       for (auto& s : input_) {
-        if (s.type() == Symbol::Type::NONTERMINAL)
+        if (s.nonterminal())
           inputNonterminals.push_back(s);
       }
       for (auto& s : output_) {
-        if (s.type() == Symbol::Type::NONTERMINAL)
+        if (s.nonterminal())
           outputNonterminals.push_back(s);
       }
       if (inputNonterminals != outputNonterminals)
@@ -220,6 +221,17 @@ class TranslationGrammar {
     }
   };
 
+  enum class PrecedenceMarker: unsigned char {
+    NOT_ASSOCIATIVE = 0x0,
+    LEFT_ASSOCIATIVE = 0x1,
+    RIGHT_ASSOCIATIVE = 0x2,
+  };
+
+  struct PrecedenceSet {
+    PrecedenceMarker marker;
+    vector_set<Symbol> terminals;
+  };
+
   /**
   \brief Constructs an empty TranslationGrammar. Implicit starting symbol is
   "S'"_nt.
@@ -227,7 +239,7 @@ class TranslationGrammar {
   TranslationGrammar()
       : terminals_({Symbol::eof()})
       , nonterminals_({"S"_nt, "S'"_nt})
-      , rules_({Rule("S'"_nt, {"S"_nt, Symbol::eof()})})
+      , rules_({Rule("S"_nt, {}), Rule("S'"_nt, {"S"_nt, Symbol::eof()})})
       , starting_symbol_("S'"_nt) {}
   /**
   \brief Constructs a TranslationGrammar, takes terminals and nonterminals
@@ -235,15 +247,54 @@ class TranslationGrammar {
 
   \param[in] rules A vector of rules. Duplicates will be erased, even with
   different atttribute actions.
-  \param[in] starting_symbol The starting symbol.
+  \param[in] starting_symbol The starting symbol. Precondition: This symbol
   */
-  TranslationGrammar(const vector<Rule>& rules, const Symbol& starting_symbol)
-      : rules_(rules), starting_symbol_(starting_symbol) {
+  TranslationGrammar(const vector<Rule>& rules, const Symbol& starting_symbol, const vector<PrecedenceSet>& precedences = {})
+      : rules_(rules), starting_symbol_(starting_symbol), precedences_(precedences)  {
     // the starting symbol must be a nonterminal
-    if (starting_symbol_.type() != Symbol::Type::NONTERMINAL)
+    if (!starting_symbol_.nonterminal())
       throw std::invalid_argument(
           "Starting symbol is not a nonterminal when constructing "
           "TranslationGrammar.");
+    nonterminals_.push_back(starting_symbol_);
+
+    // filling the terminal and nonterminal sets
+    for (auto& r : rules_) {
+      nonterminals_.push_back(r.nonterminal());
+      for (auto& s : r.input()) {
+        switch (s.type()) {
+          case Symbol::Type::NONTERMINAL:
+            nonterminals_.push_back(s);
+            break;
+          case Symbol::Type::TERMINAL:
+            terminals_.push_back(s);
+            break;
+          default:
+            // ignore all other types
+            break;
+        }  // switch
+      }    // for all input
+    }      // for all rules
+    make_set(nonterminals_);
+    make_augmented();
+    mark_rules();
+  }
+  /**
+  \brief Constructs a TranslationGrammar from rvalue references, takes terminals and nonterminals
+  from the rules' inputs and starting symbol.
+
+  \param[in] rules A vector of rules. Duplicates will be erased, even with
+  different atttribute actions.
+  \param[in] starting_symbol The starting symbol. Precondition: This symbol
+  */
+  TranslationGrammar(vector<Rule>&& rules, Symbol&& starting_symbol, vector<PrecedenceSet>&& precedences = {})
+      : rules_(rules), starting_symbol_(starting_symbol), precedences_(precedences)  {
+    // the starting symbol must be a nonterminal
+    if (!starting_symbol_.nonterminal())
+      throw std::invalid_argument(
+          "Starting symbol is not a nonterminal when constructing "
+          "TranslationGrammar.");
+
     nonterminals_.push_back(starting_symbol_);
 
     // filling the terminal and nonterminal sets
@@ -282,11 +333,13 @@ class TranslationGrammar {
   TranslationGrammar(const vector<Symbol>& nonterminals,
                      const vector<Symbol>& terminals,
                      const vector<Rule>& rules,
-                     const Symbol& starting_symbol)
+                     const Symbol& starting_symbol,
+                     const vector<PrecedenceSet>& precedences = {})
       : terminals_(terminals)
       , nonterminals_(nonterminals)
       , rules_(rules)
-      , starting_symbol_(starting_symbol) {
+      , starting_symbol_(starting_symbol)
+      , precedences_(precedences) {
     make_set(terminals_);
     make_set(nonterminals_);
 
@@ -339,6 +392,84 @@ class TranslationGrammar {
     make_set(nonterminals_);
     make_augmented();
     mark_rules();
+    // todo check precedences
+  }
+
+  /**
+  \brief Constructs a TranslationGrammar from rvalue references.
+
+  \param[in] terminals A vector of all terminals. Duplicates will be erased.
+  \param[in] nonterminals A vector of all nonterminals. Duplicates will be
+  erased.
+  \param[in] rules A vector of all rules. Duplicates will be erased, even with
+  different atttribute actions.
+  \param[in] starting_symbol The starting symbol.
+
+  Checks rules for validity with supplied terminals and nonterminals.
+  */
+  TranslationGrammar(vector<Symbol>&& nonterminals,
+                     vector<Symbol>&& terminals,
+                     vector<Rule>&& rules,
+                     Symbol&& starting_symbol,
+                     vector<PrecedenceSet>&& precedences)
+      : terminals_(terminals)
+      , nonterminals_(nonterminals)
+      , rules_(rules)
+      , starting_symbol_(starting_symbol)
+      , precedences_(precedences) {
+    make_set(terminals_);
+    make_set(nonterminals_);
+
+    for (auto& t : terminals_) {
+      if (t == Symbol::eof())
+        throw std::invalid_argument("EOF in terminals when constructing TranslationGrammar.");
+      if (t.type() != Symbol::Type::TERMINAL)
+        throw std::invalid_argument(
+            "Symbol with type other than TERMINAL in terminals when "
+            "constructing TranslationGrammar.");
+    }
+
+    for (auto& nt : nonterminals_) {
+      if (nt.type() != Symbol::Type::NONTERMINAL)
+        throw std::invalid_argument(
+            "Symbol with type other than NONTERMINAL in nonterminals when "
+            "constructing TranslationGrammar.");
+    }
+
+    if (starting_symbol_.type() != Symbol::Type::NONTERMINAL)
+      throw std::invalid_argument(
+          "Starting symbol is not a nonterminal when constructing "
+          "TranslationGrammar.");
+    if (!is_in(nonterminals_, starting_symbol_))
+      throw std::invalid_argument(
+          "Starting symbol is not in nonterminals when constructing "
+          "TranslationGrammar.");
+
+    for (auto& r : rules_) {
+      if (!is_in(nonterminals_, r.nonterminal()))
+        throw std::invalid_argument("Rule with production from nonterminal " +
+                                    r.nonterminal().name() + ", no such nonterminal.");
+
+      for (auto& s : r.input()) {
+        switch (s.type()) {
+          case Symbol::Type::TERMINAL:
+            if (!is_in(terminals_, s))
+              throw std::invalid_argument("Rule with unknown terminal " + s.name() + ".");
+            break;
+          case Symbol::Type::NONTERMINAL:
+            if (!is_in(nonterminals_, s))
+              throw std::invalid_argument("Rule with unknown nonterminal " + s.name() + ".");
+            break;
+          default:
+            // should not matter
+            break;
+        }  // switch
+      }    // for all input
+    }      // for all rules
+    make_set(nonterminals_);
+    make_augmented();
+    mark_rules();
+    // todo check precedences
   }
 
   ~TranslationGrammar() = default;
@@ -407,6 +538,10 @@ class TranslationGrammar {
   \brief The starting symbol.
   */
   Symbol starting_symbol_;
+  /**
+  \brief The precedence and associativity of operators.
+  */
+  vector<PrecedenceSet> precedences_;
 
   void mark_rules() {
     for (size_t i = 0; i < rules_.size(); ++i) {

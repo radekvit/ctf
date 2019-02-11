@@ -2,6 +2,8 @@
 
 #include "../src/ctf_base.hpp"
 
+#include <type_traits>
+
 TEST_CASE("TranslationException") {
   REQUIRE_THROWS_AS(throw ctf::TranslationException("m"),
                     ctf::TranslationException);
@@ -11,6 +13,16 @@ using namespace std::string_literals;
 
 using ctf::Symbol;
 using ctf::Token;
+
+TEST_CASE("Symbol construction and assignment", "[Symbol]") {
+  // constructor traits
+  REQUIRE(std::is_trivially_constructible<Symbol, const Symbol&>::value);
+  REQUIRE(std::is_trivially_constructible<Symbol, Symbol&&>::value);
+  REQUIRE(std::is_nothrow_constructible<Symbol, Symbol::Type, size_t>::value);
+  // assignment traits
+  REQUIRE(std::is_trivially_assignable<Symbol, const Symbol&>::value);
+  REQUIRE(std::is_trivially_assignable<Symbol, Symbol&&>::value);
+}
 
 TEST_CASE("Symbol operators", "[Symbol]") {
   using namespace ctf::literals;
@@ -35,8 +47,10 @@ TEST_CASE("Symbol operators", "[Symbol]") {
 }
 
 TEST_CASE("Token Construction", "[Token]") {
-  Token s(Symbol::Type::TERMINAL, "name", "a"s);
+  using namespace ctf::literals;
+  Token s("name"_t, "a"s);
   REQUIRE(s.type() == Symbol::Type::TERMINAL);
+  REQUIRE(s.terminal());
   REQUIRE(s.name() == "name");
   REQUIRE(s.attribute() == "a"s);
 
@@ -45,11 +59,13 @@ TEST_CASE("Token Construction", "[Token]") {
 
   s = "ter"_t;
   REQUIRE(s.type() == Symbol::Type::TERMINAL);
+  REQUIRE(s.terminal());
   REQUIRE(s.name() == "ter");
   REQUIRE(s.attribute().empty());
 
   s = "nter"_nt;
   REQUIRE(s.type() == Symbol::Type::NONTERMINAL);
+  REQUIRE(s.nonterminal());
   REQUIRE(s.name() == "nter");
   REQUIRE(s.attribute().empty());
 

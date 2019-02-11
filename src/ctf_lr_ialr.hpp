@@ -13,13 +13,13 @@ class StateMachine {
   class State {
    public:
     State(size_t id,
-          const vector_set<Item>& isocore,
+          const vector_set<Item>& kernel,
           const TranslationGrammar& grammar,
           const empty_t& empty,
           const first_t& first)
-        : id_(id), items_(closure(isocore, grammar, empty, first)) {
-      // we can only merge states when the isocore only contains rules in the form A -> x.Y
-      for (auto&& item : isocore) {
+        : id_(id), items_(closure(kernel, grammar, empty, first)) {
+      // we can only merge states when the kernel only contains rules in the form A -> x.Y
+      for (auto&& item : kernel) {
         if (item.mark() != 1) {
           mergable_ = false;
           break;
@@ -47,9 +47,9 @@ class StateMachine {
     const vector_set<size_t>& reduce_targets() const noexcept { return reduceTargets_; }
 
    private:
-    // isocore identifier
+    // kernel identifier
     size_t id_;
-    // closure of isocore
+    // closure of kernel
     vector_set<Item> items_;
 
     // state transitions

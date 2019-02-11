@@ -161,7 +161,7 @@ inline vector_set<Item> closure(vector_set<Item> items,
     // expand all new items
     for (auto&& item : items) {
       const auto& input = item.rule().input();
-      if (!item.reduce() && input[item.mark()].type() == Symbol::Type::NONTERMINAL) {
+      if (!item.reduce() && input[item.mark()].nonterminal()) {
         const auto& nonterminal = input[item.mark()];
         // all symbols after the dotted nonterminal
         vector<Symbol> followingSymbols;
@@ -227,13 +227,13 @@ class StateMachine {
   class State {
    public:
     State(size_t id,
-          const vector_set<Item>& isocore,
+          const vector_set<Item>& kernel,
           const TranslationGrammar& grammar,
           const empty_t& empty,
           const first_t& first)
-        : id_(id), items_(closure(isocore, grammar, empty, first)) {
-      // we can only merge states when the isocore only contains rules in the form A -> x.Y
-      for (auto&& item : isocore) {
+        : id_(id), items_(closure(kernel, grammar, empty, first)) {
+      // we can only merge states when the kernel only contains rules in the form A -> x.Y
+      for (auto&& item : kernel) {
         if (item.mark() != 1) {
           mergable_ = false;
           break;
@@ -268,9 +268,9 @@ class StateMachine {
     explicit operator string() const { return to_string(); }
 
    private:
-    // isocore identifier
+    // state index
     size_t id_;
-    // closure of isocore
+    // closure of kernel
     vector_set<Item> items_;
 
     // state transitions
@@ -299,48 +299,47 @@ class StateMachine {
   first_t first_;
   vector<State> states_;
 
-  map<vector_set<Item>, vector<size_t>> isocoreMap_;
+  map<vector_set<Item>, vector<size_t>> kernelMap_;
 
   StateMachine(const TranslationGrammar& grammar, empty_t empty, first_t first)
       : grammar_(&grammar), empty_(std::move(empty)), first_(std::move(first)) {}
 
   const TranslationGrammar& grammar() const noexcept { return *grammar_; }
 
-  tuple<size_t, bool> insert_state(const vector_set<Item>& isocore) {
+  tuple<size_t, bool> insert_state(const vector_set<Item>& kernel) {
     size_t i = states_.size();
-    State newState(i, isocore, grammar(), empty_, first_);
+    State newState(i, kernel, grammar(), empty_, first_);
 
     if (newState.mergable()) {
       // try to merge with another state
-      auto& isocoreStates = isocoreMap_[isocore];
-      if (isocoreStates.empty()) {
-        // new mergable isocore
-        isocoreStates.push_back(i);
+      auto& kernelStates = kernelMap_[kernel];
+      if (kernelStates.empty()) {
+        // new mergable kernel
+        kernelStates.push_back(i);
 
         states_.push_back(std::move(newState));
         return {i, true};
       } else {
-        // check existing states with this isocore
-        auto [other, merged] = merge(isocoreStates, newState);
+        // check existing states with this kernel
+        auto [other, merged] = merge(kernelStates, newState);
         if (merged) {
           return {other, false};
         }
         // no matching state found, insert as new
-        isocoreStates.push_back(i);
+        kernelStates.push_back(i);
         states_.push_back(std::move(newState));
         return {i, true};
       }
     } else {
-      // not a mergable isocore, just insert
+      // not a mergable kernel, just insert
       states_.push_back(std::move(newState));
       return {i, true};
     }
   }
 
-  virtual tuple<size_t, bool> merge(const std::vector<size_t>& existingStates,
-                                    const State& newState) {
+  virtual tuple<size_t, bool> merge(const std::vector<size_t>& isocores, const State& newState) {
     auto&& newLookaheads = lookaheads(newState);
-    for (auto other : existingStates) {
+    for (auto other : isocores) {
       auto& existing = states_[other];
       if (lookaheads(existing) == newLookaheads) {
         // we can keep the same lookahead relations in the existing state
@@ -392,8 +391,8 @@ class StateMachine {
   }
 
   void expand_state(size_t i) {
-    for (auto&& [symbol, isocore] : symbol_skip_closures(states_[i].items(), i)) {
-      auto [id, inserted] = insert_state(isocore);
+    for (auto&& [symbol, kernel] : symbol_skip_closures(states_[i].items(), i)) {
+      auto [id, inserted] = insert_state(kernel);
       states_[i].transitions()[symbol] = id;
       // new inserted state
       if (inserted) {
