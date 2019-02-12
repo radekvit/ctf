@@ -13,6 +13,7 @@ using namespace std::string_literals;
 
 using ctf::Symbol;
 using ctf::Token;
+using ctf::Attribute;
 
 TEST_CASE("Symbol construction and assignment", "[Symbol]") {
   // constructor traits
@@ -48,7 +49,7 @@ TEST_CASE("Symbol operators", "[Symbol]") {
 
 TEST_CASE("Token Construction", "[Token]") {
   using namespace ctf::literals;
-  Token s("name"_t, "a"s);
+  Token s("name"_t, Attribute("a"s));
   REQUIRE(s.type() == Symbol::Type::TERMINAL);
   REQUIRE(s.terminal());
   REQUIRE(s.name() == "name");

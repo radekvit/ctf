@@ -20,7 +20,7 @@ TEST_CASE("Rule construction", "[TranslationGrammar::Rule]") {
           vector<vector_set<size_t>>{{2}});
   REQUIRE_NOTHROW(Rule("NT"_nt, {"x"_t, "y"_t}, {"y"_t, "y"_t}, {{}, {0, 1}}));
 
-  REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t}, {}, {{}, {}}),
+  REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t}, {"y"_t}, {{}, {}}),
                     std::invalid_argument);
   REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t}, {}, {{0}}), std::invalid_argument);
   REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t, "X"_nt}, {"X"_nt}, {{0}}),

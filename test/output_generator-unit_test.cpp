@@ -22,7 +22,7 @@ TEST_CASE("OutputGenerator default output", "[OutputGenerator]") {
   std::stringstream s;
   OutputGenerator o{s};
 
-  o.output({ctf::Token(ctf::Terminal("n"), 'a'), ctf::Terminal("n"), ctf::Symbol::eof()});
+  o.output({ctf::Token(ctf::Terminal("n"), ctf::Attribute('a')), ctf::Terminal("n"), ctf::Symbol::eof()});
 
   REQUIRE(s.str() == "n.a\nn\n");
 }

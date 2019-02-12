@@ -45,7 +45,7 @@ class Attribute {
       typename = typename std::enable_if<
           !std::is_same<typename std::remove_reference<T>::type, Attribute>::value &&
           !std::is_same<typename std::remove_reference<T>::type, const Attribute>::value>::type>
-  Attribute(T&& arg) : storage_(arg) {}
+  explicit Attribute(T&& arg) : storage_(arg) {}
 
   /**
   \brief Default assignment operator.
@@ -326,8 +326,8 @@ class Symbol {
   /**
   \brief Constructs a Symbol with a given type. If specified, sets Symbol's name and attribute.
   \param[in] type Type of constructed Symbol.
-  \param[in] name Name of constructed Symbol. Defaults to "". "EOF" is the only valid name for Type::EOI.
-  \param[in] atr Attribute of constructed Symbol.
+  \param[in] name Name of constructed Symbol. Defaults to "". "EOF" is the only valid name for
+  Type::EOI. \param[in] atr Attribute of constructed Symbol.
   */
   Symbol(Type type, const string& name)
       : type_(static_cast<unsigned char>(type)), id_(name_index(name)) {}
@@ -349,9 +349,7 @@ class Symbol {
   \brief Returns a const reference to name.
   \returns A const reference to name.
   */
-  const string& name() const {
-    return nameMap()[id_];
-  }
+  const string& name() const { return nameMap()[id_]; }
   /**
   \brief Returns the type of the symbol.
   \returns The symbol's type.
@@ -428,7 +426,11 @@ class Symbol {
 
   // invalidates all Symbol names
   static void flush_symbols() {
+#ifdef CTF_MULTITHREAD
+    std::lock_guard l(nameLock());
+#endif
     nameMap() = {"EOF"};
+    nameMap().shrink_to_fit();
     reverseNameMap().clear();
     reverseNameMap()["EOF"] = 0;
   }

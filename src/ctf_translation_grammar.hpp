@@ -31,7 +31,7 @@ class TranslationGrammar {
   */
   class Rule {
    public:
-    /**
+       /**
     \brief Constructs a rule.
 
     \param[in] nonterminal Starting symbol.
@@ -51,7 +51,8 @@ class TranslationGrammar {
         : nonterminal_(nonterminal)
         , input_(input)
         , output_(output)
-        , attributeActions_(attributeActions) {
+        , attributeActions_(attributeActions)
+        , precedenceSymbol_(Symbol::eof()) {
       check_nonterminals();
 
       // no actions provided
@@ -75,6 +76,63 @@ class TranslationGrammar {
                 "TranslationGrammar::Rule.");
         }
       }
+      for (auto it = input_.crbegin(); it < input_.crend(); ++it) {
+        if (!it->nonterminal()) {
+          precedenceSymbol_ = *it;
+          break;
+        }
+      }
+    }
+    /**
+    \brief Constructs a rule.
+
+    \param[in] nonterminal Starting symbol.
+    \param[in] input Vector of input symbols. The nonterminals must match output
+    in their count and order.
+    \param[in] output Vector of output symbols. The nonterminals must match
+    input in their count and order.
+    \param[in] attributeActions Destinations of token attributes for each
+    terminal in the input. Implicitly no attribute actions take place.
+    The numbers say which output symbols are the targets for each input token's
+    attribute.
+    */
+    Rule(const Symbol& nonterminal,
+         const vector<Symbol>& input,
+         const vector<Symbol>& output,
+         const vector<vector_set<size_t>>& attributeActions,
+         bool,
+         const Symbol& precedenceSymbol)
+        : nonterminal_(nonterminal)
+        , input_(input)
+        , output_(output)
+        , attributeActions_(attributeActions)
+        , precedenceSymbol_(precedenceSymbol) {
+      check_nonterminals();
+
+      // no actions provided
+      if (attributeActions_.size() == 0) {
+        create_empty_actions();
+        return;
+      }
+      // attribute actions were provided, checking validity
+      if (attributeActions_.size() != count_input_terminals())
+        throw std::invalid_argument(
+            "Invalid attributeActions_ when constructing class TranslationGrammar::Rule.");
+      for (auto& target : attributeActions_) {
+        if (target.size() > output_.size())
+          throw std::invalid_argument(
+              "More assigned actions than symbols in output when constructing class "
+              "TranslationGrammar::Rule.");
+        for (auto i : target) {
+          if (i > output_.size() || output_[i].nonterminal())
+            throw std::invalid_argument(
+                "Attribute target not an output terminal when constructing class "
+                "TranslationGrammar::Rule.");
+        }
+      }
+      if (!precedenceSymbol_.terminal()) {
+        throw std::invalid_argument("Precedence symbol must be a terminal.");
+      }
     }
     /**
     \brief Constructs a rule with same input and output with specified attribute
@@ -85,7 +143,32 @@ class TranslationGrammar {
 
     Attribute targets are created to match all terminals to themselves.
     */
-    Rule(const Symbol& nonterminal, const vector<Symbol>& both) : Rule(nonterminal, both, both) {
+    Rule(const Symbol& nonterminal,
+         const vector<Symbol>& both)
+        : Rule(nonterminal, both, both, {}) {
+      // implicit target for each terminal is the identical output terminal
+      size_t target = 0;
+      // attribute actions have the same size as the number of terminals
+      for (size_t i = 0; i < attributeActions_.size(); ++i, ++target) {
+        while (output_[target].nonterminal())
+          ++target;
+        attributeActions_[i].insert(target);
+      }
+    }
+    /**
+    \brief Constructs a rule with same input and output with specified attribute
+    actions.
+
+    \param[in] nonterminal Starting symbol.
+    \param[in] both Vector of input symbols and at the same time output symbols.
+
+    Attribute targets are created to match all terminals to themselves.
+    */
+    Rule(const Symbol& nonterminal,
+         const vector<Symbol>& both,
+         bool,
+         const Symbol& precedenceSymbol)
+        : Rule(nonterminal, both, both, {}, true, precedenceSymbol) {
       // implicit target for each terminal is the identical output terminal
       size_t target = 0;
       // attribute actions have the same size as the number of terminals
@@ -109,6 +192,8 @@ class TranslationGrammar {
 
     vector<vector_set<size_t>>& actions() { return attributeActions_; }
     const vector<vector_set<size_t>>& actions() const { return attributeActions_; }
+
+    Symbol precedence_symbol() const noexcept { return precedenceSymbol_; }
 
     /**
     \name Comparison operators
@@ -185,6 +270,8 @@ class TranslationGrammar {
     */
     vector<vector_set<size_t>> attributeActions_;
 
+    Symbol precedenceSymbol_;
+
     /**
     \brief Checks if nonterminals are in same space in input and output strings.
     */
@@ -221,7 +308,7 @@ class TranslationGrammar {
     }
   };
 
-  enum class PrecedenceMarker: unsigned char {
+  enum class PrecedenceMarker : unsigned char {
     NOT_ASSOCIATIVE = 0x0,
     LEFT_ASSOCIATIVE = 0x1,
     RIGHT_ASSOCIATIVE = 0x2,
@@ -249,8 +336,10 @@ class TranslationGrammar {
   different atttribute actions.
   \param[in] starting_symbol The starting symbol. Precondition: This symbol
   */
-  TranslationGrammar(const vector<Rule>& rules, const Symbol& starting_symbol, const vector<PrecedenceSet>& precedences = {})
-      : rules_(rules), starting_symbol_(starting_symbol), precedences_(precedences)  {
+  TranslationGrammar(const vector<Rule>& rules,
+                     const Symbol& starting_symbol,
+                     const vector<PrecedenceSet>& precedences = {})
+      : rules_(rules), starting_symbol_(starting_symbol), precedences_(precedences) {
     // the starting symbol must be a nonterminal
     if (!starting_symbol_.nonterminal())
       throw std::invalid_argument(
@@ -287,8 +376,10 @@ class TranslationGrammar {
   different atttribute actions.
   \param[in] starting_symbol The starting symbol. Precondition: This symbol
   */
-  TranslationGrammar(vector<Rule>&& rules, Symbol&& starting_symbol, vector<PrecedenceSet>&& precedences = {})
-      : rules_(rules), starting_symbol_(starting_symbol), precedences_(precedences)  {
+  TranslationGrammar(vector<Rule>&& rules,
+                     Symbol&& starting_symbol,
+                     vector<PrecedenceSet>&& precedences = {})
+      : rules_(rules), starting_symbol_(starting_symbol), precedences_(precedences) {
     // the starting symbol must be a nonterminal
     if (!starting_symbol_.nonterminal())
       throw std::invalid_argument(
