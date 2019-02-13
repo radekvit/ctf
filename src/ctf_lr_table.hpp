@@ -12,7 +12,7 @@
 
 namespace ctf {
 
-enum class LRActionType {
+enum class LRAction {
   SHIFT,
   REDUCE,
   SUCCESS,
@@ -20,11 +20,11 @@ enum class LRActionType {
 };
 
 struct LRActionItem {
-  LRActionType type = LRActionType::ERROR;
+  LRAction action = LRAction::ERROR;
   size_t argument = 0;
 
   friend bool operator==(const LRActionItem& lhs, const LRActionItem& rhs) {
-    return lhs.type == rhs.type && lhs.argument == rhs.argument;
+    return lhs.action == rhs.action && lhs.argument == rhs.argument;
   }
 
   friend bool operator!=(const LRActionItem& lhs, const LRActionItem& rhs) { return !(lhs == rhs); }
@@ -86,7 +86,7 @@ class LRGenericTable {
   }
 
   void initialize_tables(size_t size) {
-    actionTable_ = {size * terminalMap_.size(), {LRActionType::ERROR, 0}};
+    actionTable_ = {size * terminalMap_.size(), {LRAction::ERROR, 0}};
     gotoTable_ = vector<size_t>(size * nonterminalMap_.size(), 0);
 
     states_ = size;
@@ -121,14 +121,14 @@ class SLRTable : public LRGenericTable {
     auto&& mark = item.mark();
     // special S' -> S EOF. item
     if (rule == grammar.starting_rule() && mark == 2) {
-      lr_action_item(state, Symbol::eof()) = {LRActionType::SUCCESS, 0};
+      lr_action_item(state, Symbol::eof()) = {LRAction::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
       size_t ni = grammar.nonterminal_index(rule.nonterminal());
       for (auto&& terminal : follow[ni]) {
-        if (lr_action(state, terminal).type != LRActionType::ERROR) {
+        if (lr_action(state, terminal).action != LRAction::ERROR) {
           throw std::invalid_argument("Constructing SLRTable from a non-SLR TranslationGrammar.");
         }
-        lr_action_item(state, terminal) = {LRActionType::REDUCE, rule.id};
+        lr_action_item(state, terminal) = {LRAction::REDUCE, rule.id};
       }
     } else if (rule.input()[mark].nonterminal()) {
       auto&& nonterminal = rule.input()[mark];
@@ -137,16 +137,16 @@ class SLRTable : public LRGenericTable {
     } else {
       auto&& terminal = rule.input()[mark];
       size_t nextState = transitionMap.at(terminal);
-      if (lr_action(state, terminal).type != LRActionType::ERROR) {
+      if (lr_action(state, terminal).action != LRAction::ERROR) {
         throw std::invalid_argument("Constructing SLRTable from a non-SLR TranslationGrammar.");
       }
-      lr_action_item(state, terminal) = {LRActionType::SHIFT, nextState};
+      lr_action_item(state, terminal) = {LRAction::SHIFT, nextState};
     }
   }
 };
 template <typename StateMachine, const char* type>
 class LR1GenericTable : public LRGenericTable {
-// TODO: conflict resolution
+  // TODO: conflict resolution
  public:
   LR1GenericTable() {}
   LR1GenericTable(const TranslationGrammar& grammar) {
@@ -156,55 +156,89 @@ class LR1GenericTable : public LRGenericTable {
 
     for (auto&& state : sm.states()) {
       for (auto&& item : state.items()) {
-        lr1_insert(state.id(), item, state.transitions(), grammar);
+        lr1_insert(state, item, state.transitions(), grammar);
       }
     }
   }
 
  protected:
-  void lr1_insert(size_t state,
+  void lr1_insert(const typename StateMachine::State& state,
                   const typename StateMachine::Item& item,
                   const unordered_map<Symbol, size_t>& transitionMap,
                   const TranslationGrammar& grammar) {
     using namespace std::literals;
+
+    size_t id = state.id();
     auto&& rule = item.rule();
     auto&& mark = item.mark();
     // special S' -> S.EOF item
     if (rule == grammar.starting_rule() && mark == 2) {
-      lr_action_item(state, Symbol::eof()) = {LRActionType::SUCCESS, 0};
+      lr_action_item(id, Symbol::eof()) = {LRAction::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
       for (auto&& terminal : item.generated_lookaheads()) {
-        if (lr_action(state, terminal).type != LRActionType::ERROR) {
-          conflict_resolution(terminal, lr_action_item(state, terminal), {LRActionType::REDUCE, rule.id}, item, grammar);
+        auto& action = lr_action_item(id, terminal);
+        if (action.action != LRAction::ERROR) {
+          action = conflict_resolution(
+              terminal, {LRAction::REDUCE, rule.id}, action, item, state, grammar);
         } else {
           // regular insert
-          lr_action_item(state, terminal) = {LRActionType::REDUCE, rule.id};
+          lr_action_item(id, terminal) = {LRAction::REDUCE, rule.id};
         }
       }
     } else if (rule.input()[mark].nonterminal()) {
+      // marked nonterminal
       auto&& nonterminal = rule.input()[mark];
       size_t nextState = transitionMap.at(nonterminal);
-      lr_goto_item(state, nonterminal) = nextState;
+      lr_goto_item(id, nonterminal) = nextState;
     } else {
+      // marked terminal
       auto&& terminal = rule.input()[mark];
       size_t nextState = transitionMap.at(terminal);
-      auto&& action = lr_action(state, terminal);
-      if (action.type != LRActionType::ERROR &&
-          action != LRActionItem{LRActionType::SHIFT, nextState}) {
-        conflict_resolution(terminal, lr_action_item(state, terminal), {LRActionType::REDUCE, rule.id}, item, grammar);
+      auto& action = lr_action(id, terminal);
+      if (action.action == LRAction::REDUCE) {
+        action = conflict_resolution(
+            terminal, action, {LRAction::SHIFT, nextState}, item, state, grammar);
       } else {
         // regular insert
-        lr_action_item(state, terminal) = {LRActionType::SHIFT, nextState};
+        lr_action_item(id, terminal) = {LRAction::SHIFT, nextState};
       }
     }
   }
 
-  void conflict_resolution(const Symbol terminal, LRActionItem& item, const LRActionItem& newItem, const typename StateMachine::Item& LR1Item, const TranslationGrammar& grammar) {
-    // TODO:
-    // terminal higher precedence :> favor shift
-    // left associative, same symbol :> favor reduce
-    // right associative, same symbol :> favor shift
-    // not associative, same symbol :> error
+  LRActionItem conflict_resolution(const Symbol terminal,
+                                   const LRActionItem& reduceItem,
+                                   const LRActionItem& item,
+                                   const typename StateMachine::Item& LR1Item,
+                                   const typename StateMachine::State& state,
+                                   const TranslationGrammar& grammar) {
+    using namespace std::literals;
+    // R/R conflict: select rule earlier defined in the grammar
+    if (item.action == LRAction::REDUCE) {
+      return (reduceItem.argument <= item.argument) ? reduceItem : item;
+    }
+    // S/R conflict:
+    auto [associativity, precedence] = grammar.precedence(terminal);
+    auto [associativity2, precedence2] = grammar.precedence(LR1Item.rule().precedence_symbol());
+    if (precedence == precedence2) {
+      switch (associativity) {
+        case Associativity::LEFT:
+          // left associative, same precedence :> favor reduce
+          return reduceItem;
+        case Associativity::RIGHT:
+          // right associative, same precedence :> favor shift
+          return item;
+        case Associativity::NO:
+          // not associative, same precedence :> error
+          throw std::invalid_argument("Unresolvable S/R conflict on "s + terminal.to_string() +
+                                      " in state " + state.to_string() + ".");
+      }
+    } else if (precedence < precedence2) {
+      // terminal higher precedence :> favor shift
+      return item;
+    } else {
+      // terminal lower precedence :> favor reduce
+      return reduceItem;
+    }
   }
 };
 
@@ -234,13 +268,13 @@ class LR1StrictGenericTable : public LRGenericTable {
     auto&& mark = item.mark();
     // special S' -> S.EOF item
     if (rule == grammar.starting_rule() && mark == 2) {
-      lr_action_item(state, Symbol::eof()) = {LRActionType::SUCCESS, 0};
+      lr_action_item(state, Symbol::eof()) = {LRAction::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
       for (auto&& terminal : item.generated_lookaheads()) {
-        if (lr_action(state, terminal).type != LRActionType::ERROR) {
+        if (lr_action(state, terminal).action != LRAction::ERROR) {
           throw std::invalid_argument("Translation grammar is not "s + type);
         }
-        lr_action_item(state, terminal) = {LRActionType::REDUCE, rule.id};
+        lr_action_item(state, terminal) = {LRAction::REDUCE, rule.id};
       }
     } else if (rule.input()[mark].nonterminal()) {
       auto&& nonterminal = rule.input()[mark];
@@ -250,11 +284,10 @@ class LR1StrictGenericTable : public LRGenericTable {
       auto&& terminal = rule.input()[mark];
       size_t nextState = transitionMap.at(terminal);
       auto&& action = lr_action(state, terminal);
-      if (action.type != LRActionType::ERROR &&
-          action != LRActionItem{LRActionType::SHIFT, nextState}) {
+      if (action.action != LRAction::ERROR && action != LRActionItem{LRAction::SHIFT, nextState}) {
         throw std::invalid_argument("Translation grammar is not "s + type);
       }
-      lr_action_item(state, terminal) = {LRActionType::SHIFT, nextState};
+      lr_action_item(state, terminal) = {LRAction::SHIFT, nextState};
     }
   }
 };

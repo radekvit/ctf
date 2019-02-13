@@ -15,7 +15,16 @@ methods.
 #include <utility>
 
 namespace ctf {
+enum class Associativity : unsigned char {
+  NO = 0x0,
+  LEFT = 0x1,
+  RIGHT = 0x2,
+};
 
+struct PrecedenceSet {
+  Associativity associativity;
+  vector_set<Symbol> terminals;
+};
 /**
 \brief Translation grammar.
 */
@@ -31,19 +40,19 @@ class TranslationGrammar {
   */
   class Rule {
    public:
-       /**
-    \brief Constructs a rule.
+    /**
+ \brief Constructs a rule.
 
-    \param[in] nonterminal Starting symbol.
-    \param[in] input Vector of input symbols. The nonterminals must match output
-    in their count and order.
-    \param[in] output Vector of output symbols. The nonterminals must match
-    input in their count and order.
-    \param[in] attributeActions Destinations of token attributes for each
-    terminal in the input. Implicitly no attribute actions take place.
-    The numbers say which output symbols are the targets for each input token's
-    attribute.
-    */
+ \param[in] nonterminal Starting symbol.
+ \param[in] input Vector of input symbols. The nonterminals must match output
+ in their count and order.
+ \param[in] output Vector of output symbols. The nonterminals must match
+ input in their count and order.
+ \param[in] attributeActions Destinations of token attributes for each
+ terminal in the input. Implicitly no attribute actions take place.
+ The numbers say which output symbols are the targets for each input token's
+ attribute.
+ */
     Rule(const Symbol& nonterminal,
          const vector<Symbol>& input,
          const vector<Symbol>& output,
@@ -143,8 +152,7 @@ class TranslationGrammar {
 
     Attribute targets are created to match all terminals to themselves.
     */
-    Rule(const Symbol& nonterminal,
-         const vector<Symbol>& both)
+    Rule(const Symbol& nonterminal, const vector<Symbol>& both)
         : Rule(nonterminal, both, both, {}) {
       // implicit target for each terminal is the identical output terminal
       size_t target = 0;
@@ -306,17 +314,6 @@ class TranslationGrammar {
     void create_empty_actions() {
       attributeActions_ = vector<vector_set<size_t>>(count_input_terminals(), vector_set<size_t>());
     }
-  };
-
-  enum class PrecedenceMarker : unsigned char {
-    NOT_ASSOCIATIVE = 0x0,
-    LEFT_ASSOCIATIVE = 0x1,
-    RIGHT_ASSOCIATIVE = 0x2,
-  };
-
-  struct PrecedenceSet {
-    PrecedenceMarker marker;
-    vector_set<Symbol> terminals;
   };
 
   /**
@@ -610,6 +607,15 @@ class TranslationGrammar {
   */
   size_t terminal_index(const Symbol& t) const {
     return std::lower_bound(terminals_.begin(), terminals_.end(), t) - terminals_.begin();
+  }
+
+  tuple<Associativity, size_t> precedence(const Symbol symbol) const {
+    for (size_t i = 0; i < precedences_.size(); ++i) {
+      if (precedences_[i].terminals.contains(symbol)) {
+        return {precedences_[i].associativity, i};
+      }
+    }
+    return {Associativity::NO, std::numeric_limits<size_t>::max()};
   }
 
  protected:

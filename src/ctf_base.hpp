@@ -322,7 +322,8 @@ class Symbol {
     EOI = 3,
   };
 
-  constexpr Symbol(Type type, size_t id = 0) noexcept : type_(static_cast<unsigned char>(type)), id_(id) {}
+  constexpr Symbol(Type type, size_t id = 0) noexcept
+      : type_(static_cast<unsigned char>(type)), id_(id) {}
   /**
   \brief Constructs a Symbol with a given type. If specified, sets Symbol's name and attribute.
   \param[in] type Type of constructed Symbol.

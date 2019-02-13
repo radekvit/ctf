@@ -5,7 +5,7 @@
 using ctf::Symbol;
 using ctf::TranslationGrammar;
 using ctf::SLRTable;
-using ctf::LRActionType;
+using ctf::LRAction;
 
 using namespace ctf::literals;
 
@@ -26,15 +26,15 @@ TEST_CASE("SLRTable base", "[SLRTable]") {
   size_t state = 0;
 
   // check some of the table contents
-  REQUIRE(table.lr_action(state, "i"_t).type == LRActionType::SHIFT);
-  REQUIRE(table.lr_action(state, "("_t).type == LRActionType::SHIFT);
-  REQUIRE(table.lr_action(state, ")"_t).type == LRActionType::ERROR);
+  REQUIRE(table.lr_action(state, "i"_t).action == LRAction::SHIFT);
+  REQUIRE(table.lr_action(state, "("_t).action == LRAction::SHIFT);
+  REQUIRE(table.lr_action(state, ")"_t).action == LRAction::ERROR);
   state = table.lr_action(0, "i"_t).argument;
-  REQUIRE(table.lr_action(state, "o"_t).type == LRActionType::REDUCE);
-  REQUIRE(table.lr_action(state, ")"_t).type == LRActionType::REDUCE);
-  REQUIRE(table.lr_action(state, Symbol::eof()).type == LRActionType::REDUCE);
+  REQUIRE(table.lr_action(state, "o"_t).action == LRAction::REDUCE);
+  REQUIRE(table.lr_action(state, ")"_t).action == LRAction::REDUCE);
+  REQUIRE(table.lr_action(state, Symbol::eof()).action == LRAction::REDUCE);
 
   state = table.lr_goto(0, "S"_nt);
   state = table.lr_action(state, Symbol::eof()).argument;
-  REQUIRE(table.lr_action(state, Symbol::eof()).type == LRActionType::SUCCESS);
+  REQUIRE(table.lr_action(state, Symbol::eof()).action == LRAction::SUCCESS);
 }

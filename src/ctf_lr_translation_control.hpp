@@ -122,13 +122,13 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     Token token = next_token();
 
     while (true) {
-      switch (auto&& item = lrTable_.lr_action(state, token.symbol()); item.type) {
-        case LRActionType::SHIFT:
+      switch (auto&& item = lrTable_.lr_action(state, token.symbol()); item.action) {
+        case LRAction::SHIFT:
           state = item.argument;
           pushdown.push_back(state);
           token = next_token();
           break;
-        case LRActionType::REDUCE: {
+        case LRAction::REDUCE: {
           auto&& rule = translationGrammar_->rules()[item.argument];
           for (size_t i = 0; i < rule.input().size(); ++i) {
             pushdown.pop_back();
@@ -139,11 +139,11 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
           appliedRules.push_back(item.argument);
           break;
         }
-        case LRActionType::SUCCESS:
+        case LRAction::SUCCESS:
           appliedRules.push_back(translationGrammar_->rules().size() - 1);
           produce_output(appliedRules);
           return;
-        case LRActionType::ERROR:
+        case LRAction::ERROR:
           add_error(token, error_message(state, token));
           if (!error_recovery(state, token))
             return;
@@ -201,11 +201,11 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     string message = "Unexpected symbol '";
     message += token.name();
     message += "'\nexpected one of:";
-    if (lrTable_.lr_action(state, Symbol::eof()).type != LRActionType::ERROR) {
+    if (lrTable_.lr_action(state, Symbol::eof()).action != LRAction::ERROR) {
       message += " EOF";
     }
     for (auto& terminal : translationGrammar_->terminals()) {
-      if (lrTable_.lr_action(state, terminal).type != LRActionType::ERROR) {
+      if (lrTable_.lr_action(state, terminal).action != LRAction::ERROR) {
         message += " '";
         message += terminal.name() + "'";
       }
