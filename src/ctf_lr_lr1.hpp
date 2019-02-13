@@ -234,8 +234,8 @@ class StateMachine {
         : id_(id), items_(closure(kernel, grammar, empty, first)) {
       // we can only merge states when the kernel only contains rules in the form A -> x.Y
       for (auto&& item : kernel) {
-        if (item.mark() != 1) {
-          mergable_ = false;
+        if (item.mark() == 1) {
+          mergable_ = true;
           break;
         }
       }
@@ -276,7 +276,7 @@ class StateMachine {
     // state transitions
     unordered_map<Symbol, size_t> transitions_;
 
-    bool mergable_ = true;
+    bool mergable_ = false;
   };
 
   StateMachine(const TranslationGrammar& grammar)

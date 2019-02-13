@@ -16,7 +16,7 @@ methods.
 
 namespace ctf {
 enum class Associativity : unsigned char {
-  NO = 0x0,
+  NONE = 0x0,
   LEFT = 0x1,
   RIGHT = 0x2,
 };
@@ -615,7 +615,7 @@ class TranslationGrammar {
         return {precedences_[i].associativity, i};
       }
     }
-    return {Associativity::NO, std::numeric_limits<size_t>::max()};
+    return {Associativity::NONE, std::numeric_limits<size_t>::max()};
   }
 
  protected:

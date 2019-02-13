@@ -28,18 +28,17 @@ TEST_CASE("LLTable construction", "[LLTable]") {
   }
 
   SECTION("regular Translation Grammar") {
-    TranslationGrammar tg{
-        {
-            {"E"_nt, {"T"_nt, "E'"_nt}},
-            {"E'"_nt, {}},
-            {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
-            {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
-            {"F"_nt, {"i"_t}},
-            {"T"_nt, {"F"_nt, "T'"_nt}},
-            {"T'"_nt, {}},
-            {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
-        },
-        "E"_nt};
+    TranslationGrammar tg{{
+                              {"E"_nt, {"T"_nt, "E'"_nt}},
+                              {"E'"_nt, {}},
+                              {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
+                              {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
+                              {"F"_nt, {"i"_t}},
+                              {"T"_nt, {"F"_nt, "T'"_nt}},
+                              {"T'"_nt, {}},
+                              {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
+                          },
+                          "E"_nt};
     REQUIRE(tg.starting_symbol().name() == "E''");
     REQUIRE_NOTHROW(LLTable(tg,
                             {{"i"_t, "("_t},
@@ -55,18 +54,17 @@ TEST_CASE("LLTable construction", "[LLTable]") {
 }
 
 TEST_CASE("rule index returning", "[LLTable]") {
-  TranslationGrammar tg{
-      {
-          {"E"_nt, {"T"_nt, "E'"_nt}},
-          {"E'"_nt, {}},
-          {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
-          {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
-          {"F"_nt, {"i"_t}},
-          {"T"_nt, {"F"_nt, "T'"_nt}},
-          {"T'"_nt, {}},
-          {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
-      },
-      "E"_nt};
+  TranslationGrammar tg{{
+                            {"E"_nt, {"T"_nt, "E'"_nt}},
+                            {"E'"_nt, {}},
+                            {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
+                            {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
+                            {"F"_nt, {"i"_t}},
+                            {"T"_nt, {"F"_nt, "T'"_nt}},
+                            {"T'"_nt, {}},
+                            {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
+                        },
+                        "E"_nt};
   LLTable ll{tg,
              {{"i"_t, "("_t},
               {")"_t, Symbol::eof()},

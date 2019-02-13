@@ -12,24 +12,21 @@ using ctf::InputReader;
 using namespace ctf::literals;
 
 TEST_CASE("LLTranslationControl construction", "[LLTranslationControl]") {
-  TranslationGrammar tg{
-      {
-          {"E"_nt, {"T"_nt, "E'"_nt}},
-          {"E'"_nt, {}},
-          {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
-          {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
-          {"F"_nt, {"i"_t}},
-          {"T"_nt, {"F"_nt, "T'"_nt}},
-          {"T'"_nt, {}},
-          {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
-      },
-      "E"_nt};
+  TranslationGrammar tg{{
+                            {"E"_nt, {"T"_nt, "E'"_nt}},
+                            {"E'"_nt, {}},
+                            {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
+                            {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
+                            {"F"_nt, {"i"_t}},
+                            {"T"_nt, {"F"_nt, "T'"_nt}},
+                            {"T'"_nt, {}},
+                            {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
+                        },
+                        "E"_nt};
   LexicalAnalyzer a;
   SECTION("no arguments") { REQUIRE_NOTHROW(LLTranslationControl()); }
 
-  SECTION("with grammar and analyzer") {
-    REQUIRE_NOTHROW(LLTranslationControl(a, tg));
-  }
+  SECTION("with grammar and analyzer") { REQUIRE_NOTHROW(LLTranslationControl(a, tg)); }
 }
 
 TEST_CASE("LLTranslationControl run", "[LLTranslationControl]") {

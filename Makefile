@@ -8,6 +8,7 @@ all:
 
 format:
 	clang-format -style=file -i $(SRC)/*.hpp $(INCLUDE)/*.hpp
+	$(MAKE) -C test format
 
 test:
 	$(MAKE) -C test test

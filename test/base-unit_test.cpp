@@ -5,8 +5,7 @@
 #include <type_traits>
 
 TEST_CASE("TranslationException") {
-  REQUIRE_THROWS_AS(throw ctf::TranslationException("m"),
-                    ctf::TranslationException);
+  REQUIRE_THROWS_AS(throw ctf::TranslationException("m"), ctf::TranslationException);
   REQUIRE_THROWS_WITH(throw ctf::TranslationException("m"), "m");
 }
 using namespace std::string_literals;

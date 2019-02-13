@@ -22,9 +22,7 @@ static TranslationGrammar grammar{{
                                   },
                                   "S'"_nt};
 
-TEST_CASE("lr0::Item construction", "[lr0::Item]") {
-  REQUIRE_NOTHROW(Item(grammar.rules()[0], 0));
-}
+TEST_CASE("lr0::Item construction", "[lr0::Item]") { REQUIRE_NOTHROW(Item(grammar.rules()[0], 0)); }
 
 TEST_CASE("lr0::Item operations", "[lr0::Item]") {
   Item i{grammar.rules()[4], 0};

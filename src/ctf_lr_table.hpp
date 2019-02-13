@@ -194,7 +194,7 @@ class LR1GenericTable : public LRGenericTable {
       // marked terminal
       auto&& terminal = rule.input()[mark];
       size_t nextState = transitionMap.at(terminal);
-      auto& action = lr_action(id, terminal);
+      auto& action = lr_action_item(id, terminal);
       if (action.action == LRAction::REDUCE) {
         action = conflict_resolution(
             terminal, action, {LRAction::SHIFT, nextState}, item, state, grammar);
@@ -218,7 +218,7 @@ class LR1GenericTable : public LRGenericTable {
     }
     // S/R conflict:
     auto [associativity, precedence] = grammar.precedence(terminal);
-    auto [associativity2, precedence2] = grammar.precedence(LR1Item.rule().precedence_symbol());
+    auto precedence2 = std::get<1>(grammar.precedence(LR1Item.rule().precedence_symbol()));
     if (precedence == precedence2) {
       switch (associativity) {
         case Associativity::LEFT:
@@ -227,7 +227,7 @@ class LR1GenericTable : public LRGenericTable {
         case Associativity::RIGHT:
           // right associative, same precedence :> favor shift
           return item;
-        case Associativity::NO:
+        case Associativity::NONE:
           // not associative, same precedence :> error
           throw std::invalid_argument("Unresolvable S/R conflict on "s + terminal.to_string() +
                                       " in state " + state.to_string() + ".");
@@ -235,10 +235,9 @@ class LR1GenericTable : public LRGenericTable {
     } else if (precedence < precedence2) {
       // terminal higher precedence :> favor shift
       return item;
-    } else {
-      // terminal lower precedence :> favor reduce
-      return reduceItem;
     }
+    // terminal lower precedence :> favor reduce
+    return reduceItem;
   }
 };
 

@@ -10,6 +10,8 @@ using ctf::TranslationGrammar;
 using Rule = TranslationGrammar::Rule;
 using ctf::LR0StateMachine;
 using ctf::SLRTranslationControl;
+using ctf::LALRTranslationControl;
+using ctf::LR1TranslationControl;
 using ctf::LALRStrictTranslationControl;
 using ctf::LR1StrictTranslationControl;
 
@@ -19,6 +21,8 @@ using ctf::Symbol;
 using ctf::Token;
 using ctf::InputReader;
 using ctf::Location;
+using ctf::PrecedenceSet;
+using ctf::Associativity;
 
 using namespace ctf::literals;
 
@@ -43,14 +47,13 @@ TEST_CASE("Empty SLR translation", "[SLRTranslationControl]") {
 }
 
 TEST_CASE("Regular SLR translation", "[SLRTranslationControl]") {
-  TranslationGrammar tg{
-      {
-          {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
-          {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
-          {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
-          {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
-      },
-      "S"_nt};
+  TranslationGrammar tg{{
+                            {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
+                            {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
+                            {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
+                            {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
+                        },
+                        "S"_nt};
 
   LexicalAnalyzer a;
   std::stringstream in;
@@ -96,14 +99,13 @@ TEST_CASE("Regular SLR translation", "[SLRTranslationControl]") {
 }
 
 TEST_CASE("Failed SLR translation", "[SLRTranslationControl]") {
-  TranslationGrammar tg{
-      {
-          {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
-          {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
-          {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
-          {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
-      },
-      "S"_nt};
+  TranslationGrammar tg{{
+                            {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
+                            {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
+                            {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
+                            {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
+                        },
+                        "S"_nt};
 
   LexicalAnalyzer a;
   std::stringstream in;
@@ -133,14 +135,13 @@ TEST_CASE("LALR empty translation", "[LALRStrictTranslationControl]") {
 }
 
 TEST_CASE("LALR full translation", "[LALRStrictTranslationControl]") {
-    TranslationGrammar tg{
-      {
-          {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
-          {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
-          {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
-          {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
-      },
-      "S"_nt};
+  TranslationGrammar tg{{
+                            {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
+                            {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
+                            {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
+                            {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
+                        },
+                        "S"_nt};
 
   LexicalAnalyzer a;
   std::stringstream in;
@@ -158,7 +159,7 @@ TEST_CASE("LALR full translation", "[LALRStrictTranslationControl]") {
   os = *it++;
   REQUIRE(os == "4"_t);
   REQUIRE(os.location() == Location(1, 1));
-    os = *it++;
+  os = *it++;
   REQUIRE(os == "1"_t);
   REQUIRE(os.location() == Location(1, 5));
   os = *it++;
@@ -186,15 +187,14 @@ TEST_CASE("LALR full translation", "[LALRStrictTranslationControl]") {
 }
 
 TEST_CASE("LALR non-SLR translation", "[LALRStrictTranslationControl]") {
-  TranslationGrammar tg{
-      {
-          {"S"_nt, {"A"_nt, "a"_t}},
-          {"S"_nt, {"b"_t, "A"_nt, "c"_nt}},
-          {"S"_nt, {"d"_t, "c"_t}},
-          {"S"_nt, {"b"_t, "d"_t, "a"_t}},
-          {"A"_nt, {"d"_t}},
-      },
-      "S"_nt};
+  TranslationGrammar tg{{
+                            {"S"_nt, {"A"_nt, "a"_t}},
+                            {"S"_nt, {"b"_t, "A"_nt, "c"_nt}},
+                            {"S"_nt, {"d"_t, "c"_t}},
+                            {"S"_nt, {"b"_t, "d"_t, "a"_t}},
+                            {"A"_nt, {"d"_t}},
+                        },
+                        "S"_nt};
 
   LexicalAnalyzer a;
   std::stringstream in;
@@ -235,14 +235,13 @@ TEST_CASE("LR(1) empty translation", "[LR1StrictTranslationControl]") {
 }
 
 TEST_CASE("LR(1) full translation", "[LR1StrictTranslationControl]") {
-    TranslationGrammar tg{
-      {
-          {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
-          {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
-          {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
-          {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
-      },
-      "S"_nt};
+  TranslationGrammar tg{{
+                            {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
+                            {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
+                            {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
+                            {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
+                        },
+                        "S"_nt};
 
   LexicalAnalyzer a;
   std::stringstream in;
@@ -260,7 +259,7 @@ TEST_CASE("LR(1) full translation", "[LR1StrictTranslationControl]") {
   os = *it++;
   REQUIRE(os == "4"_t);
   REQUIRE(os.location() == Location(1, 1));
-    os = *it++;
+  os = *it++;
   REQUIRE(os == "1"_t);
   REQUIRE(os.location() == Location(1, 5));
   os = *it++;
@@ -292,16 +291,15 @@ TEST_CASE("LR(1) full translation", "[LR1StrictTranslationControl]") {
 // F -> e
 
 TEST_CASE("LR(1) full non-LALR translation", "[LR1StrictTranslationControl]") {
-    TranslationGrammar tg{
-      {
-          {"S"_nt, {"e"_t, "E"_nt, "a"_t}},
-          {"S"_nt, {"b"_t, "E"_nt, "b"_t}},
-          {"S"_nt, {"a"_t, "F"_nt, "b"_t}},
-          {"S"_nt, {"b"_t, "F"_nt, "a"_t}},
-          {"E"_nt, {"e"_t}},
-          {"F"_nt, {"e"_t}},
-      },
-      "S"_nt};
+  TranslationGrammar tg{{
+                            {"S"_nt, {"e"_t, "E"_nt, "a"_t}},
+                            {"S"_nt, {"b"_t, "E"_nt, "b"_t}},
+                            {"S"_nt, {"a"_t, "F"_nt, "b"_t}},
+                            {"S"_nt, {"b"_t, "F"_nt, "a"_t}},
+                            {"E"_nt, {"e"_t}},
+                            {"F"_nt, {"e"_t}},
+                        },
+                        "S"_nt};
 
   LexicalAnalyzer a;
   std::stringstream in;
@@ -320,10 +318,80 @@ TEST_CASE("LR(1) full non-LALR translation", "[LR1StrictTranslationControl]") {
   os = *it++;
   REQUIRE(os == "e"_t);
   REQUIRE(os.location() == Location(1, 5));
-    os = *it++;
+  os = *it++;
   REQUIRE(os == "b"_t);
   REQUIRE(os.location() == Location(1, 9));
   os = *it++;
   REQUIRE(os == Symbol::eof());
   REQUIRE(os.location() == Location(1, 10));
+}
+
+TEST_CASE("Simple infix to postfix calculator translation", "[LALRTranslationControl]") {
+  // TODO state machine error, doesn't find isocores properly
+  // https://www.gnu.org/software/bison/manual/html_node/Infix-Calc.html#Infix-Calc
+  TranslationGrammar tg{
+      vector<Rule>({
+          {"S"_nt, {}},
+          {"S"_nt, {"Expr"_nt}},
+          {"Expr"_nt, {"i"_t}},
+          {"Expr"_nt, {"Expr"_nt, "+"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "+"_t}, {{2}}},
+          {"Expr"_nt, {"Expr"_nt, "-"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "-"_t}, {{2}}},
+          {"Expr"_nt, {"Expr"_nt, "*"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "*"_t}, {{2}}},
+          {"Expr"_nt, {"Expr"_nt, "/"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "/"_t}, {{2}}},
+          {"Expr"_nt, {"-"_t, "Expr"_nt}, {"Expr"_nt, "-"_t}, {{1}}, true, "unary-"_t},
+          {"Expr"_nt, {"Expr"_nt, "^"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "^"_t}, {{2}}},
+          {"Expr"_nt, {"("_t, "Expr"_nt, ")"_t}},
+      }),
+      "S"_nt,
+      vector<PrecedenceSet>({
+          {Associativity::LEFT, {"+"_t, "-"_t}},
+          {Associativity::LEFT, {"*"_t, "/"_t}},
+          {Associativity::NONE, {"unary-"_t}},
+          {Associativity::RIGHT, {"^"_t}},
+      })};
+  LexicalAnalyzer a;
+  std::stringstream in;
+  // expected output:
+  // i.0 i.3 unary- i.6 i.8 i.11 unary- * i.13 / - ^ ^ i.16 + EOF
+  in << "i ^ - i ^ ( i - i * - i / i ) + i";
+  InputReader r{in};
+  a.set_reader(r);
+  LALRTranslationControl lalr(a, tg);
+  lalr.run();
+  REQUIRE(lalr.output().size() == 18);
+}
+
+TEST_CASE("Simple infix to postfix calculator translation in LR1", "[LR1TranslationControl]") {
+  // TODO state machine error, doesn't find isocores properly
+  // https://www.gnu.org/software/bison/manual/html_node/Infix-Calc.html#Infix-Calc
+  TranslationGrammar tg{
+      vector<Rule>({
+          {"S"_nt, {}},
+          {"S"_nt, {"Expr"_nt}},
+          {"Expr"_nt, {"i"_t}},
+          {"Expr"_nt, {"Expr"_nt, "+"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "+"_t}, {{2}}},
+          {"Expr"_nt, {"Expr"_nt, "-"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "-"_t}, {{2}}},
+          {"Expr"_nt, {"Expr"_nt, "*"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "*"_t}, {{2}}},
+          {"Expr"_nt, {"Expr"_nt, "/"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "/"_t}, {{2}}},
+          {"Expr"_nt, {"-"_t, "Expr"_nt}, {"Expr"_nt, "-"_t}, {{1}}, true, "unary-"_t},
+          {"Expr"_nt, {"Expr"_nt, "^"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "^"_t}, {{2}}},
+          {"Expr"_nt, {"("_t, "Expr"_nt, ")"_t}},
+      }),
+      "S"_nt,
+      vector<PrecedenceSet>({
+          {Associativity::LEFT, {"+"_t, "-"_t}},
+          {Associativity::LEFT, {"*"_t, "/"_t}},
+          {Associativity::NONE, {"unary-"_t}},
+          {Associativity::RIGHT, {"^"_t}},
+      })};
+  LexicalAnalyzer a;
+  std::stringstream in;
+  // expected output:
+  // i.0 i.3 unary- i.6 i.8 i.11 unary- * i.13 / - ^ ^ i.16 + EOF
+  in << "i ^ - i ^ ( i - i * - i / i ) + i";
+  InputReader r{in};
+  a.set_reader(r);
+  LR1TranslationControl lr1(a, tg);
+  lr1.run();
+  REQUIRE(lr1.output().size() == 18);
 }
