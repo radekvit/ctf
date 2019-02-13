@@ -58,7 +58,7 @@ class LexicalAnalyzer {
   /**
   \brief Resets the internal state.
   */
-  void reset() noexcept {
+  void reset() {
     clear_error();
     location_ = Location::invalid();
     if (reader_) {
@@ -99,7 +99,6 @@ class LexicalAnalyzer {
   read. Adds a size_t attribute to each token denoting its number.
   */
   virtual Token read_token() {
-    static size_t attribute = 0;
     string name;
     // first character
     int c = get();
@@ -117,9 +116,9 @@ class LexicalAnalyzer {
       c = get();
     } while (!isspace(c) && c != std::char_traits<char>::eof());
     if (c != std::char_traits<char>::eof())
-      reader_->unget();
+      unget();
 
-    return token(name, Attribute{attribute++});
+    return token(name);
   }
 
   /**
@@ -251,7 +250,7 @@ class LexicalAnalyzer {
   */
   void clear_error() noexcept { errorFlag_ = false; }
 
-  virtual void reset_private() noexcept {}
+  virtual void reset_private() {}
 };
 }  // namespace ctf
 

@@ -387,7 +387,7 @@ TEST_CASE("Simple infix to postfix calculator translation in LR1", "[LR1Translat
   LexicalAnalyzer a;
   std::stringstream in;
   // expected output:
-  // i.0 i.3 unary- i.6 i.8 i.11 unary- * i.13 / - ^ ^ i.16 + EOF
+  // i i unary- i i i unary- * i / - ^ ^ i + EOF
   in << "i ^ - i ^ ( i - i * - i / i ) + i";
   InputReader r{in};
   a.set_reader(r);

@@ -5,7 +5,10 @@
 
 #include "../src/ctf_translation.hpp"
 
+using ctf::string;
 using ctf::Symbol;
+using ctf::Token;
+using ctf::Attribute;
 using ctf::Translation;
 using ctf::TranslationResult;
 using ctf::LexicalAnalyzer;
@@ -13,6 +16,38 @@ using ctf::TranslationGrammar;
 using ctf::OutputGenerator;
 
 using namespace ctf::literals;
+
+class TestLexicalAnalyzer : public LexicalAnalyzer {
+ public:
+  using LexicalAnalyzer::LexicalAnalyzer;
+
+  Token read_token() override {
+    string name;
+    // first character
+    int c = get();
+    while (std::isspace(c)) {
+      reset_location();
+      c = get();
+    }
+
+    if (c == std::char_traits<char>::eof()) {
+      return token_eof();
+    }
+
+    do {
+      name += c;
+      c = get();
+    } while (!isspace(c) && c != std::char_traits<char>::eof());
+    if (c != std::char_traits<char>::eof())
+      unget();
+
+    return token(name, Attribute{attr++});
+  }
+
+  void reset_private() override { attr = 0; }
+
+  size_t attr = 0;
+};
 
 TEST_CASE("Constructing translation", "[Translation]") {
   TranslationGrammar tg{{
@@ -54,7 +89,7 @@ TEST_CASE("Running translation", "[Translation]") {
                           },
                           "E"_nt};
     Translation tr(
-        std::make_unique<LexicalAnalyzer>(), "ll", tg, std::make_unique<OutputGenerator>());
+        std::make_unique<TestLexicalAnalyzer>(), "ll", tg, std::make_unique<OutputGenerator>());
     std::stringstream expected;
     std::stringstream out;
     std::stringstream error;
@@ -79,7 +114,7 @@ TEST_CASE("Running translation", "[Translation]") {
                           },
                           "E"_nt};
     Translation tr(
-        std::make_unique<LexicalAnalyzer>(), "ll", tg, std::make_unique<OutputGenerator>());
+        std::make_unique<TestLexicalAnalyzer>(), "ll", tg, std::make_unique<OutputGenerator>());
     std::stringstream out;
     std::stringstream error;
     std::ifstream in("media/in");
