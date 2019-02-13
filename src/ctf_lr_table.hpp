@@ -144,12 +144,75 @@ class SLRTable : public LRGenericTable {
     }
   }
 };
-// TODO: conflict resolution
 template <typename StateMachine, const char* type>
 class LR1GenericTable : public LRGenericTable {
+// TODO: conflict resolution
  public:
   LR1GenericTable() {}
   LR1GenericTable(const TranslationGrammar& grammar) {
+    StateMachine sm(grammar);
+    initialize_maps(grammar);
+    initialize_tables(sm.states().size());
+
+    for (auto&& state : sm.states()) {
+      for (auto&& item : state.items()) {
+        lr1_insert(state.id(), item, state.transitions(), grammar);
+      }
+    }
+  }
+
+ protected:
+  void lr1_insert(size_t state,
+                  const typename StateMachine::Item& item,
+                  const unordered_map<Symbol, size_t>& transitionMap,
+                  const TranslationGrammar& grammar) {
+    using namespace std::literals;
+    auto&& rule = item.rule();
+    auto&& mark = item.mark();
+    // special S' -> S.EOF item
+    if (rule == grammar.starting_rule() && mark == 2) {
+      lr_action_item(state, Symbol::eof()) = {LRActionType::SUCCESS, 0};
+    } else if (mark == rule.input().size()) {
+      for (auto&& terminal : item.generated_lookaheads()) {
+        if (lr_action(state, terminal).type != LRActionType::ERROR) {
+          conflict_resolution(terminal, lr_action_item(state, terminal), {LRActionType::REDUCE, rule.id}, item, grammar);
+        } else {
+          // regular insert
+          lr_action_item(state, terminal) = {LRActionType::REDUCE, rule.id};
+        }
+      }
+    } else if (rule.input()[mark].nonterminal()) {
+      auto&& nonterminal = rule.input()[mark];
+      size_t nextState = transitionMap.at(nonterminal);
+      lr_goto_item(state, nonterminal) = nextState;
+    } else {
+      auto&& terminal = rule.input()[mark];
+      size_t nextState = transitionMap.at(terminal);
+      auto&& action = lr_action(state, terminal);
+      if (action.type != LRActionType::ERROR &&
+          action != LRActionItem{LRActionType::SHIFT, nextState}) {
+        conflict_resolution(terminal, lr_action_item(state, terminal), {LRActionType::REDUCE, rule.id}, item, grammar);
+      } else {
+        // regular insert
+        lr_action_item(state, terminal) = {LRActionType::SHIFT, nextState};
+      }
+    }
+  }
+
+  void conflict_resolution(const Symbol terminal, LRActionItem& item, const LRActionItem& newItem, const typename StateMachine::Item& LR1Item, const TranslationGrammar& grammar) {
+    // TODO:
+    // terminal higher precedence :> favor shift
+    // left associative, same symbol :> favor reduce
+    // right associative, same symbol :> favor shift
+    // not associative, same symbol :> error
+  }
+};
+
+template <typename StateMachine, const char* type>
+class LR1StrictGenericTable : public LRGenericTable {
+ public:
+  LR1StrictGenericTable() {}
+  LR1StrictGenericTable(const TranslationGrammar& grammar) {
     StateMachine sm(grammar);
     initialize_maps(grammar);
     initialize_tables(sm.states().size());
@@ -198,9 +261,14 @@ class LR1GenericTable : public LRGenericTable {
 
 inline char CanonicalLR1String[] = "Canonical LR(1)";
 inline char LALRString[] = "LALR";
+inline char StrictCanonicalLR1String[] = "Strict Canonical LR(1)";
+inline char StrictLALRString[] = "Strict LALR";
 
 using LR1Table = LR1GenericTable<lr1::StateMachine, CanonicalLR1String>;
 using LALRTable = LR1GenericTable<lalr::StateMachine, LALRString>;
+
+using LR1StrictTable = LR1StrictGenericTable<lr1::StateMachine, StrictCanonicalLR1String>;
+using LALRStrictTable = LR1StrictGenericTable<lalr::StateMachine, StrictLALRString>;
 
 }  // namespace ctf
 #endif

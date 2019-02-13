@@ -10,8 +10,8 @@ using ctf::TranslationGrammar;
 using Rule = TranslationGrammar::Rule;
 using ctf::LR0StateMachine;
 using ctf::SLRTranslationControl;
-using ctf::LALRTranslationControl;
-using ctf::LR1TranslationControl;
+using ctf::LALRStrictTranslationControl;
+using ctf::LR1StrictTranslationControl;
 
 using ctf::vector;
 using ctf::string;
@@ -117,14 +117,14 @@ TEST_CASE("Failed SLR translation", "[SLRTranslationControl]") {
   REQUIRE(slr.error());
 }
 
-TEST_CASE("LALR empty translation", "[LALRTranslationControl]") {
+TEST_CASE("LALR empty translation", "[LALRStrictTranslationControl]") {
   LexicalAnalyzer a;
   TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
   std::stringstream in;
   std::stringstream err;
   InputReader r{in};
   a.set_reader(r);
-  LALRTranslationControl lalr(a, tg);
+  LALRStrictTranslationControl lalr(a, tg);
   lalr.set_error_stream(err);
   lalr.run();
   REQUIRE(lalr.output().size() == 1);
@@ -132,7 +132,7 @@ TEST_CASE("LALR empty translation", "[LALRTranslationControl]") {
   REQUIRE(lalr.output().top().location() == Location(1, 1));
 }
 
-TEST_CASE("LALR full translation", "[LALRTranslationControl]") {
+TEST_CASE("LALR full translation", "[LALRStrictTranslationControl]") {
     TranslationGrammar tg{
       {
           {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
@@ -149,7 +149,7 @@ TEST_CASE("LALR full translation", "[LALRTranslationControl]") {
   in << "( i o ( i o i ) )";
   InputReader r{in};
   a.set_reader(r);
-  LALRTranslationControl lalr(a, tg);
+  LALRStrictTranslationControl lalr(a, tg);
   lalr.run();
   REQUIRE(lalr.output().size() == 11);
   auto it = lalr.output().begin();
@@ -185,7 +185,7 @@ TEST_CASE("LALR full translation", "[LALRTranslationControl]") {
   REQUIRE(os.location() == Location(1, 18));
 }
 
-TEST_CASE("LALR non-SLR translation", "[LALRTranslationControl]") {
+TEST_CASE("LALR non-SLR translation", "[LALRStrictTranslationControl]") {
   TranslationGrammar tg{
       {
           {"S"_nt, {"A"_nt, "a"_t}},
@@ -203,7 +203,7 @@ TEST_CASE("LALR non-SLR translation", "[LALRTranslationControl]") {
   in << "d  c";
   InputReader r{in};
   a.set_reader(r);
-  LALRTranslationControl lalr(a, tg);
+  LALRStrictTranslationControl lalr(a, tg);
   lalr.run();
   REQUIRE(lalr.output().size() == 3);
 
@@ -219,14 +219,14 @@ TEST_CASE("LALR non-SLR translation", "[LALRTranslationControl]") {
   REQUIRE(os.location() == Location(1, 5));
 }
 
-TEST_CASE("LR(1) empty translation", "[LR1TranslationControl]") {
+TEST_CASE("LR(1) empty translation", "[LR1StrictTranslationControl]") {
   LexicalAnalyzer a;
   TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
   std::stringstream in;
   std::stringstream err;
   InputReader r{in};
   a.set_reader(r);
-  LR1TranslationControl lr1(a, tg);
+  LR1StrictTranslationControl lr1(a, tg);
   lr1.set_error_stream(err);
   lr1.run();
   REQUIRE(lr1.output().size() == 1);
@@ -234,7 +234,7 @@ TEST_CASE("LR(1) empty translation", "[LR1TranslationControl]") {
   REQUIRE(lr1.output().top().location() == Location(1, 1));
 }
 
-TEST_CASE("LR(1) full translation", "[LR1TranslationControl]") {
+TEST_CASE("LR(1) full translation", "[LR1StrictTranslationControl]") {
     TranslationGrammar tg{
       {
           {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
@@ -251,7 +251,7 @@ TEST_CASE("LR(1) full translation", "[LR1TranslationControl]") {
   in << "( i o ( i o i ) )";
   InputReader r{in};
   a.set_reader(r);
-  LR1TranslationControl lr1(a, tg);
+  LR1StrictTranslationControl lr1(a, tg);
   lr1.run();
   REQUIRE(lr1.output().size() == 11);
   auto it = lr1.output().begin();
@@ -291,7 +291,7 @@ TEST_CASE("LR(1) full translation", "[LR1TranslationControl]") {
 // E -> e
 // F -> e
 
-TEST_CASE("LR(1) full non-LALR translation", "[LR1TranslationControl]") {
+TEST_CASE("LR(1) full non-LALR translation", "[LR1StrictTranslationControl]") {
     TranslationGrammar tg{
       {
           {"S"_nt, {"e"_t, "E"_nt, "a"_t}},
@@ -310,7 +310,7 @@ TEST_CASE("LR(1) full non-LALR translation", "[LR1TranslationControl]") {
   in << "a   e   b";
   InputReader r{in};
   a.set_reader(r);
-  LR1TranslationControl lr1(a, tg);
+  LR1StrictTranslationControl lr1(a, tg);
   lr1.run();
   REQUIRE(lr1.output().size() == 4);
   auto it = lr1.output().begin();

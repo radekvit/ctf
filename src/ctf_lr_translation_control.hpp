@@ -245,6 +245,9 @@ using SLRTranslationControl = LRTranslationControlTemplate<SLRTable>;
 using LALRTranslationControl = LRTranslationControlTemplate<LALRTable>;
 using LR1TranslationControl = LRTranslationControlTemplate<LR1Table>;
 
+using LALRStrictTranslationControl = LRTranslationControlTemplate<LALRStrictTable>;
+using LR1StrictTranslationControl = LRTranslationControlTemplate<LR1StrictTable>;
+
 }  // namespace ctf
 #endif
 /*** End of file ll_translation_control.hpp ***/

@@ -275,7 +275,7 @@ struct Location {
   /**
   \brief Creates a string from this Location.
 
-  \returns A string in the format "fileName:row:col"
+  \returns A string in the format "fileName:row:col" if the location is valid.
   */
   string to_string() const {
     if (*this == Location::invalid()) {
@@ -322,7 +322,7 @@ class Symbol {
     EOI = 3,
   };
 
-  Symbol(Type type, size_t id = 0) noexcept : type_(static_cast<unsigned char>(type)), id_(id) {}
+  constexpr Symbol(Type type, size_t id = 0) noexcept : type_(static_cast<unsigned char>(type)), id_(id) {}
   /**
   \brief Constructs a Symbol with a given type. If specified, sets Symbol's name and attribute.
   \param[in] type Type of constructed Symbol.
@@ -341,9 +341,9 @@ class Symbol {
   \brief Creates an EOF Symbol.
   \returns An EOF Symbol.
   */
-  static Symbol eof() { return Symbol(Type::EOI); }
+  static constexpr Symbol eof() { return Symbol(Type::EOI); }
 
-  size_t id() const { return id_; }
+  constexpr size_t id() const { return id_; }
 
   /**
   \brief Returns a const reference to name.
@@ -354,36 +354,36 @@ class Symbol {
   \brief Returns the type of the symbol.
   \returns The symbol's type.
   */
-  Type type() const { return Type(type_); }
+  constexpr Type type() const { return Type(type_); }
 
-  bool terminal() const noexcept { return Type(type_) == Type::TERMINAL; }
-  bool nonterminal() const noexcept { return Type(type_) == Type::NONTERMINAL; }
+  constexpr bool terminal() const noexcept { return Type(type_) == Type::TERMINAL; }
+  constexpr bool nonterminal() const noexcept { return Type(type_) == Type::NONTERMINAL; }
 
   /**
   \name Comparison operators
-  \brief Numeric comparison of types and lexicographic comparison of names.
+  \brief Numeric comparison of types and ids.
   Types have higher priority.
   \param[in] lhs Left Symbol of the comparison.
   \param[out] rhs Right Symbol of the comparison.
-  \returns True when the lexicographic comparison is true.
+  \returns True when the numeric comparison is true.
   */
   ///@{
-  friend bool operator<(const Symbol& lhs, const Symbol& rhs) {
+  friend constexpr bool operator<(const Symbol& lhs, const Symbol& rhs) {
     static_assert(sizeof(Symbol) == sizeof(size_t), "Symbol must match size_t size");
     return reinterpret_cast<const size_t&>(lhs) < reinterpret_cast<const size_t&>(rhs);
   }
 
-  friend bool operator==(const Symbol& lhs, const Symbol& rhs) {
+  friend constexpr bool operator==(const Symbol& lhs, const Symbol& rhs) {
     return reinterpret_cast<const size_t&>(lhs) == reinterpret_cast<const size_t&>(rhs);
   }
 
-  friend bool operator!=(const Symbol& lhs, const Symbol& rhs) { return !(lhs == rhs); }
+  friend constexpr bool operator!=(const Symbol& lhs, const Symbol& rhs) { return !(lhs == rhs); }
 
-  friend bool operator>(const Symbol& lhs, const Symbol& rhs) { return rhs < lhs; }
+  friend constexpr bool operator>(const Symbol& lhs, const Symbol& rhs) { return rhs < lhs; }
 
-  friend bool operator<=(const Symbol& lhs, const Symbol& rhs) { return !(lhs > rhs); }
+  friend constexpr bool operator<=(const Symbol& lhs, const Symbol& rhs) { return !(lhs > rhs); }
 
-  friend bool operator>=(const Symbol& lhs, const Symbol& rhs) { return rhs <= lhs; }
+  friend constexpr bool operator>=(const Symbol& lhs, const Symbol& rhs) { return rhs <= lhs; }
   ///@}
 
   string to_string() const {
