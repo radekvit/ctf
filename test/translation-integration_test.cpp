@@ -17,6 +17,39 @@ using ctf::OutputGenerator;
 
 using namespace ctf::literals;
 
+class TITOG : public OutputGenerator {
+ public:
+  using OutputGenerator::OutputGenerator;
+
+  void output(const ctf::tstack<Token>& tokens) override {
+    auto& os = this->os();
+    for (auto& t : tokens) {
+      if (t == Symbol::eof())
+        return;
+      if (t.symbol() == 0_t) {
+        os << "i";
+      } else if (t.symbol() == 1_t) {
+        os << "+";
+      } else if (t.symbol() == 2_t) {
+        os << "*";
+      }
+      if (!t.attribute().empty()) {
+        os << ".";
+        auto& type = t.attribute().type();
+        if (type == typeid(string))
+          os << t.attribute().get<string>();
+        else if (type == typeid(char))
+          os << t.attribute().get<char>();
+        else if (type == typeid(double))
+          os << t.attribute().get<double>();
+        else if (type == typeid(size_t))
+          os << t.attribute().get<size_t>();
+      }
+      os << "\n";
+    }
+  }
+};
+
 static constexpr ctf::Symbol operator""_nt(const char* s, size_t) {
   if (c_streq(s, "E"))
     return 0_nt;
@@ -67,7 +100,7 @@ class TestLexicalAnalyzer : public LexicalAnalyzer {
       return 4_t;
     }
 
-    return 100_t;
+    throw std::invalid_argument(s + ": unknown symbol name");
   }
 
   Token read_token() override {
@@ -111,16 +144,16 @@ TEST_CASE("Constructing translation", "[Translation]") {
                         },
                         "E"_nt};
   REQUIRE_NOTHROW(Translation(
-      std::make_unique<LexicalAnalyzer>(), "ll", tg, std::make_unique<OutputGenerator>()));
+      std::make_unique<LexicalAnalyzer>(), "ll", tg, std::make_unique<TITOG>()));
 
   auto tcp = Translation::control("ll");
   REQUIRE_NOTHROW(Translation(
-      std::make_unique<LexicalAnalyzer>(), *tcp, tg, std::make_unique<OutputGenerator>()));
+      std::make_unique<LexicalAnalyzer>(), *tcp, tg, std::make_unique<TITOG>()));
 
   REQUIRE_THROWS_AS(Translation(std::make_unique<LexicalAnalyzer>(),
                                 "fail, please",
                                 tg,
-                                std::make_unique<OutputGenerator>()),
+                                std::make_unique<TITOG>()),
                     std::invalid_argument);
 }
 
@@ -138,7 +171,7 @@ TEST_CASE("Running translation", "[Translation]") {
                           },
                           "E"_nt};
     Translation tr(
-        std::make_unique<TestLexicalAnalyzer>(), "ll", tg, std::make_unique<OutputGenerator>());
+        std::make_unique<TestLexicalAnalyzer>(), "ll", tg, std::make_unique<TITOG>());
     std::stringstream expected;
     std::stringstream out;
     std::stringstream error;
@@ -163,7 +196,7 @@ TEST_CASE("Running translation", "[Translation]") {
                           },
                           "E"_nt};
     Translation tr(
-        std::make_unique<TestLexicalAnalyzer>(), "ll", tg, std::make_unique<OutputGenerator>());
+        std::make_unique<TestLexicalAnalyzer>(), "ll", tg, std::make_unique<TITOG>());
     std::stringstream out;
     std::stringstream error;
     std::ifstream in("media/in");

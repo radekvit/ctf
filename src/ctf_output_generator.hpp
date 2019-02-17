@@ -81,7 +81,7 @@ class OutputGenerator {
     for (auto& t : tokens) {
       if (t == Symbol::eof())
         return;
-      os << t.to_string();
+      os << t.symbol().to_string();
       if (!t.attribute().empty()) {
         os << ".";
         auto& type = t.attribute().type();

@@ -87,14 +87,79 @@ static constexpr ctf::Symbol operator""_t(const char* s, size_t) {
   return 100_t;
 }
 
+class TCTLA : public LexicalAnalyzer {
+ public:
+  using LexicalAnalyzer::LexicalAnalyzer;
+
+  Token read_token() override {
+    string name;
+    // first character
+    int c = get();
+    while (std::isspace(c)) {
+      reset_location();
+      c = get();
+    }
+
+    if (c == std::char_traits<char>::eof()) {
+      return token_eof();
+    }
+
+    do {
+      name += c;
+      c = get();
+    } while (!isspace(c) && c != std::char_traits<char>::eof());
+    if (c != std::char_traits<char>::eof())
+      unget();
+
+    return token(name_to_symbol(name));
+  }
+
+ private:
+  Symbol name_to_symbol(const string& name) {
+    using namespace ctf::literals;
+    if (name == "o")
+      return 0_t;
+    if (name == "i")
+      return 1_t;
+    if (name == "(")
+      return 2_t;
+    if (name == ")")
+      return 3_t;
+    if (name == "+")
+      return 4_t;
+    if (name == "-")
+      return 5_t;
+    if (name == "*")
+      return 6_t;
+    if (name == "/")
+      return 7_t;
+    if (name == "^")
+      return 8_t;
+
+    if (name == "a")
+      return 0_t;
+    if (name == "b")
+      return 1_t;
+    if (name == "c")
+      return 2_t;
+    if (name == "d")
+      return 3_t;
+
+    if (name == "e")
+      return 2_t;
+
+    throw std::invalid_argument(name + ": unknown name");
+  }
+};
+
 TEST_CASE("SLRTranslationTest", "[SLRTranslationControl]") {
   TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
-  LexicalAnalyzer a;
+  TCTLA a;
   SLRTranslationControl(a, tg);
 }
 
 TEST_CASE("Empty SLR translation", "[SLRTranslationControl]") {
-  LexicalAnalyzer a;
+  TCTLA a;
   TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
   std::stringstream in;
   InputReader r{in};
@@ -116,7 +181,7 @@ TEST_CASE("Regular SLR translation", "[SLRTranslationControl]") {
                         },
                         "S"_nt};
 
-  LexicalAnalyzer a;
+  TCTLA a;
   std::stringstream in;
   // expected output:
   // 2 4 1 2 3 4 1 2 3 3 eof
@@ -168,7 +233,7 @@ TEST_CASE("Failed SLR translation", "[SLRTranslationControl]") {
                         },
                         "S"_nt};
 
-  LexicalAnalyzer a;
+  TCTLA a;
   std::stringstream in;
   std::stringstream err;
   in << "( ( i o i ) ) )";
@@ -181,7 +246,7 @@ TEST_CASE("Failed SLR translation", "[SLRTranslationControl]") {
 }
 
 TEST_CASE("LALR empty translation", "[LALRStrictTranslationControl]") {
-  LexicalAnalyzer a;
+  TCTLA a;
   TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
   std::stringstream in;
   std::stringstream err;
@@ -204,7 +269,7 @@ TEST_CASE("LALR full translation", "[LALRStrictTranslationControl]") {
                         },
                         "S"_nt};
 
-  LexicalAnalyzer a;
+  TCTLA a;
   std::stringstream in;
   // expected output:
   // 2 4 1 2 3 4 1 2 3 3 eof
@@ -257,7 +322,7 @@ TEST_CASE("LALR non-SLR translation", "[LALRStrictTranslationControl]") {
                         },
                         "S"_nt};
 
-  LexicalAnalyzer a;
+  TCTLA a;
   std::stringstream in;
   // expected output:
   // d c eof
@@ -281,7 +346,7 @@ TEST_CASE("LALR non-SLR translation", "[LALRStrictTranslationControl]") {
 }
 
 TEST_CASE("LR(1) empty translation", "[LR1StrictTranslationControl]") {
-  LexicalAnalyzer a;
+  TCTLA a;
   TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
   std::stringstream in;
   std::stringstream err;
@@ -304,7 +369,7 @@ TEST_CASE("LR(1) full translation", "[LR1StrictTranslationControl]") {
                         },
                         "S"_nt};
 
-  LexicalAnalyzer a;
+  TCTLA a;
   std::stringstream in;
   // expected output:
   // 2 4 1 2 3 4 1 2 3 3 eof
@@ -362,7 +427,7 @@ TEST_CASE("LR(1) full non-LALR translation", "[LR1StrictTranslationControl]") {
                         },
                         "S"_nt};
 
-  LexicalAnalyzer a;
+  TCTLA a;
   std::stringstream in;
   // expected output:
   // a e b eof
@@ -410,7 +475,7 @@ TEST_CASE("Simple infix to postfix calculator translation", "[LALRTranslationCon
           {Associativity::NONE, {"unary-"_t}},
           {Associativity::RIGHT, {"^"_t}},
       })};
-  LexicalAnalyzer a;
+  TCTLA a;
   std::stringstream in;
   // expected output:
   // i.0 i.3 unary- i.6 i.8 i.11 unary- * i.13 / - ^ ^ i.16 + EOF
@@ -445,7 +510,7 @@ TEST_CASE("Simple infix to postfix calculator translation in LR1", "[LR1Translat
           {Associativity::NONE, {"unary-"_t}},
           {Associativity::RIGHT, {"^"_t}},
       })};
-  LexicalAnalyzer a;
+  TCTLA a;
   std::stringstream in;
   // expected output:
   // i i unary- i i i unary- * i / - ^ ^ i + EOF
