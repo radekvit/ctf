@@ -1,9 +1,9 @@
 #include <catch.hpp>
 
-#include "../src/ctf_lr_translation_control.hpp"
-
 #include <iostream>
 #include <sstream>
+#include "../src/ctf_lr_translation_control.hpp"
+#include "test_utils.h"
 
 using ctf::LexicalAnalyzer;
 using ctf::TranslationGrammar;
@@ -24,7 +24,68 @@ using ctf::Location;
 using ctf::PrecedenceSet;
 using ctf::Associativity;
 
-using namespace ctf::literals;
+static constexpr ctf::Symbol operator""_nt(const char* s, size_t) {
+  using namespace ctf::literals;
+  if (c_streq(s, "S"))
+    return 0_nt;
+  if (c_streq(s, "Expr"))
+    return 2_nt;
+  if (c_streq(s, "E"))
+    return 1_nt;
+  if (c_streq(s, "A"))
+    return 2_nt;
+  if (c_streq(s, "F"))
+    return 3_nt;
+
+  return 100_nt;
+}
+static constexpr ctf::Symbol operator""_t(const char* s, size_t) {
+  using namespace ctf::literals;
+  if (c_streq(s, "o"))
+    return 0_t;
+  if (c_streq(s, "i"))
+    return 1_t;
+  if (c_streq(s, "("))
+    return 2_t;
+  if (c_streq(s, ")"))
+    return 3_t;
+
+  if (c_streq(s, "1"))
+    return 4_t;
+  if (c_streq(s, "2"))
+    return 5_t;
+  if (c_streq(s, "3"))
+    return 6_t;
+  if (c_streq(s, "4"))
+    return 7_t;
+
+  if (c_streq(s, "a"))
+    return 0_t;
+  if (c_streq(s, "b"))
+    return 1_t;
+  if (c_streq(s, "c"))
+    return 2_t;
+  if (c_streq(s, "d"))
+    return 3_t;
+
+  if (c_streq(s, "e"))
+    return 2_t;
+
+  if (c_streq(s, "+"))
+    return 4_t;
+  if (c_streq(s, "-"))
+    return 5_t;
+  if (c_streq(s, "*"))
+    return 6_t;
+  if (c_streq(s, "/"))
+    return 7_t;
+  if (c_streq(s, "^"))
+    return 8_t;
+  if (c_streq(s, "unary-"))
+    return 666_t;
+
+  return 100_t;
+}
 
 TEST_CASE("SLRTranslationTest", "[SLRTranslationControl]") {
   TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};

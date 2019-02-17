@@ -1,20 +1,50 @@
 #include <catch.hpp>
 
 #include "../src/ctf_ll_table.hpp"
+#include "test_utils.h"
 
 using ctf::LLTable;
 using ctf::TranslationGrammar;
 using ctf::Symbol;
-using namespace ctf::literals;
+
+static constexpr Symbol operator""_nt(const char* s, size_t) {
+  using namespace ctf::literals;
+  if (c_streq(s, "E"))
+    return 0_nt;
+  if (c_streq(s, "E'"))
+    return 1_nt;
+  if (c_streq(s, "T"))
+    return 2_nt;
+  if (c_streq(s, "T'"))
+    return 3_nt;
+  if (c_streq(s, "F"))
+    return 4_nt;
+  return 100_nt;
+}
+static constexpr Symbol operator""_t(const char* s, size_t) {
+  using namespace ctf::literals;
+  if (c_streq(s, "i"))
+    return 0_t;
+  if (c_streq(s, "+"))
+    return 1_t;
+  if (c_streq(s, "*"))
+    return 2_t;
+  if (c_streq(s, "("))
+    return 3_t;
+  if (c_streq(s, ")"))
+    return 4_t;
+
+  return 100_t;
+}
 
 TEST_CASE("LLTable construction", "[LLTable]") {
   SECTION("Multiple terminals and nonterminals.") {
-    TranslationGrammar tg{{"E"_nt, "F"_nt}, {"x"_t, "y"_t}, {}, "E"_nt};
+    TranslationGrammar tg{2, 3, {}, "E"_nt};
     REQUIRE_NOTHROW(LLTable(tg, {{Symbol::eof()}}));
   }
 
   SECTION("No terminals, at least one nonterminal") {
-    TranslationGrammar tg{{"E"_nt, "F"_nt}, {}, {}, "E"_nt};
+    TranslationGrammar tg{2, 1, {}, "E"_nt};
     REQUIRE_NOTHROW(LLTable(tg, {{Symbol::eof()}}));
   }
 
@@ -23,8 +53,8 @@ TEST_CASE("LLTable construction", "[LLTable]") {
   }
 
   SECTION("non-LL Translation Grammar") {
-    TranslationGrammar tg{{{"E"_nt, {"x"_t}}, {"E"_nt, {"x"_t}}}, "E"_nt};
-    REQUIRE_THROWS_AS(LLTable(tg, {{"x"_t}, {"x"_t}, {"x"_t}}), std::invalid_argument);
+    TranslationGrammar tg{{{"E"_nt, {"i"_t}}, {"E"_nt, {"i"_t}}}, "E"_nt};
+    REQUIRE_THROWS_AS(LLTable(tg, {{"i"_t}, {"i"_t}, {"i"_t}}), std::invalid_argument);
   }
 
   SECTION("regular Translation Grammar") {
@@ -39,7 +69,7 @@ TEST_CASE("LLTable construction", "[LLTable]") {
                               {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
                           },
                           "E"_nt};
-    REQUIRE(tg.starting_symbol().name() == "E''");
+    REQUIRE(tg.starting_symbol().id() == tg.nonterminals() - 1);
     REQUIRE_NOTHROW(LLTable(tg,
                             {{"i"_t, "("_t},
                              {")"_t, Symbol::eof()},

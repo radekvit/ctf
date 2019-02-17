@@ -118,7 +118,7 @@ class LexicalAnalyzer {
     if (c != std::char_traits<char>::eof())
       unget();
 
-    return token(name);
+    return token(std::stoull(name));
   }
 
   /**
@@ -182,8 +182,19 @@ class LexicalAnalyzer {
 
   \returns A terminal Symbol with the current stored location_.
   */
-  Token token(const string& name, const Attribute& attr = Attribute{}) {
-    return Token(Terminal(name), attr, location_);
+  Token token(Symbol s, const Attribute& attr = Attribute{}) { return Token(s, attr, location_); }
+
+  /**
+  \brief Constructs a terminal symbol and inserts the current symbol location
+  automatically.
+
+  \param[in] name The name of the created Terminal
+  \param[in] attr The attribute of the created Terminal
+
+  \returns A terminal Symbol with the current stored location_.
+  */
+  Token token(size_t i, const Attribute& attr = Attribute{}) {
+    return Token(Terminal(i), attr, location_);
   }
 
   /**

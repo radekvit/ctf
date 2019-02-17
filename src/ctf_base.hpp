@@ -14,17 +14,275 @@
 #include "ctf_generic_types.hpp"
 
 namespace ctf {
+/**
+\brief Base exception class for ctf specific exceptions.
+*/
+class TranslationException : public std::runtime_error {
+  using std::runtime_error::runtime_error;
+};
+
+/**
+\brief A single symbol in the translation process. May represent a Terminal, Nonterminal or end of
+input.
+*/
+class Symbol {
+ public:
+  /**
+  \brief Type of the Symbol.
+  */
+  enum class Type : unsigned char {
+    /**
+    \brief Nonterminal symbol
+    */
+    NONTERMINAL = 0,
+    /**
+    \brief Terminal symbol
+    */
+    TERMINAL = 1,
+    /**
+    \brief End of input
+    */
+    EOI = 3,
+  };
+
+  using enum_type = size_t;
+
+  /**
+  \brief Default destructor.
+  */
+  ~Symbol() = default;
+
+  /**
+  \brief Returns a Symbol with Type::Terminal, given name and attribute.
+  \param[in] name Name of returned symbol.
+  \param[in] attribute Attribute of returned Symbol. Defaults to "".
+  \returns A Symbol with type Terminal, given name and given attribute.
+  */
+  friend constexpr Symbol Terminal(size_t id) noexcept;
+
+  /**
+  \brief Returns a Symbol with Type::Nonterminal, given name and attribute.
+  \param[in] name Name of returned symbol.
+  \returns A Symbol with type Nonterminal and given name.
+  */
+  friend constexpr Symbol Nonterminal(const size_t id) noexcept;
+
+  /**
+  \brief Creates an EOF Symbol.
+  \returns An EOF Symbol.
+  */
+  static constexpr Symbol eof() noexcept { return Symbol(Type::EOI); }
+
+  /**
+  \brief Returns the type of the symbol.
+  \returns The symbol's type.
+  */
+  constexpr Type type() const noexcept { return Type((storage_ & type_mask()) >> type_shift()); }
+
+  constexpr size_t id() const noexcept { return storage_ & id_mask(); }
+
+  /**
+  \brief Returns true if the symbol is a terminal and false otherwise.
+
+  Symbol::eof() is a terminal symbol as well.
+  */
+  constexpr bool terminal() const noexcept {
+    return storage_ & (static_cast<size_t>(0x1) << type_shift());
+  }
+  /**
+  \brief Returns true if the symbol is a nonterminal.
+  */
+  constexpr bool nonterminal() const noexcept { return (storage_ & type_mask()) == 0; }
+
+  /**
+  \name Comparison operators
+  \brief Numeric comparison of types and ids.
+  Types have higher priority.
+  \param[in] lhs Left Symbol of the comparison.
+  \param[out] rhs Right Symbol of the comparison.
+  \returns True when the numeric comparison is true.
+  */
+  ///@{
+  friend constexpr bool operator<(const Symbol& lhs, const Symbol& rhs) {
+    static_assert(sizeof(Symbol) == sizeof(size_t), "Symbol must match size_t size");
+    return lhs.storage_ < rhs.storage_;
+  }
+
+  friend constexpr bool operator==(const Symbol& lhs, const Symbol& rhs) {
+    return lhs.storage_ == rhs.storage_;
+  }
+
+  friend constexpr bool operator!=(const Symbol& lhs, const Symbol& rhs) { return !(lhs == rhs); }
+
+  friend constexpr bool operator>(const Symbol& lhs, const Symbol& rhs) { return rhs < lhs; }
+
+  friend constexpr bool operator<=(const Symbol& lhs, const Symbol& rhs) { return !(lhs > rhs); }
+
+  friend constexpr bool operator>=(const Symbol& lhs, const Symbol& rhs) { return rhs <= lhs; }
+  ///@}
+
+  string to_string() const {
+    using namespace std::literals;
+
+    if (type() == Type::EOI) {
+      return "EOF";
+    }
+    return "\""s + std::to_string(id() - (terminal() ? 1 : 0)) + "\"" +
+           (type() == Type::NONTERMINAL ? "_nt" : "_t");
+  }
+
+  explicit operator std::string() const { return to_string(); }
+
+  explicit constexpr operator size_t() { return reinterpret_cast<const size_t&>(*this); }
+
+ protected:
+  constexpr Symbol(Type type, size_t id = 0) noexcept
+      : storage_((static_cast<size_t>(type) << type_shift()) | (id & id_mask())) {}
+
+  /**
+  \brief Id of this Symbol.
+  */
+  size_t storage_;
+
+  static constexpr size_t id_mask() noexcept {
+    return (std::numeric_limits<size_t>::max() << 2) >> 2;
+  }
+  static constexpr size_t type_mask() noexcept { return ~id_mask(); }
+  static constexpr size_t type_shift() noexcept { return sizeof(size_t) * 8 - 2; }
+};
+
+/**
+  \brief Returns a Symbol with Type::Terminal, given name and attribute.
+  \param[in] name Name of returned symbol.
+  \param[in] attribute Attribute of returned Symbol. Defaults to "".
+  \returns A Symbol with type Terminal, given name and given attribute.
+  */
+inline constexpr Symbol Terminal(size_t id) noexcept {
+  return Symbol(Symbol::Type::TERMINAL, id + 1);
+}
+
+/**
+\brief Returns a Symbol with Type::Nonterminal, given name and attribute.
+\param[in] name Name of returned symbol.
+\returns A Symbol with type Nonterminal and given name.
+*/
+inline constexpr Symbol Nonterminal(const size_t id) noexcept {
+  return Symbol(Symbol::Type::NONTERMINAL, id);
+}
+
+/**
+\brief POD struct holding location coordinates.
+
+Valid row and col numbers start at 1. Zero value row or col values are equal to the invalid()
+constant.
+**/
+struct Location {
+  /**
+  \brief Row number. The lowest valid row number is 1.
+  */
+  uint64_t row;
+  /**
+  \brief Col number. The lowest valid col number is 1.
+  */
+  uint64_t col;
+  /**
+  \brief The name of the source of the location.
+  */
+  string fileName;
+
+  /**
+  \brief Basic constructor.
+
+  \param[in] _row The row of the created object.
+  \param[in] _col The col of the created object.
+  \param[in] _fileName The name of the source file.
+  */
+  Location(uint64_t _row, uint64_t _col, string _fileName = "")
+      : row(_row), col(_col), fileName(_fileName) {
+    assert(row != 0);
+    assert(col != 0);
+  }
+  /**
+  \brief Implicit first location constructor.
+
+  \param[in] _fileName The name of the source file.
+  */
+  explicit Location(string _fileName = "") : row(1), col(1), fileName(_fileName) {}
+  Location(const Location&) = default;
+  Location(Location&&) noexcept = default;
+  ~Location() = default;
+
+  /**
+  \brief Static constant invalid location object.
+
+  \returns A const reference to the single invalid Location object.
+  */
+  static const Location& invalid() noexcept {
+    static const Location ns{false};
+    return ns;
+  }
+
+  Location& operator=(const Location&) & = default;
+  Location& operator=(Location&&) & noexcept = default;
+  /**
+  \brief Compares two Location objects by row and col numbers.
+
+  \param[in] lhs The left-hand side Location.
+  \param[in] rhs The right-hand side Location.
+
+  \returns True if both are invalid or when both have the same row and col.
+  False
+  otherwise.
+  */
+  friend bool operator==(const Location& lhs, const Location& rhs) {
+    // Location::invalid comparison
+    if ((lhs.row == 0 || lhs.col == 0) && (rhs.row == 0 || rhs.col == 0))
+      return true;
+    // regular comparison
+    return lhs.row == rhs.row && lhs.col == rhs.col;
+  }
+  /**
+  \brief Compares two Location objects by row and col numbers.
+
+  \param[in] lhs The left-hand side Location.
+  \param[in] rhs The right-hand side Location.
+
+  \returns False if both are invalid or when both have the same row and col.
+  True
+  otherwise.
+  */
+  friend bool operator!=(const Location& lhs, const Location& rhs) { return !(lhs == rhs); }
+
+  /**
+  \brief Creates a string from this Location.
+
+  \returns A string in the format "fileName:row:col" if the location is valid.
+  */
+  string to_string() const {
+    if (*this == Location::invalid()) {
+      return "";
+    }
+    return fileName + ":" + std::to_string(row) + ":" + std::to_string(col);
+  }
+
+  explicit operator string() const { return to_string(); }
+
+  friend std::ostream& operator<<(std::ostream& os, const Location& location) {
+    os << location.to_string();
+    return os;
+  }
+
+ private:
+  /**
+  \brief Constructs an invalid Location.
+  */
+  explicit Location(bool) : row(0), col(0) {}
+};
 
 /**
 \brief Attribute class. Holds values of any type.
 */
 class Attribute {
- private:
-  /**
-  \brief Stores any value.
-  */
-  std::any storage_;
-
  public:
   constexpr Attribute() = default;
   /**
@@ -50,14 +308,14 @@ class Attribute {
   /**
   \brief Default assignment operator.
   */
-  Attribute& operator=(const Attribute& other) {
+  Attribute& operator=(const Attribute& other) & {
     storage_ = other.storage_;
     return *this;
   }
   /**
   \brief Default assignment operator.
   */
-  Attribute& operator=(Attribute&& other) {
+  Attribute& operator=(Attribute&& other) & {
     storage_ = other.storage_;
     return *this;
   }
@@ -67,7 +325,7 @@ class Attribute {
   \tparam T The type of the assigned object.
   */
   template <typename T>
-  Attribute& operator=(T& rhs) {
+  Attribute& operator=(T& rhs) & {
     storage_ = rhs;
     return *this;
   }
@@ -180,279 +438,12 @@ class Attribute {
     return lhs == rhs.get<T>();
   }
   ///@}
-};
-
-/**
-\brief Base exception class for ctf specific exceptions.
-*/
-class TranslationException : public std::runtime_error {
-  using std::runtime_error::runtime_error;
-};
-
-/**
-\brief POD struct holding location coordinates.
-
-Valid row and col numbers start at 1. Zero value row or col values are equal to the invalid()
-constant.
-**/
-struct Location {
-  /**
-  \brief Row number. The lowest valid row number is 1.
-  */
-  uint64_t row;
-  /**
-  \brief Col number. The lowest valid col number is 1.
-  */
-  uint64_t col;
-  /**
-  \brief The name of the source of the location.
-  */
-  string fileName;
-
-  /**
-  \brief Basic constructor.
-
-  \param[in] _row The row of the created object.
-  \param[in] _col The col of the created object.
-  \param[in] _fileName The name of the source file.
-  */
-  Location(uint64_t _row, uint64_t _col, string _fileName = "")
-      : row(_row), col(_col), fileName(_fileName) {
-    assert(row != 0);
-    assert(col != 0);
-  }
-  /**
-  \brief Implicit first location constructor.
-
-  \param[in] _fileName The name of the source file.
-  */
-  explicit Location(string _fileName = "") : row(1), col(1), fileName(_fileName) {}
-  Location(const Location&) = default;
-  Location(Location&&) noexcept = default;
-  ~Location() = default;
-
-  /**
-  \brief Static constant invalid location object.
-
-  \returns A const reference to the single invalid Location object.
-  */
-  static const Location& invalid() noexcept {
-    static const Location ns{false};
-    return ns;
-  }
-
-  Location& operator=(const Location&) = default;
-  Location& operator=(Location&&) noexcept = default;
-  /**
-  \brief Compares two Location objects by row and col numbers.
-
-  \param[in] lhs The left-hand side Location.
-  \param[in] rhs The right-hand side Location.
-
-  \returns True if both are invalid or when both have the same row and col.
-  False
-  otherwise.
-  */
-  friend bool operator==(const Location& lhs, const Location& rhs) {
-    // Location::invalid comparison
-    if ((lhs.row == 0 || lhs.col == 0) && (rhs.row == 0 || rhs.col == 0))
-      return true;
-    // regular comparison
-    return lhs.row == rhs.row && lhs.col == rhs.col;
-  }
-  /**
-  \brief Compares two Location objects by row and col numbers.
-
-  \param[in] lhs The left-hand side Location.
-  \param[in] rhs The right-hand side Location.
-
-  \returns False if both are invalid or when both have the same row and col.
-  True
-  otherwise.
-  */
-  friend bool operator!=(const Location& lhs, const Location& rhs) { return !(lhs == rhs); }
-
-  /**
-  \brief Creates a string from this Location.
-
-  \returns A string in the format "fileName:row:col" if the location is valid.
-  */
-  string to_string() const {
-    if (*this == Location::invalid()) {
-      return "";
-    }
-    return fileName + ":" + std::to_string(row) + ":" + std::to_string(col);
-  }
-
-  explicit operator string() const { return to_string(); }
-
-  friend std::ostream& operator<<(std::ostream& os, const Location& location) {
-    os << location.to_string();
-    return os;
-  }
 
  private:
   /**
-  \brief Constructs an invalid Location.
+  \brief Stores any value.
   */
-  explicit Location(bool) : row(0), col(0) {}
-};
-
-/**
-\brief A single symbol in the translation process. May represent a Terminal, Nonterminal or end of
-input.
-*/
-class Symbol {
- public:
-  /**
-  \brief Type of the Symbol.
-  */
-  enum class Type : unsigned char {
-    /**
-    \brief Nonterminal symbol
-    */
-    NONTERMINAL = 0,
-    /**
-    \brief Terminal symbol
-    */
-    TERMINAL = 1,
-    /**
-    \brief End of input
-    */
-    EOI = 3,
-  };
-
-  constexpr Symbol(Type type, size_t id = 0) noexcept
-      : type_(static_cast<unsigned char>(type)), id_(id) {}
-  /**
-  \brief Constructs a Symbol with a given type. If specified, sets Symbol's name and attribute.
-  \param[in] type Type of constructed Symbol.
-  \param[in] name Name of constructed Symbol. Defaults to "". "EOF" is the only valid name for
-  Type::EOI. \param[in] atr Attribute of constructed Symbol.
-  */
-  Symbol(Type type, const string& name)
-      : type_(static_cast<unsigned char>(type)), id_(name_index(name)) {}
-
-  /**
-  \brief Default destructor.
-  */
-  ~Symbol() = default;
-
-  /**
-  \brief Creates an EOF Symbol.
-  \returns An EOF Symbol.
-  */
-  static constexpr Symbol eof() { return Symbol(Type::EOI); }
-
-  constexpr size_t id() const { return id_; }
-
-  /**
-  \brief Returns a const reference to name.
-  \returns A const reference to name.
-  */
-  const string& name() const { return nameMap()[id_]; }
-  /**
-  \brief Returns the type of the symbol.
-  \returns The symbol's type.
-  */
-  constexpr Type type() const { return Type(type_); }
-
-  constexpr bool terminal() const noexcept { return Type(type_) == Type::TERMINAL; }
-  constexpr bool nonterminal() const noexcept { return Type(type_) == Type::NONTERMINAL; }
-
-  /**
-  \name Comparison operators
-  \brief Numeric comparison of types and ids.
-  Types have higher priority.
-  \param[in] lhs Left Symbol of the comparison.
-  \param[out] rhs Right Symbol of the comparison.
-  \returns True when the numeric comparison is true.
-  */
-  ///@{
-  friend constexpr bool operator<(const Symbol& lhs, const Symbol& rhs) {
-    static_assert(sizeof(Symbol) == sizeof(size_t), "Symbol must match size_t size");
-    return reinterpret_cast<const size_t&>(lhs) < reinterpret_cast<const size_t&>(rhs);
-  }
-
-  friend constexpr bool operator==(const Symbol& lhs, const Symbol& rhs) {
-    return reinterpret_cast<const size_t&>(lhs) == reinterpret_cast<const size_t&>(rhs);
-  }
-
-  friend constexpr bool operator!=(const Symbol& lhs, const Symbol& rhs) { return !(lhs == rhs); }
-
-  friend constexpr bool operator>(const Symbol& lhs, const Symbol& rhs) { return rhs < lhs; }
-
-  friend constexpr bool operator<=(const Symbol& lhs, const Symbol& rhs) { return !(lhs > rhs); }
-
-  friend constexpr bool operator>=(const Symbol& lhs, const Symbol& rhs) { return rhs <= lhs; }
-  ///@}
-
-  string to_string() const {
-    using namespace std::literals;
-
-    if (type() == Type::EOI) {
-      return name();
-    }
-    return "\""s + name() + "\"" + (type() == Type::NONTERMINAL ? "_nt" : "_t");
-  }
-
-  explicit operator std::string() const { return to_string(); }
-
- protected:
-  /**
-  \brief Type of this Symbol.
-  */
-  unsigned char type_ : 2;
-  /**
-  \brief Id of this Symbol.
-  */
-  size_t id_ : sizeof(size_t) * 8 - 2;
-
-  /**
-  \brief Inserts a name into static maps and returns its index.
-  */
-  static size_t name_index(const string& name) {
-#ifdef CTF_MULTITHREAD
-    std::lock_guard l(nameLock());
-#endif
-    auto it = reverseNameMap().find(name);
-    if (it == reverseNameMap().end()) {
-      size_t result = nameMap().size();
-      reverseNameMap()[name] = result;
-      nameMap().push_back(name);
-      return result;
-    }
-    return it->second;
-  }
-
-  // invalidates all Symbol names
-  static void flush_symbols() {
-#ifdef CTF_MULTITHREAD
-    std::lock_guard l(nameLock());
-#endif
-    nameMap() = {"EOF"};
-    nameMap().shrink_to_fit();
-    reverseNameMap().clear();
-    reverseNameMap()["EOF"] = 0;
-  }
-
- private:
-  /**
-  \brief Gets the mutex for Symbol name insertion.
-  */
-  inline static std::mutex& nameLock() {
-    static std::mutex nl;
-    return nl;
-  }
-
-  inline static unordered_map<string, size_t>& reverseNameMap() {
-    static unordered_map<string, size_t> rnm{{"EOF", 0}};
-    return rnm;
-  }
-  inline static deque<string>& nameMap() {
-    static deque<string> nm{"EOF"};
-    return nm;
-  }
+  std::any storage_;
 };
 
 class Token {
@@ -475,8 +466,6 @@ class Token {
 
   size_t id() const noexcept { return symbol_.id(); }
   Symbol::Type type() const noexcept { return symbol_.type(); }
-
-  const string& name() const noexcept { return symbol_.name(); }
 
   bool terminal() const noexcept { return symbol_.terminal(); }
   bool nonterminal() const noexcept { return symbol_.nonterminal(); }
@@ -537,22 +526,6 @@ class Token {
   Location location_;
 };
 
-/**
-\brief Returns a Symbol with Type::Terminal, given name and attribute.
-\param[in] name Name of returned symbol.
-\param[in] attribute Attribute of returned Symbol. Defaults to "".
-\returns A Symbol with type Terminal, given name and given attribute.
-*/
-inline Symbol Terminal(const string& name) { return Symbol(Symbol::Type::TERMINAL, name); }
-inline Symbol Terminal(size_t id) { return Symbol(Symbol::Type::TERMINAL, id); }
-/**
-\brief Returns a Symbol with Type::Nonterminal, given name and attribute.
-\param[in] name Name of returned symbol.
-\returns A Symbol with type Nonterminal and given name.
-*/
-inline Symbol Nonterminal(const string& name) { return Symbol(Symbol::Type::NONTERMINAL, name); }
-inline Symbol Nonterminal(const size_t id) { return Symbol(Symbol::Type::NONTERMINAL, id); }
-
 #ifndef CTF_NO_LITERALS
 inline namespace literals {
 /**
@@ -560,22 +533,15 @@ inline namespace literals {
 \param[in] s C string representing the name of the returned Symbol.
 \returns Symbol with type Terminal and given name.
 */
-inline Symbol operator""_t(const char* s, size_t) { return Terminal({s}); }
-inline Symbol operator""_t(unsigned long long int id) {
-  return Symbol(Symbol::Type::TERMINAL, static_cast<size_t>(id));
-}
+inline constexpr Symbol operator""_t(unsigned long long int id) { return Terminal(id); }
 /**
 \brief Returns a Symbol of Type::Nonterminal with given name.
 \param[in] s C string representing the name of the returned Symbol.
 \returns Symbol with type Terminal and given name.
 */
-inline Symbol operator""_nt(const char* s, size_t) { return Nonterminal({s}); }
-inline Symbol operator""_nt(unsigned long long int id) {
-  return Symbol(Symbol::Type::NONTERMINAL, static_cast<size_t>(id));
-}
+inline constexpr Symbol operator""_nt(unsigned long long int id) { return Nonterminal(id); }
 }  // namespace literals
 #endif
-
 }  // namespace ctf
 
 namespace std {
@@ -584,9 +550,10 @@ inline void swap(ctf::Attribute& lhs, ctf::Attribute& rhs) noexcept { lhs.swap(r
 template <>
 struct hash<ctf::Symbol> {
   using argument_type = ctf::Symbol;
-  using result_type = size_t;
+  using result_type = std::hash<size_t>::result_type;
   result_type operator()(argument_type const& s) const noexcept {
-    return std::hash<size_t>{}(s.id());
+    // reinterpret as a size_t
+    return std::hash<size_t>{}(reinterpret_cast<const size_t&>(s));
   }
 };
 }  // namespace std

@@ -17,11 +17,11 @@ Empty is true if a series of productions from the nonterminal can result in an
 empty string.
 */
 inline empty_t create_empty(const TranslationGrammar& tg) {
-  empty_t empty = empty_t(tg.nonterminals().size(), false);
+  empty_t empty = empty_t(tg.nonterminals(), false);
 
   for (auto& r : tg.rules()) {
     if (r.input().size() == 0) {
-      empty[tg.nonterminal_index(r.nonterminal())] = true;
+      empty[r.nonterminal().id()] = true;
     }
   }
 
@@ -29,7 +29,7 @@ inline empty_t create_empty(const TranslationGrammar& tg) {
   do {
     changed = false;
     for (auto& r : tg.rules()) {
-      if (empty[tg.nonterminal_index(r.nonterminal())]) {
+      if (empty[r.nonterminal().id()]) {
         continue;
       }
       bool isempty = true;
@@ -40,7 +40,7 @@ inline empty_t create_empty(const TranslationGrammar& tg) {
             isempty = false;
             break;
           case Symbol::Type::NONTERMINAL:
-            if (empty[tg.nonterminal_index(s)] == false) {
+            if (!empty[s.id()]) {
               isempty = false;
             }
             break;
@@ -50,7 +50,7 @@ inline empty_t create_empty(const TranslationGrammar& tg) {
       }
       if (isempty) {
         changed = true;
-        empty[tg.nonterminal_index(r.nonterminal())] = true;
+        empty[r.nonterminal().id()] = true;
       }
     }
   } while (changed);
@@ -64,13 +64,13 @@ First contains all characters that can be at the first position of any string
 derived from this nonterminal.
 */
 inline first_t create_first(const TranslationGrammar& tg, const empty_t& empty) {
-  first_t first = {tg.nonterminals().size(), vector_set<Symbol>{}};
+  first_t first = {tg.nonterminals(), vector_set<Symbol>{}};
 
   bool changed = false;
   do {
     changed = false;
     for (auto& r : tg.rules()) {
-      size_t i = tg.nonterminal_index(r.nonterminal());
+      size_t i = r.nonterminal().id();
       bool isEmpty = true;
       for (auto& symbol : r.input()) {
         if (!isEmpty)
@@ -78,7 +78,7 @@ inline first_t create_first(const TranslationGrammar& tg, const empty_t& empty) 
         size_t nonterm_i;
         switch (symbol.type()) {
           case Symbol::Type::NONTERMINAL:
-            nonterm_i = tg.nonterminal_index(symbol);
+            nonterm_i = symbol.id();
             changed |= first[i].modify_set_union(first[nonterm_i]);
             isEmpty = empty[nonterm_i];
             break;
@@ -106,15 +106,15 @@ sentential form from the starting nonterminal.
 inline follow_t create_follow(const TranslationGrammar& tg,
                               const empty_t& empty,
                               const first_t& first) {
-  follow_t follow = {tg.nonterminals().size(), vector_set<Symbol>{}};
-  follow[tg.nonterminal_index(tg.starting_rule().input()[0])].insert(Symbol::eof());
+  follow_t follow = {tg.nonterminals(), vector_set<Symbol>{}};
+  follow[tg.starting_rule().input()[0].id()].insert(Symbol::eof());
 
   bool changed = false;
   do {
     changed = false;
     for (auto& r : tg.rules()) {
       // index of origin nonterminal
-      size_t i = tg.nonterminal_index(r.nonterminal());
+      size_t i = r.nonterminal().id();
       /* empty set of all symbols to the right of the current one */
       bool compoundEmpty = true;
       /* first set of all symbols to the right of the current symbol */
@@ -126,15 +126,15 @@ inline follow_t create_follow(const TranslationGrammar& tg,
         size_t ti = 0;
         switch (s.type()) {
           case Symbol::Type::NONTERMINAL:
-            ti = tg.nonterminal_index(s);
+            ti = s.id();
             changed |= follow[ti].modify_set_union(compoundFirst);
             changed |= (compoundEmpty && follow[ti].modify_set_union(follow[i]));
             break;
           default:
             break;
         }
-        /* if empty == false */
-        if (s.type() != Symbol::Type::NONTERMINAL || !empty[tg.nonterminal_index(s)]) {
+        /* if !empty */
+        if (s.type() != Symbol::Type::NONTERMINAL || !empty[s.id()]) {
           compoundEmpty = false;
           switch (s.type()) {
             case Symbol::Type::NONTERMINAL:
@@ -172,7 +172,7 @@ inline predict_t create_predict(const TranslationGrammar& tg,
   predict_t predict;
   for (auto& r : tg.rules()) {
     vector_set<Symbol> compoundFirst;
-    vector_set<Symbol> rfollow = follow[tg.nonterminal_index(r.nonterminal())];
+    vector_set<Symbol> rfollow = follow[r.nonterminal().id()];
     bool compoundEmpty = true;
     for (auto& s : reverse(r.input())) {
       size_t i;
@@ -183,7 +183,7 @@ inline predict_t create_predict(const TranslationGrammar& tg,
           compoundFirst = vector_set<Symbol>({s});
           break;
         case Symbol::Type::NONTERMINAL:
-          i = tg.nonterminal_index(s);
+          i = s.id();
           if (!empty[i]) {
             compoundEmpty = false;
             compoundFirst = first[i];
@@ -203,10 +203,9 @@ inline predict_t create_predict(const TranslationGrammar& tg,
   return predict;
 }
 
-inline vector_set<Symbol> string_first(const TranslationGrammar& grammar,
+inline vector_set<Symbol> string_first(const std::vector<Symbol>& symbols,
                                        const empty_t& empty,
-                                       const first_t& first,
-                                       const std::vector<Symbol>& symbols) {
+                                       const first_t& first) {
   using Type = Symbol::Type;
   vector_set<Symbol> result;
   for (auto&& symbol : symbols) {
@@ -216,7 +215,7 @@ inline vector_set<Symbol> string_first(const TranslationGrammar& grammar,
         result.insert(symbol);
         return result;
       case Type::NONTERMINAL: {
-        size_t i = grammar.nonterminal_index(symbol);
+        size_t i = symbol.id();
         result = set_union(result, first[i]);
         if (!empty[i]) {
           return result;

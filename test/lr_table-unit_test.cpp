@@ -1,13 +1,35 @@
 #include <catch.hpp>
 
 #include "../src/ctf_lr_table.hpp"
+#include "test_utils.h"
 
 using ctf::Symbol;
 using ctf::TranslationGrammar;
 using ctf::SLRTable;
 using ctf::LRAction;
 
-using namespace ctf::literals;
+static constexpr ctf::Symbol operator""_nt(const char* s, size_t) {
+  using namespace ctf::literals;
+  if (c_streq(s, "S"))
+    return 0_nt;
+  if (c_streq(s, "A"))
+    return 1_nt;
+
+  return 100_nt;
+}
+static constexpr ctf::Symbol operator""_t(const char* s, size_t) {
+  using namespace ctf::literals;
+  if (c_streq(s, "i"))
+    return 0_t;
+  if (c_streq(s, "o"))
+    return 1_t;
+  if (c_streq(s, "("))
+    return 2_t;
+  if (c_streq(s, ")"))
+    return 3_t;
+
+  return 100_t;
+}
 
 static TranslationGrammar grammar{{
                                       {"S"_nt, {"S"_nt, "o"_t, "A"_nt}},

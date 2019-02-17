@@ -3,24 +3,6 @@
 
 #include "../include/ctf.hpp"
 
-std::ostream& operator<<(std::ostream& os, const Symbol& s) {
-  switch (s.type()) {
-    case Symbol::Type::NONTERMINAL:
-      os << "NONTERMINAL: ";
-      break;
-    case Symbol::Type::TERMINAL:
-      os << "TERMINAL: ";
-      break;
-    case Symbol::Type::EOI:
-      os << "EOF";
-      break;
-    default:
-      os << "SYMBOL: ";
-      break;
-  }
-  os << s.name();
-
-  return os;
-}
+std::ostream& operator<<(std::ostream& os, const Symbol& s) { return os << s.to_string(); }
 
 std::ostream& operator<<(std::ostream& os, const Location& l) { return os << l.to_string(); }

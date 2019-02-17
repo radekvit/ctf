@@ -1,15 +1,45 @@
 #include <catch.hpp>
 
-#include "../src/ctf_ll_translation_control.hpp"
-
 #include <sstream>
+#include "../src/ctf_ll_translation_control.hpp"
+#include "test_utils.h"
 
 using ctf::Symbol;
 using ctf::LLTranslationControl;
 using ctf::TranslationGrammar;
 using ctf::LexicalAnalyzer;
 using ctf::InputReader;
-using namespace ctf::literals;
+
+static constexpr ctf::Symbol operator""_nt(const char* s, size_t) {
+  using namespace ctf::literals;
+  if (c_streq(s, "E"))
+    return 0_nt;
+  if (c_streq(s, "E'"))
+    return 1_nt;
+  if (c_streq(s, "T"))
+    return 2_nt;
+  if (c_streq(s, "T'"))
+    return 3_nt;
+  if (c_streq(s, "F"))
+    return 4_nt;
+
+  return 100_nt;
+}
+static constexpr ctf::Symbol operator""_t(const char* s, size_t) {
+  using namespace ctf::literals;
+  if (c_streq(s, "+"))
+    return 0_t;
+  if (c_streq(s, "*"))
+    return 1_t;
+  if (c_streq(s, "("))
+    return 2_t;
+  if (c_streq(s, ")"))
+    return 3_t;
+  if (c_streq(s, "i"))
+    return 4_t;
+
+  return 100_t;
+}
 
 TEST_CASE("LLTranslationControl construction", "[LLTranslationControl]") {
   TranslationGrammar tg{{

@@ -30,20 +30,21 @@ inline string default_LL_error_message(const Token& top,
 
   switch (top.type()) {
     case Type::EOI:
-      errorString += "Unexpected token '" + token.name() + "' at the end of input.";
+      errorString += "Unexpected token '" + token.to_string() + "' at the end of input.";
       break;
     case Type::TERMINAL:
-      errorString += "Unexpected token '" + token.name() + "'; expected '" + top.name() + "'.";
+      errorString +=
+          "Unexpected token '" + token.to_string() + "'; expected '" + top.to_string() + "'.";
       break;
     case Type::NONTERMINAL:
-      errorString += "Unexpected token '" + token.name() + "' when deriving '" + top.name() +
-                     "'; expected one of:\n";
+      errorString += "Unexpected token '" + token.to_string() + "' when deriving '" +
+                     top.to_string() + "'; expected one of:\n";
       for (auto&& expected : first) {
-        errorString += "'" + expected.name() + "', ";
+        errorString += "'" + expected.to_string() + "', ";
       }
       if (empty) {
         for (auto&& expected : follow) {
-          errorString += "'" + expected.name() + "', ";
+          errorString += "'" + expected.to_string() + "', ";
         }
       }
       if (errorString.back() == ' ') {
@@ -162,9 +163,7 @@ class LLTranslationControlGeneral : public TranslationControl {
     set_error();
     string message;
     if (top.nonterminal()) {
-      // find predict and follow
-      auto& nonterminals = translationGrammar_->nonterminals();
-      size_t i = std::find(nonterminals.begin(), nonterminals.end(), top) - nonterminals.begin();
+      size_t i = top.id();
       message =
           error_function(top, token, lastDerivedNonterminal, empty_[i], first_[i], follow_[i]);
     } else {
@@ -299,8 +298,8 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
     using Type = Symbol::Type;
 
     size_t ruleIndex = 0;
-    size_t ntIndex = translationGrammar_->nonterminal_index(lastDerivedNonterminal);
-    if (ntIndex >= translationGrammar_->nonterminals().size())
+    size_t ntIndex = lastDerivedNonterminal.id();
+    if (ntIndex >= translationGrammar_->nonterminals())
       return false;
     auto& ntFollow = follow_[ntIndex];
     // get a token from follow(lastNonterminal_)

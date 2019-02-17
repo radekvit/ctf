@@ -8,6 +8,7 @@ TEST_CASE("TranslationException") {
   REQUIRE_THROWS_AS(throw ctf::TranslationException("m"), ctf::TranslationException);
   REQUIRE_THROWS_WITH(throw ctf::TranslationException("m"), "m");
 }
+
 using namespace std::string_literals;
 
 using ctf::Symbol;
@@ -18,7 +19,8 @@ TEST_CASE("Symbol construction and assignment", "[Symbol]") {
   // constructor traits
   REQUIRE(std::is_trivially_constructible<Symbol, const Symbol&>::value);
   REQUIRE(std::is_trivially_constructible<Symbol, Symbol&&>::value);
-  REQUIRE(std::is_nothrow_constructible<Symbol, Symbol::Type, size_t>::value);
+  REQUIRE(noexcept(ctf::Terminal(0)));
+  REQUIRE(noexcept(ctf::Nonterminal(0)));
   // assignment traits
   REQUIRE(std::is_trivially_assignable<Symbol, const Symbol&>::value);
   REQUIRE(std::is_trivially_assignable<Symbol, Symbol&&>::value);
@@ -28,10 +30,10 @@ TEST_CASE("Symbol operators", "[Symbol]") {
   using namespace ctf::literals;
   using ctf::Token;
 
-  Symbol s1 = "0"_t;
-  Symbol s2 = "5"_t;
-  Symbol s3 = "5"_nt;
-  Symbol s4 = "7"_t;
+  Symbol s1 = 0_t;
+  Symbol s2 = 5_t;
+  Symbol s3 = 5_nt;
+  Symbol s4 = 7_t;
 
   REQUIRE(s1 < s2);
   REQUIRE_FALSE(s2 < s1);
@@ -48,40 +50,44 @@ TEST_CASE("Symbol operators", "[Symbol]") {
 
 TEST_CASE("Token Construction", "[Token]") {
   using namespace ctf::literals;
-  Token s("name"_t, Attribute("a"s));
+  Token s(0_t, Attribute("a"s));
   REQUIRE(s.type() == Symbol::Type::TERMINAL);
   REQUIRE(s.terminal());
-  REQUIRE(s.name() == "name");
+  REQUIRE(s.id() == 1);
+  REQUIRE(s.to_string() == "\"0\"_t");
   REQUIRE(s.attribute() == "a"s);
 
   using namespace ctf::literals;
   using ctf::Attribute;
 
-  s = "ter"_t;
+  s = 0_t;
   REQUIRE(s.type() == Symbol::Type::TERMINAL);
   REQUIRE(s.terminal());
-  REQUIRE(s.name() == "ter");
+  REQUIRE(s.id() == 1);
+  REQUIRE(s.to_string() == "\"0\"_t");
   REQUIRE(s.attribute().empty());
 
-  s = "nter"_nt;
+  s = 66_nt;
   REQUIRE(s.type() == Symbol::Type::NONTERMINAL);
   REQUIRE(s.nonterminal());
-  REQUIRE(s.name() == "nter");
+  REQUIRE(s.id() == 66);
+  REQUIRE(s.to_string() == "\"66\"_nt");
   REQUIRE(s.attribute().empty());
 
   s = Symbol::eof();
   REQUIRE(s.type() == Symbol::Type::EOI);
-  REQUIRE(s.name() == "EOF");
+  REQUIRE(s.id() == 0);
+  REQUIRE(s.to_string() == "EOF");
 }
 
 TEST_CASE("Token operators", "[Token]") {
   using namespace ctf::literals;
   using ctf::Token;
 
-  Token s1 = "0"_t;
-  Token s2 = "5"_t;
-  Token s3 = "5"_nt;
-  Token s4 = "7"_t;
+  Token s1 = 0_t;
+  Token s2 = 5_t;
+  Token s3 = 5_nt;
+  Token s4 = 7_t;
 
   REQUIRE(s1 < s2);
   REQUIRE_FALSE(s2 < s1);

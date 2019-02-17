@@ -33,11 +33,11 @@ struct LRActionItem {
 class LRGenericTable {
  public:
   const LRActionItem& lr_action(size_t state, const Symbol& terminal) const {
-    return actionTable_[actionIndex(state, terminalMap_.at(terminal))];
+    return actionTable_[actionIndex(state, terminal.id())];
   }
 
   const size_t& lr_goto(size_t state, const Symbol& nonterminal) const {
-    return gotoTable_[gotoIndex(state, nonterminalMap_.at(nonterminal))];
+    return gotoTable_[gotoIndex(state, nonterminal.id())];
   }
 
   size_t total_states() const { return states_; }
@@ -46,48 +46,30 @@ class LRGenericTable {
   vector<LRActionItem> actionTable_;
   vector<size_t> gotoTable_;
 
-  /**
-  \brief Mapping nonterminals to table_ indices.
-  */
-  unordered_map<Symbol, size_t> nonterminalMap_;
-  /**
-  \brief Mapping terminals to table_ row indices.
-  */
-  unordered_map<Symbol, size_t> terminalMap_;
-
   size_t states_;
+  size_t terminals_;
+  size_t nonterminals_;
 
   LRActionItem& lr_action_item(size_t state, const Symbol& terminal) {
-    return actionTable_[actionIndex(state, terminalMap_.at(terminal))];
+    return actionTable_[actionIndex(state, terminal.id())];
   }
 
   size_t& lr_goto_item(size_t state, const Symbol& nonterminal) {
-    return gotoTable_[gotoIndex(state, nonterminalMap_.at(nonterminal))];
+    return gotoTable_[gotoIndex(state, nonterminal.id())];
   }
 
   /**
   \brief Maps 2D indices to 1D indices.
   */
-  size_t actionIndex(size_t y, size_t x) const { return terminalMap_.size() * y + x; }
+  size_t actionIndex(size_t y, size_t x) const { return terminals_ * y + x; }
   /**
   \brief Maps 2D indices to 1D indices.
   */
-  size_t gotoIndex(size_t y, size_t x) const { return nonterminalMap_.size() * y + x; }
-
-  void initialize_maps(const TranslationGrammar& tg) {
-    // create index maps for terminals and nonterminals
-    for (size_t i = 0; i < tg.nonterminals().size(); ++i) {
-      nonterminalMap_.insert(std::make_pair(tg.nonterminals()[i], i));
-    }
-    // eof is a terminal in augmented grammars
-    for (size_t i = 0; i < tg.terminals().size(); ++i) {
-      terminalMap_.insert(std::make_pair(tg.terminals()[i], i));
-    }
-  }
+  size_t gotoIndex(size_t y, size_t x) const { return nonterminals_ * y + x; }
 
   void initialize_tables(size_t size) {
-    actionTable_ = {size * terminalMap_.size(), {LRAction::ERROR, 0}};
-    gotoTable_ = vector<size_t>(size * nonterminalMap_.size(), 0);
+    actionTable_ = {size * terminals_, {LRAction::ERROR, 0}};
+    gotoTable_ = vector<size_t>(size * nonterminals_, 0);
 
     states_ = size;
   }
@@ -100,7 +82,8 @@ class SLRTable : public LRGenericTable {
     const empty_t empty = create_empty(grammar);
     const first_t first = create_first(grammar, empty);
     const follow_t follow = create_follow(grammar, empty, first);
-    initialize_maps(grammar);
+    terminals_ = grammar.terminals();
+    nonterminals_ = grammar.nonterminals();
     LR0StateMachine sm(grammar);
     initialize_tables(sm.states().size());
 
@@ -123,7 +106,7 @@ class SLRTable : public LRGenericTable {
     if (rule == grammar.starting_rule() && mark == 2) {
       lr_action_item(state, Symbol::eof()) = {LRAction::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
-      size_t ni = grammar.nonterminal_index(rule.nonterminal());
+      size_t ni = rule.nonterminal().id();
       for (auto&& terminal : follow[ni]) {
         if (lr_action(state, terminal).action != LRAction::ERROR) {
           throw std::invalid_argument("Constructing SLRTable from a non-SLR TranslationGrammar.");
@@ -151,7 +134,8 @@ class LR1GenericTable : public LRGenericTable {
   LR1GenericTable() {}
   LR1GenericTable(const TranslationGrammar& grammar) {
     StateMachine sm(grammar);
-    initialize_maps(grammar);
+    terminals_ = grammar.terminals();
+    nonterminals_ = grammar.nonterminals();
     initialize_tables(sm.states().size());
 
     for (auto&& state : sm.states()) {
@@ -247,7 +231,8 @@ class LR1StrictGenericTable : public LRGenericTable {
   LR1StrictGenericTable() {}
   LR1StrictGenericTable(const TranslationGrammar& grammar) {
     StateMachine sm(grammar);
-    initialize_maps(grammar);
+    terminals_ = grammar.terminals();
+    nonterminals_ = grammar.nonterminals();
     initialize_tables(sm.states().size());
 
     for (auto&& state : sm.states()) {

@@ -1,8 +1,8 @@
 #include <catch.hpp>
 
 #include <algorithm>
-
 #include "../src/ctf_translation_grammar.hpp"
+#include "test_utils.h"
 
 using ctf::vector;
 using ctf::vector_set;
@@ -10,26 +10,65 @@ using ctf::Symbol;
 using ctf::TranslationGrammar;
 using Rule = ctf::TranslationGrammar::Rule;
 
+static constexpr Symbol operator""_nt(const char* s, size_t) {
+  using namespace ctf::literals;
+  if (c_streq(s, "A"))
+    return 0_nt;
+  if (c_streq(s, "B"))
+    return 1_nt;
+  if (c_streq(s, "C"))
+    return 2_nt;
+  if (c_streq(s, "D"))
+    return 3_nt;
+  if (c_streq(s, "E"))
+    return 4_nt;
+  if (c_streq(s, "S"))
+    return 5_nt;
+  if (c_streq(s, "X"))
+    return 6_nt;
+  if (c_streq(s, "Y"))
+    return 7_nt;
+
+  return 100_nt;
+}
+static constexpr Symbol operator""_t(const char* s, size_t) {
+  using namespace ctf::literals;
+  if (c_streq(s, "a"))
+    return 0_t;
+  if (c_streq(s, "b"))
+    return 1_t;
+  if (c_streq(s, "c"))
+    return 2_t;
+  if (c_streq(s, "x"))
+    return 3_t;
+  if (c_streq(s, "y"))
+    return 4_t;
+  if (c_streq(s, "X"))
+    return 0_t;
+
+  return 100_t;
+}
+
 using namespace ctf::literals;
 
 TEST_CASE("Rule construction", "[TranslationGrammar::Rule]") {
-  REQUIRE_NOTHROW(Rule("NT"_nt, {}));
-  REQUIRE_NOTHROW(Rule("NT"_nt, {"x"_t, "y"_t}));
-  REQUIRE_NOTHROW(Rule("NT"_nt, {"X"_nt, "X"_nt, "x"_t}));
-  REQUIRE(Rule("NT"_nt, {"X"_nt, "X"_nt, "x"_t}).actions() == vector<vector_set<size_t>>{{2}});
-  REQUIRE_NOTHROW(Rule("NT"_nt, {"x"_t, "y"_t}, {"y"_t, "y"_t}, {{}, {0, 1}}));
+  REQUIRE_NOTHROW(Rule("C"_nt, {}));
+  REQUIRE_NOTHROW(Rule("C"_nt, {"x"_t, "y"_t}));
+  REQUIRE_NOTHROW(Rule("C"_nt, {"X"_nt, "X"_nt, "x"_t}));
+  REQUIRE(Rule("C"_nt, {"X"_nt, "X"_nt, "x"_t}).actions() == vector<vector_set<size_t>>{{2}});
+  REQUIRE_NOTHROW(Rule("C"_nt, {"x"_t, "y"_t}, {"y"_t, "y"_t}, {{}, {0, 1}}));
 
-  REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t}, {"y"_t}, {{}, {}}), std::invalid_argument);
-  REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t}, {}, {{0}}), std::invalid_argument);
-  REQUIRE_THROWS_AS(Rule("NT"_nt, {"x"_t, "X"_nt}, {"X"_nt}, {{0}}), std::invalid_argument);
-  REQUIRE_THROWS_AS(Rule("NT"_nt, {"X"_nt, "Y"_nt}, {"Y"_nt, "X"_nt}), std::invalid_argument);
+  REQUIRE_THROWS_AS(Rule("C"_nt, {"x"_t}, {"y"_t}, {{}, {}}), std::invalid_argument);
+  REQUIRE_THROWS_AS(Rule("C"_nt, {"x"_t}, {}, {{0}}), std::invalid_argument);
+  REQUIRE_THROWS_AS(Rule("C"_nt, {"x"_t, "X"_nt}, {"X"_nt}, {{0}}), std::invalid_argument);
+  REQUIRE_THROWS_AS(Rule("C"_nt, {"X"_nt, "Y"_nt}, {"Y"_nt, "X"_nt}), std::invalid_argument);
 }
 
 TEST_CASE("Rule basics", "[TranslationGrammar::Rule]") {
-  Rule rule("NT"_nt, {"a"_t, "A"_nt, "B"_nt, "b"_t}, {"A"_nt, "b"_t, "a"_t, "B"_nt}, {{1}, {2}});
+  Rule rule("C"_nt, {"a"_t, "A"_nt, "B"_nt, "b"_t}, {"A"_nt, "b"_t, "a"_t, "B"_nt}, {{1}, {2}});
   vector<vector_set<size_t>> expectedActions{{1}, {2}};
   REQUIRE(rule.actions() == expectedActions);
-  REQUIRE(rule.nonterminal() == "NT"_nt);
+  REQUIRE(rule.nonterminal() == "C"_nt);
   vector<Symbol> expectedIn{"a"_t, "A"_nt, "B"_nt, "b"_t};
   vector<Symbol> expectedOut{"A"_nt, "b"_t, "a"_t, "B"_nt};
   REQUIRE(rule.input() == expectedIn);
@@ -70,43 +109,36 @@ TEST_CASE("Rule comparison operators", "[TranslationGrammar::Rule]") {
 
 TEST_CASE("TranslationGrammar construction", "[TranslationGrammar]") {
   REQUIRE_NOTHROW(TranslationGrammar());
-  REQUIRE_NOTHROW(TranslationGrammar({}, "X"_nt));
+  REQUIRE_NOTHROW(TranslationGrammar(std::vector<ctf::Rule>(), "X"_nt));
   REQUIRE_NOTHROW(TranslationGrammar({{"X"_nt, {}}}, "X"_nt));
   REQUIRE_NOTHROW(
       TranslationGrammar({{"X"_nt, {"X"_nt, "X"_t}}, {"X"_nt, {"x"_t, "X"_t}}}, "X"_nt));
   REQUIRE_THROWS_AS(TranslationGrammar({}, {}, {}, "X"_nt), std::invalid_argument);
   REQUIRE_THROWS_AS(TranslationGrammar({}, {}, {{"X"_nt, {}}}, "X"_nt), std::invalid_argument);
-  REQUIRE_THROWS_AS(TranslationGrammar({"X"_nt}, {}, {{"X"_nt, {"x"_t}}}, "X"_nt),
+  REQUIRE_THROWS_AS(TranslationGrammar("X"_nt.id() + 1, 1, {{"X"_nt, {"x"_t}}}, "X"_nt),
                     std::invalid_argument);
-  REQUIRE_THROWS_AS(TranslationGrammar({"X"_nt}, {"x"_t}, {{"X"_nt, {"x"_t, "A"_nt}}}, "X"_nt),
+  REQUIRE_THROWS_AS(TranslationGrammar(1, "x"_t.id() + 1, {{"X"_nt, {"x"_t, "A"_nt}}}, "X"_nt),
                     std::invalid_argument);
-  REQUIRE_NOTHROW(TranslationGrammar(
-      {"X"_nt}, {"x"_t}, {{"X"_nt, {"X"_nt, "X"_nt}}, {"X"_nt, {"x"_t, "X"_nt}}}, "X"_nt));
+  REQUIRE_NOTHROW(TranslationGrammar("X"_nt.id() + 1,
+                                     "x"_t.id() + 1,
+                                     {{"X"_nt, {"X"_nt, "X"_nt}}, {"X"_nt, {"x"_t, "X"_nt}}},
+                                     "X"_nt));
 }
 TEST_CASE("TranslationGrammar basic", "[TranslationGrammar]") {
   TranslationGrammar grammar{{
-                                 {"E"_nt, {"T"_nt, "E'"_nt}},
-                                 {"E'"_nt, {}},
-                                 {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
-                                 {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
-                                 {"F"_nt, {"i"_t}},
-                                 {"T"_nt, {"F"_nt, "T'"_nt}},
-                                 {"T'"_nt, {}},
-                                 {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
+                                 {"A"_nt, {"B"_nt, "C"_nt}},
+                                 {"C"_nt, {}},
+                                 {"C"_nt, {"a"_t, "B"_nt, "C"_nt}, {"B"_nt, "a"_t, "C"_nt}},
+                                 {"D"_nt, {"b"_t, "A"_nt, "c"_t}, {"A"_nt}},
+                                 {"D"_nt, {"y"_t}},
+                                 {"B"_nt, {"D"_nt, "E"_nt}},
+                                 {"E"_nt, {}},
+                                 {"E"_nt, {"x"_t, "D"_nt, "E"_nt}, {"D"_nt, "x"_t, "E"_nt}},
                              },
-                             "E"_nt};
-  vector<Symbol> expectedTerminals{Symbol::eof(), "+"_t, "("_t, ")"_t, "*"_t, "i"_t};
-  vector<Symbol> expectedNonterminals{"E"_nt, "E'"_nt, "E''"_nt, "F"_nt, "T"_nt, "T'"_nt};
-  std::sort(expectedTerminals.begin(), expectedTerminals.end());
-  std::sort(expectedNonterminals.begin(), expectedNonterminals.end());
+                             "A"_nt};
+  size_t expectedTerminals = "y"_t.id() + 1;
+  size_t expectedNonterminals = "E"_nt.id() + 2;
 
   REQUIRE(grammar.terminals() == expectedTerminals);
   REQUIRE(grammar.nonterminals() == expectedNonterminals);
-
-  Symbol nonterminal = expectedNonterminals[2];
-  Symbol terminal = expectedTerminals[3];
-  REQUIRE(grammar.nonterminal_index(nonterminal) == 2);
-  REQUIRE(grammar.terminal_index(terminal) == 3);
-
-  REQUIRE(TranslationGrammar::EPSILON_STRING().size() == 0);
 }

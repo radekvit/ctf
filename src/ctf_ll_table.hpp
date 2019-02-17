@@ -55,14 +55,14 @@ class LLGenericTable {
   */
   const T& rule_index(const Symbol& nt, const Symbol& t) noexcept {
     // iterator to nonterminal index
-    auto ntit = nonterminalMap_.find(nt);
+    auto ntid = nt.id();
     // iterator to terminal index;
-    auto tit = terminalMap_.find(t);
+    auto tid = t.id();
     // either of the arguments not found
-    if (ntit == nonterminalMap_.end() || tit == terminalMap_.end())
+    if (ntid >= nonterminals_ || tid >= terminals_)
       return invalid_;
     // returning from LL table
-    return table_[index(ntit->second, tit->second)];
+    return table_[index(ntid, tid)];
   }
 
  protected:
@@ -73,11 +73,11 @@ class LLGenericTable {
   /**
   \brief Mapping nonterminals to table_ indices.
   */
-  unordered_map<Symbol, size_t> nonterminalMap_;
+  size_t nonterminals_;
   /**
   \brief Mapping terminals to table_ row indices.
   */
-  unordered_map<Symbol, size_t> terminalMap_;
+  size_t terminals_;
   /**
   \brief Stores invalid value.
   */
@@ -85,7 +85,7 @@ class LLGenericTable {
   /**
   \brief Maps 2D indices to 1D indices.
   */
-  size_t index(size_t y, size_t x) const { return terminalMap_.size() * y + x; }
+  size_t index(size_t y, size_t x) const { return terminals_ * y + x; }
 
   virtual void initialize_invalid(const TranslationGrammar&) { return; }
 
@@ -97,28 +97,22 @@ class LLGenericTable {
 
   void initialize(const TranslationGrammar& tg, const predict_t& predict) {
     initialize_invalid(tg);
-    table_ = row(tg.nonterminals().size() * (tg.terminals().size() + 1), invalid_);
+    table_ = row(tg.nonterminals() * tg.terminals(), invalid_);
     assert(predict.size() == tg.rules().size());
 
-    // create index maps for terminals and nonterminals
-    for (size_t i = 0; i < tg.nonterminals().size(); ++i) {
-      nonterminalMap_.insert(std::make_pair(tg.nonterminals()[i], i));
-    }
-    for (size_t i = 0; i < tg.terminals().size(); ++i) {
-      terminalMap_.insert(std::make_pair(tg.terminals()[i], i));
-    }
+    nonterminals_ = tg.nonterminals();
+    terminals_ = tg.terminals();
 
     /* fill table */
     for (size_t i = 0; i < tg.rules().size(); ++i) {
       auto& terminals = predict[i];
       // TranslationGrammar requires this to be always found
-      size_t ni = nonterminalMap_.at(tg.rules()[i].nonterminal());
+      size_t ni = tg.rules()[i].nonterminal().id();
 
       for (auto& t : terminals) {
-        auto tit = terminalMap_.find(t);
-        assert(tit != terminalMap_.end());
+        auto ti = t.id();
+        assert(ti < terminals_);
 
-        size_t ti = tit->second;
         insert_rule(i, index(ni, ti));
       }  // for all terminals
     }    // for all i

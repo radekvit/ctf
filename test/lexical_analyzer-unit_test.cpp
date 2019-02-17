@@ -1,6 +1,6 @@
 #include <catch.hpp>
-
 #include <sstream>
+#include "test_utils.h"
 
 #include "../src/ctf_lexical_analyzer.hpp"
 
@@ -26,11 +26,12 @@ TEST_CASE("LexicalAnalyzer default input", "[LexicalAnalyzer]") {
   using namespace ctf::literals;
   stringstream s;
   InputReader r{s};
-  s << "a\nb\n";
+  s << "0\n1\n165\n";
   LexicalAnalyzer l{r};
 
-  REQUIRE(l.get_token() == "a"_t);
-  REQUIRE(l.get_token() == "b"_t);
+  REQUIRE(l.get_token() == 0_t);
+  REQUIRE(l.get_token() == 1_t);
+  REQUIRE(l.get_token() == 165_t);
   REQUIRE(l.get_token() == ctf::Symbol::eof());
 
   s << "";

@@ -2,8 +2,8 @@
 
 #include <fstream>
 #include <sstream>
-
 #include "../src/ctf_translation.hpp"
+#include "test_utils.h"
 
 using ctf::string;
 using ctf::Symbol;
@@ -17,9 +17,58 @@ using ctf::OutputGenerator;
 
 using namespace ctf::literals;
 
+static constexpr ctf::Symbol operator""_nt(const char* s, size_t) {
+  if (c_streq(s, "E"))
+    return 0_nt;
+  if (c_streq(s, "E'"))
+    return 1_nt;
+  if (c_streq(s, "T"))
+    return 2_nt;
+  if (c_streq(s, "T'"))
+    return 3_nt;
+  if (c_streq(s, "F"))
+    return 4_nt;
+
+  return 100_nt;
+}
+static constexpr ctf::Symbol operator""_t(const char* s, size_t) {
+  if (c_streq(s, "i"))
+    return 0_t;
+  if (c_streq(s, "+"))
+    return 1_t;
+  if (c_streq(s, "*"))
+    return 2_t;
+  if (c_streq(s, "("))
+    return 3_t;
+  if (c_streq(s, ")"))
+    return 4_t;
+
+  return 100_t;
+}
+
 class TestLexicalAnalyzer : public LexicalAnalyzer {
  public:
   using LexicalAnalyzer::LexicalAnalyzer;
+
+  Symbol name_to_symbol(const string& s) {
+    if (s == "i") {
+      return 0_t;
+    }
+    if (s == "+") {
+      return 1_t;
+    }
+    if (s == "*") {
+      return 2_t;
+    }
+    if (s == "(") {
+      return 3_t;
+    }
+    if (s == ")") {
+      return 4_t;
+    }
+
+    return 100_t;
+  }
 
   Token read_token() override {
     string name;
@@ -41,7 +90,7 @@ class TestLexicalAnalyzer : public LexicalAnalyzer {
     if (c != std::char_traits<char>::eof())
       unget();
 
-    return token(name, Attribute{attr++});
+    return token(name_to_symbol(name), Attribute{attr++});
   }
 
   void reset_private() override { attr = 0; }

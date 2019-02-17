@@ -125,10 +125,9 @@ class Item {
   vector_set<Symbol> generatedLookaheads_;
 };
 
-inline tuple<vector_set<Symbol>, bool> first(const TranslationGrammar& grammar,
+inline tuple<vector_set<Symbol>, bool> first(const vector<Symbol>& symbols,
                                              const empty_t& empty,
-                                             const first_t& first,
-                                             const vector<Symbol>& symbols) {
+                                             const first_t& first) {
   using Type = Symbol::Type;
   vector_set<Symbol> result;
   for (auto&& symbol : symbols) {
@@ -138,7 +137,7 @@ inline tuple<vector_set<Symbol>, bool> first(const TranslationGrammar& grammar,
         result.insert(symbol);
         return {result, false};
       case Type::NONTERMINAL: {
-        size_t i = grammar.nonterminal_index(symbol);
+        size_t i = symbol.id();
         result = set_union(result, first[i]);
         if (!empty[i]) {
           return {result, false};
@@ -168,7 +167,7 @@ inline vector_set<Item> closure(vector_set<Item> items,
         if (!item.reduce()) {
           followingSymbols = {input.begin() + item.mark() + 1, input.end()};
         }
-        auto [generatedLookaheads, propagateLookahead] = first(grammar, e, f, followingSymbols);
+        auto [generatedLookaheads, propagateLookahead] = first(followingSymbols, e, f);
         vector_set<LookaheadSource> propagatedLookaheads;
         if (propagateLookahead) {
           propagatedLookaheads = item.lookaheads();
