@@ -7,7 +7,7 @@ DOC = docs
 all:
 
 format:
-	clang-format -style=file -i $(SRC)/*.hpp $(INCLUDE)/*.hpp
+	clang-format -style=file -i $(SRC)/*.hpp $(SRC)/*.cpp $(INCLUDE)/*.hpp
 	$(MAKE) -C test format
 
 test:

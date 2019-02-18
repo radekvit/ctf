@@ -888,6 +888,16 @@ OT transform(const IT& it) {
   return OT{begin(it), end(it)};
 }
 
+inline constexpr int c_streq(const char* a, const char* b) {
+  while (*a != '\0' && *b != '\0') {
+    if (*a != *b)
+      return false;
+    ++a;
+    ++b;
+  }
+  return *a == *b;
+}
+
 }  // namespace ctf
 #endif
 /*** Enf of file generic_types.hpp ***/

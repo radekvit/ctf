@@ -470,10 +470,10 @@ TEST_CASE("Simple infix to postfix calculator translation", "[LALRTranslationCon
       }),
       "S"_nt,
       vector<PrecedenceSet>({
-          {Associativity::LEFT, {"+"_t, "-"_t}},
-          {Associativity::LEFT, {"*"_t, "/"_t}},
-          {Associativity::NONE, {"unary-"_t}},
           {Associativity::RIGHT, {"^"_t}},
+          {Associativity::NONE, {"unary-"_t}},
+          {Associativity::LEFT, {"*"_t, "/"_t}},
+          {Associativity::LEFT, {"+"_t, "-"_t}},
       })};
   TCTLA a;
   std::stringstream in;
@@ -485,6 +485,7 @@ TEST_CASE("Simple infix to postfix calculator translation", "[LALRTranslationCon
   LALRTranslationControl lalr(a, tg);
   lalr.run();
   REQUIRE(lalr.output().size() == 18);
+  // TODO actually check the result
 }
 
 TEST_CASE("Simple infix to postfix calculator translation in LR1", "[LR1TranslationControl]") {
@@ -520,4 +521,5 @@ TEST_CASE("Simple infix to postfix calculator translation in LR1", "[LR1Translat
   LR1TranslationControl lr1(a, tg);
   lr1.run();
   REQUIRE(lr1.output().size() == 18);
+  // TODO actually check the result
 }

@@ -403,8 +403,8 @@ class StateMachine {
   // goes through all relative lookaheads and changes them to generated lookaheads
   void finalize_lookaheads() {
     // a single map for all lookaheads
-    unordered_map<LookaheadSource, vector_set<Symbol>> lookaheadMap;
     for (auto& state : states_) {
+      unordered_map<LookaheadSource, vector_set<Symbol>> lookaheadMap;
       for (auto& item : state.items()) {
         for (auto&& source : item.lookaheads()) {
           auto it = lookaheadMap.find(source);
