@@ -12,6 +12,7 @@ using ctf::LR0StateMachine;
 using ctf::SLRTranslationControl;
 using ctf::LALRTranslationControl;
 using ctf::LR1TranslationControl;
+using ctf::IALRTranslationControl;
 using ctf::LALRStrictTranslationControl;
 using ctf::LR1StrictTranslationControl;
 
@@ -554,6 +555,74 @@ TEST_CASE("Simple infix to postfix calculator translation in LR1", "[LR1Translat
   lr1.run();
   REQUIRE(lr1.output().size() == 16);
   auto it = lr1.output().begin();
+  Token os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "unary-"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "unary-"_t);
+  os = *it++;
+  REQUIRE(os == "*"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "/"_t);
+  os = *it++;
+  REQUIRE(os == "-"_t);
+  os = *it++;
+  REQUIRE(os == "^"_t);
+  os = *it++;
+  REQUIRE(os == "^"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "+"_t);
+  os = *it++;
+  REQUIRE(os == Symbol::eof());
+}
+
+TEST_CASE("Simple infix to postfix calculator translation in IALR", "[LR1TranslationControl]") {
+  // TODO state machine error, doesn't find isocores properly
+  // https://www.gnu.org/software/bison/manual/html_node/Infix-Calc.html#Infix-Calc
+  TranslationGrammar tg{
+      vector<Rule>({
+          {"S"_nt, {}},
+          {"S"_nt, {"Expr"_nt}},
+          {"Expr"_nt, {"i"_t}},
+          {"Expr"_nt, {"Expr"_nt, "+"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "+"_t}, {{2}}},
+          {"Expr"_nt, {"Expr"_nt, "-"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "-"_t}, {{2}}},
+          {"Expr"_nt, {"Expr"_nt, "*"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "*"_t}, {{2}}},
+          {"Expr"_nt, {"Expr"_nt, "/"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "/"_t}, {{2}}},
+          {"Expr"_nt, {"-"_t, "Expr"_nt}, {"Expr"_nt, "unary-"_t}, {{1}}, true, "unary-"_t},
+          {"Expr"_nt, {"Expr"_nt, "^"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "^"_t}, {{2}}},
+          {"Expr"_nt, {"("_t, "Expr"_nt, ")"_t}, {"Expr"_nt}},
+      }),
+      "S"_nt,
+      vector<PrecedenceSet>({
+          {Associativity::NONE, {"unary-"_t}},
+          {Associativity::RIGHT, {"^"_t}},
+          {Associativity::LEFT, {"*"_t, "/"_t}},
+          {Associativity::LEFT, {"+"_t, "-"_t}},
+      })};
+  TCTLA a;
+  std::stringstream in;
+  // expected output:
+  // i i unary- i i i unary- * i / - ^ ^ i + EOF
+  in << "i ^ - i ^ ( i - i * - i / i ) + i";
+  InputReader r{in};
+  a.set_reader(r);
+  IALRTranslationControl ialr(a, tg);
+  ialr.run();
+  REQUIRE(ialr.output().size() == 16);
+  auto it = ialr.output().begin();
   Token os = *it++;
   REQUIRE(os == "i"_t);
   os = *it++;

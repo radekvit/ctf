@@ -7,8 +7,10 @@
 #define CRF_LR_TABLE_HPP
 
 #include "ctf_base.hpp"
+#include "ctf_lr_ialr.hpp"
 #include "ctf_lr_lalr.hpp"
 #include "ctf_lr_lr0.hpp"
+#include "ctf_lr_lr1.hpp"
 
 namespace ctf {
 
@@ -180,8 +182,12 @@ class LR1GenericTable : public LRGenericTable {
       size_t nextState = transitionMap.at(terminal);
       auto& action = lr_action_item(id, terminal);
       if (action.action == LRAction::REDUCE) {
-        action = conflict_resolution(
-            terminal, action, {LRAction::SHIFT, nextState}, grammar.rules()[action.argument], state, grammar);
+        action = conflict_resolution(terminal,
+                                     action,
+                                     {LRAction::SHIFT, nextState},
+                                     grammar.rules()[action.argument],
+                                     state,
+                                     grammar);
       } else {
         // regular insert
         lr_action_item(id, terminal) = {LRAction::SHIFT, nextState};
@@ -278,11 +284,13 @@ class LR1StrictGenericTable : public LRGenericTable {
 
 inline char CanonicalLR1String[] = "Canonical LR(1)";
 inline char LALRString[] = "LALR";
+inline char IALRString[] = "IALR";
 inline char StrictCanonicalLR1String[] = "Strict Canonical LR(1)";
 inline char StrictLALRString[] = "Strict LALR";
 
 using LR1Table = LR1GenericTable<lr1::StateMachine, CanonicalLR1String>;
 using LALRTable = LR1GenericTable<lalr::StateMachine, LALRString>;
+using IALRTable = LR1GenericTable<ialr::StateMachine, IALRString>;
 
 using LR1StrictTable = LR1StrictGenericTable<lr1::StateMachine, StrictCanonicalLR1String>;
 using LALRStrictTable = LR1StrictGenericTable<lalr::StateMachine, StrictLALRString>;

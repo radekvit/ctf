@@ -1,11 +1,11 @@
 #ifndef CTF_LR_LR1_HPP
 #define CTF_LR_LR1_HPP
 
+#include <iostream>
 #include "ctf_base.hpp"
 #include "ctf_lr_lr0.hpp"
 #include "ctf_table_sets.hpp"
 #include "ctf_translation_grammar.hpp"
-
 namespace ctf::lr1 {
 
 struct LookaheadSource {
@@ -214,7 +214,9 @@ inline unordered_map<Symbol, vector_set<Item>> symbol_skip_closures(const vector
 
   for (size_t i = 0; i < state.size(); ++i) {
     auto& item = state[i];
-    if (item.reduce()) { continue; }
+    if (item.reduce()) {
+      continue;
+    }
     auto& symbol = item.rule().input()[item.mark()];
     if (symbol == Symbol::eof() || !item.has_next()) {
       continue;
@@ -291,6 +293,7 @@ class StateMachine {
     // recursively expand all states: dfs
     expand_state(0);
     // push all lookaheads to their items
+    std::cout << "LR1: how many states? " << states_.size() << "\n";
     finalize_lookaheads();
   }
 
@@ -374,6 +377,7 @@ class StateMachine {
 
     // get all sources
     for (auto&& item : state.items()) {
+      result.push_back({});
       for (auto&& source : item.lookaheads()) {
         auto it = lookaheadMap.find(source);
         if (it == lookaheadMap.end()) {
@@ -381,7 +385,7 @@ class StateMachine {
           lookahead_lookup(source, lookaheadMap);
           it = lookaheadMap.find(source);
         }
-        result.push_back(it->second);
+        result.back() = set_union(result.back(), it->second);
       }
     }
     return result;

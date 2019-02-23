@@ -1,8 +1,8 @@
 #ifndef CTF_LR_LALR_HPP
 #define CTF_LR_LALR_HPP
 
+#include <iostream>
 #include "ctf_lr_lr1.hpp"
-
 namespace ctf::lalr {
 using Item = ctf::lr1::Item;
 
@@ -16,6 +16,7 @@ class StateMachine : public ctf::lr1::StateMachine {
     // recursively expand all states: dfs
     expand_state(0);
     // push all lookaheads to their items
+    std::cout << "LALR: how many states? " << states_.size() << "\n";
     finalize_lookaheads();
   }
 

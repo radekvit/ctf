@@ -1,8 +1,8 @@
 #ifndef CTF_LR_IALR_HPP
 #define CTF_LR_IALR_HPP
 
+#include <iostream>
 #include "ctf_lr_lr1.hpp"
-
 namespace ctf::ialr {
 
 using LookaheadSource = lr1::LookaheadSource;
@@ -62,6 +62,23 @@ class StateMachine {
 
     void set_expanded() noexcept { expanded_ = true; }
     bool expanded() const noexcept { return expanded_; }
+
+    string to_string() const {
+      string result = std::to_string(id()) + ": {\n";
+      for (auto&& item : items()) {
+        result += '\t';
+        result += item.to_string() + '\n';
+      }
+      result += "\t-----\n";
+      for (auto&& [symbol, next] : transitions()) {
+        result += '\t';
+        result += symbol.to_string() + ": " + std::to_string(next) + '\n';
+      }
+      result += "}\n";
+      return result;
+    }
+
+    explicit operator string() const { return to_string(); }
 
    private:
     // kernel identifier
@@ -162,13 +179,13 @@ class StateMachine {
   }
 
   void expand_state(size_t i) {
-    auto& state = states_[i];
     // set as reduce target for all lookahead sources
-    mark_reduce_targets(i, state);
+    mark_reduce_targets(i, states_[i]);
     vector<Symbol> postponedSymbols;
     // expand all transitions
-    for (auto [symbol, kernel] : lr1::symbol_skip_closures(state.items(), i)) {
+    for (auto [symbol, kernel] : lr1::symbol_skip_closures(states_[i].items(), i)) {
       auto [id, inserted, postponed] = insert_state(kernel);
+      auto& state = states_[i];
       if (postponed) {
         postponedSymbols.push_back(symbol);
         continue;
@@ -183,7 +200,7 @@ class StateMachine {
       postponed_.push_back({i, std::move(postponedSymbols)});
     }
     // mark; this state knows its lookahead reduce targets
-    state.set_expanded();
+    states_[i].set_expanded();
   }
 
   MergeResult merge(const std::vector<size_t>& isocores, const State& newState) {
@@ -223,12 +240,13 @@ class StateMachine {
   }
 
   vector<vector_set<Symbol>> lookaheads(
-      const State& state, unordered_map<LookaheadSource, vector_set<Symbol>>& lookaheadMap = {}) {
+      const State& state, unordered_map<LookaheadSource, vector_set<Symbol>> lookaheadMap = {}) {
     // get all back references
     vector<vector_set<Symbol>> result;
 
     // get all sources
     for (auto&& item : state.items()) {
+      result.push_back({});
       for (auto&& source : item.lookaheads()) {
         auto it = lookaheadMap.find(source);
         if (it == lookaheadMap.end()) {
@@ -236,7 +254,7 @@ class StateMachine {
           lookahead_lookup(source, lookaheadMap);
           it = lookaheadMap.find(source);
         }
-        result.push_back(it->second);
+        result.back() = set_union(result.back(), it->second);
       }
     }
     return result;
@@ -320,7 +338,6 @@ class StateMachine {
       }
       // TODO: this should be cached in the state
       // 3: construct actions with old lookaheads
-      lookaheadMap.clear();
       // construct original lookaheads
       for (size_t i = 0; i < existingLookaheads.size(); ++i) {
         // set lookaheads
@@ -330,7 +347,6 @@ class StateMachine {
       auto oldConflicts = conflicts(rstate, oldLookups);
 
       // 4: construct actions with new lookaheads lookaheads
-      lookaheadMap.clear();
       // construct original lookaheads
       for (size_t i = 0; i < newLookaheads.size(); ++i) {
         // set lookaheads
@@ -461,6 +477,7 @@ class StateMachine {
   \brief Removes all lookahead sources and replaces them with generated lookaheads.
   */
   void finalize_lookaheads() {
+    std::cout << "IALR: how many states? " << states_.size() << "\n";
     unordered_map<LookaheadSource, vector_set<Symbol>> lookaheadMap;
     for (auto& state : states_) {
       // reset for each state in case of lookahead loops
