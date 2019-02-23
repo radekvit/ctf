@@ -160,9 +160,6 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     input_.push(translationGrammar_->starting_symbol());
     output_.push(translationGrammar_->starting_symbol());
 
-    // remove extra eof
-    tokens_.pop_back();
-
     auto obegin = output_.begin();
     auto tokenIt = tokens_.crbegin();
     for (auto&& ruleIndex : reverse(appliedRules)) {

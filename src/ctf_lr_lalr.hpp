@@ -20,8 +20,7 @@ class StateMachine : public ctf::lr1::StateMachine {
   }
 
  protected:
-  tuple<size_t, bool> merge(const std::vector<size_t>& existingStates,
-                            const State& newState) override {
+  MergeResult merge(const std::vector<size_t>& existingStates, const State& newState) override {
     assert(existingStates.size() == 1);
     auto& state = states_[existingStates[0]];
     // always succeeds, merge lookahead sources

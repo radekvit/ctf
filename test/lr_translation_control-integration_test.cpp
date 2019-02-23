@@ -464,14 +464,14 @@ TEST_CASE("Simple infix to postfix calculator translation", "[LALRTranslationCon
           {"Expr"_nt, {"Expr"_nt, "-"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "-"_t}, {{2}}},
           {"Expr"_nt, {"Expr"_nt, "*"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "*"_t}, {{2}}},
           {"Expr"_nt, {"Expr"_nt, "/"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "/"_t}, {{2}}},
-          {"Expr"_nt, {"-"_t, "Expr"_nt}, {"Expr"_nt, "-"_t}, {{1}}, true, "unary-"_t},
+          {"Expr"_nt, {"-"_t, "Expr"_nt}, {"Expr"_nt, "unary-"_t}, {{1}}, true, "unary-"_t},
           {"Expr"_nt, {"Expr"_nt, "^"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "^"_t}, {{2}}},
-          {"Expr"_nt, {"("_t, "Expr"_nt, ")"_t}},
+          {"Expr"_nt, {"("_t, "Expr"_nt, ")"_t}, {"Expr"_nt}},
       }),
       "S"_nt,
       vector<PrecedenceSet>({
-          {Associativity::RIGHT, {"^"_t}},
           {Associativity::NONE, {"unary-"_t}},
+          {Associativity::RIGHT, {"^"_t}},
           {Associativity::LEFT, {"*"_t, "/"_t}},
           {Associativity::LEFT, {"+"_t, "-"_t}},
       })};
@@ -484,8 +484,40 @@ TEST_CASE("Simple infix to postfix calculator translation", "[LALRTranslationCon
   a.set_reader(r);
   LALRTranslationControl lalr(a, tg);
   lalr.run();
-  REQUIRE(lalr.output().size() == 18);
-  // TODO actually check the result
+  REQUIRE(lalr.output().size() == 16);
+  auto it = lalr.output().begin();
+  Token os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "unary-"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "unary-"_t);
+  os = *it++;
+  REQUIRE(os == "*"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "/"_t);
+  os = *it++;
+  REQUIRE(os == "-"_t);
+  os = *it++;
+  REQUIRE(os == "^"_t);
+  os = *it++;
+  REQUIRE(os == "^"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "+"_t);
+  os = *it++;
+  REQUIRE(os == Symbol::eof());
 }
 
 TEST_CASE("Simple infix to postfix calculator translation in LR1", "[LR1TranslationControl]") {
@@ -500,16 +532,16 @@ TEST_CASE("Simple infix to postfix calculator translation in LR1", "[LR1Translat
           {"Expr"_nt, {"Expr"_nt, "-"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "-"_t}, {{2}}},
           {"Expr"_nt, {"Expr"_nt, "*"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "*"_t}, {{2}}},
           {"Expr"_nt, {"Expr"_nt, "/"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "/"_t}, {{2}}},
-          {"Expr"_nt, {"-"_t, "Expr"_nt}, {"Expr"_nt, "-"_t}, {{1}}, true, "unary-"_t},
+          {"Expr"_nt, {"-"_t, "Expr"_nt}, {"Expr"_nt, "unary-"_t}, {{1}}, true, "unary-"_t},
           {"Expr"_nt, {"Expr"_nt, "^"_t, "Expr"_nt}, {"Expr"_nt, "Expr"_nt, "^"_t}, {{2}}},
-          {"Expr"_nt, {"("_t, "Expr"_nt, ")"_t}},
+          {"Expr"_nt, {"("_t, "Expr"_nt, ")"_t}, {"Expr"_nt}},
       }),
       "S"_nt,
       vector<PrecedenceSet>({
-          {Associativity::LEFT, {"+"_t, "-"_t}},
-          {Associativity::LEFT, {"*"_t, "/"_t}},
           {Associativity::NONE, {"unary-"_t}},
           {Associativity::RIGHT, {"^"_t}},
+          {Associativity::LEFT, {"*"_t, "/"_t}},
+          {Associativity::LEFT, {"+"_t, "-"_t}},
       })};
   TCTLA a;
   std::stringstream in;
@@ -520,6 +552,38 @@ TEST_CASE("Simple infix to postfix calculator translation in LR1", "[LR1Translat
   a.set_reader(r);
   LR1TranslationControl lr1(a, tg);
   lr1.run();
-  REQUIRE(lr1.output().size() == 18);
-  // TODO actually check the result
+  REQUIRE(lr1.output().size() == 16);
+  auto it = lr1.output().begin();
+  Token os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "unary-"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "unary-"_t);
+  os = *it++;
+  REQUIRE(os == "*"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "/"_t);
+  os = *it++;
+  REQUIRE(os == "-"_t);
+  os = *it++;
+  REQUIRE(os == "^"_t);
+  os = *it++;
+  REQUIRE(os == "^"_t);
+  os = *it++;
+  REQUIRE(os == "i"_t);
+  os = *it++;
+  REQUIRE(os == "+"_t);
+  os = *it++;
+  REQUIRE(os == Symbol::eof());
 }

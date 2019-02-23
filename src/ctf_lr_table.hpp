@@ -103,7 +103,7 @@ class SLRTable : public LRGenericTable {
     auto&& rule = item.rule();
     auto&& mark = item.mark();
     // special S' -> S EOF. item
-    if (rule == grammar.starting_rule() && mark == 2) {
+    if (rule == grammar.starting_rule() && mark == 1) {
       lr_action_item(state, Symbol::eof()) = {LRAction::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
       size_t ni = rule.nonterminal().id();
@@ -156,14 +156,14 @@ class LR1GenericTable : public LRGenericTable {
     auto&& rule = item.rule();
     auto&& mark = item.mark();
     // special S' -> S.EOF item
-    if (rule == grammar.starting_rule() && mark == 2) {
+    if (rule == grammar.starting_rule() && mark == 1) {
       lr_action_item(id, Symbol::eof()) = {LRAction::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
       for (auto&& terminal : item.generated_lookaheads()) {
         auto& action = lr_action_item(id, terminal);
         if (action.action != LRAction::ERROR) {
           action = conflict_resolution(
-              terminal, {LRAction::REDUCE, rule.id}, action, item, state, grammar);
+              terminal, {LRAction::REDUCE, rule.id}, action, rule, state, grammar);
         } else {
           // regular insert
           lr_action_item(id, terminal) = {LRAction::REDUCE, rule.id};
@@ -181,7 +181,7 @@ class LR1GenericTable : public LRGenericTable {
       auto& action = lr_action_item(id, terminal);
       if (action.action == LRAction::REDUCE) {
         action = conflict_resolution(
-            terminal, action, {LRAction::SHIFT, nextState}, item, state, grammar);
+            terminal, action, {LRAction::SHIFT, nextState}, grammar.rules()[action.argument], state, grammar);
       } else {
         // regular insert
         lr_action_item(id, terminal) = {LRAction::SHIFT, nextState};
@@ -192,17 +192,17 @@ class LR1GenericTable : public LRGenericTable {
   LRActionItem conflict_resolution(const Symbol terminal,
                                    const LRActionItem& reduceItem,
                                    const LRActionItem& item,
-                                   const typename StateMachine::Item& LR1Item,
+                                   const TranslationGrammar::Rule& reduceRule,
                                    const typename StateMachine::State& state,
                                    const TranslationGrammar& grammar) {
     using namespace std::literals;
-    // R/R conflict: select rule earlier defined in the grammar
+    // R/R conflict: select rule defined first in the grammar
     if (item.action == LRAction::REDUCE) {
       return (reduceItem.argument <= item.argument) ? reduceItem : item;
     }
     // S/R conflict:
     auto [associativity, precedence] = grammar.precedence(terminal);
-    auto precedence2 = std::get<1>(grammar.precedence(LR1Item.rule().precedence_symbol()));
+    auto precedence2 = std::get<1>(grammar.precedence(reduceRule.precedence_symbol()));
     if (precedence == precedence2) {
       switch (associativity) {
         case Associativity::LEFT:
@@ -251,7 +251,7 @@ class LR1StrictGenericTable : public LRGenericTable {
     auto&& rule = item.rule();
     auto&& mark = item.mark();
     // special S' -> S.EOF item
-    if (rule == grammar.starting_rule() && mark == 2) {
+    if (rule == grammar.starting_rule() && mark == 1) {
       lr_action_item(state, Symbol::eof()) = {LRAction::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
       for (auto&& terminal : item.generated_lookaheads()) {

@@ -125,9 +125,14 @@ class Item {
   vector_set<Symbol> generatedLookaheads_;
 };
 
-inline tuple<vector_set<Symbol>, bool> first(const vector<Symbol>& symbols,
-                                             const empty_t& empty,
-                                             const first_t& first) {
+struct FirstResult {
+  vector_set<Symbol> symbols;
+  bool empty;
+};
+
+inline FirstResult first(const vector<Symbol>& symbols,
+                         const empty_t& empty,
+                         const first_t& first) {
   using Type = Symbol::Type;
   vector_set<Symbol> result;
   for (auto&& symbol : symbols) {
@@ -208,11 +213,12 @@ inline unordered_map<Symbol, vector_set<Item>> symbol_skip_closures(const vector
   unordered_map<Symbol, vector_set<Item>> result;
 
   for (size_t i = 0; i < state.size(); ++i) {
-    auto&& item = state[i];
-    if (!item.has_next()) {
+    auto& item = state[i];
+    if (item.reduce()) { continue; }
+    auto& symbol = item.rule().input()[item.mark()];
+    if (symbol == Symbol::eof() || !item.has_next()) {
       continue;
     }
-    auto&& symbol = item.rule().input()[item.mark()];
     Item newItem{item.next({id, i})};
     result[symbol] = set_union(result[symbol], {newItem});
   }
@@ -300,12 +306,22 @@ class StateMachine {
 
   map<vector_set<Item>, vector<size_t>> kernelMap_;
 
+  struct InsertResult {
+    size_t state;
+    bool insertedNew;
+  };
+
+  struct MergeResult {
+    size_t state;
+    bool merge;
+  };
+
   StateMachine(const TranslationGrammar& grammar, empty_t empty, first_t first)
       : grammar_(&grammar), empty_(std::move(empty)), first_(std::move(first)) {}
 
   const TranslationGrammar& grammar() const noexcept { return *grammar_; }
 
-  tuple<size_t, bool> insert_state(const vector_set<Item>& kernel) {
+  InsertResult insert_state(const vector_set<Item>& kernel) {
     size_t i = states_.size();
     State newState(i, kernel, grammar(), empty_, first_);
 
@@ -336,11 +352,13 @@ class StateMachine {
     }
   }
 
-  virtual tuple<size_t, bool> merge(const std::vector<size_t>& isocores, const State& newState) {
+  virtual MergeResult merge(const std::vector<size_t>& isocores, const State& newState) {
     auto&& newLookaheads = lookaheads(newState);
     for (auto other : isocores) {
       auto& existing = states_[other];
-      if (lookaheads(existing) == newLookaheads) {
+      auto lookahead = lookaheads(existing);
+      // we can insert the lookaheads to the existing
+      if (lookahead == newLookaheads) {
         // we can keep the same lookahead relations in the existing state
         // no modification necessary
         return {other, true};

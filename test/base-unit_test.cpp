@@ -54,7 +54,7 @@ TEST_CASE("Token Construction", "[Token]") {
   REQUIRE(s.type() == Symbol::Type::TERMINAL);
   REQUIRE(s.terminal());
   REQUIRE(s.id() == 1);
-  REQUIRE(s.to_string() == "\"0\"_t");
+  REQUIRE(s.to_string() == "0_t");
   REQUIRE(s.attribute() == "a"s);
 
   using namespace ctf::literals;
@@ -64,14 +64,14 @@ TEST_CASE("Token Construction", "[Token]") {
   REQUIRE(s.type() == Symbol::Type::TERMINAL);
   REQUIRE(s.terminal());
   REQUIRE(s.id() == 1);
-  REQUIRE(s.to_string() == "\"0\"_t");
+  REQUIRE(s.to_string() == "0_t");
   REQUIRE(s.attribute().empty());
 
   s = 66_nt;
   REQUIRE(s.type() == Symbol::Type::NONTERMINAL);
   REQUIRE(s.nonterminal());
   REQUIRE(s.id() == 66);
-  REQUIRE(s.to_string() == "\"66\"_nt");
+  REQUIRE(s.to_string() == "66_nt");
   REQUIRE(s.attribute().empty());
 
   s = Symbol::eof();

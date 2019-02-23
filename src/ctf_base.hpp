@@ -122,12 +122,10 @@ class Symbol {
   ///@}
 
   string to_string() const {
-    using namespace std::literals;
-
     if (type() == Type::EOI) {
       return "EOF";
     }
-    return "\""s + std::to_string(id() - (terminal() ? 1 : 0)) + "\"" +
+    return std::to_string(id() - (terminal() ? 1 : 0)) +
            (type() == Type::NONTERMINAL ? "_nt" : "_t");
   }
 
