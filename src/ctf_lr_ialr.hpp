@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "ctf_lr_lr1.hpp"
+#include <iostream>
 namespace ctf::ialr {
 
 using LookaheadSource = lr1::LookaheadSource;
@@ -60,6 +61,9 @@ class StateMachine {
     vector_set<size_t>& reduce_targets() noexcept { return reduceTargets_; }
     const vector_set<size_t>& reduce_targets() const noexcept { return reduceTargets_; }
 
+    unordered_map<Symbol, vector_set<size_t>>& conflicts() noexcept { return conflicts_; }
+    const unordered_map<Symbol, vector_set<size_t>>& conflicts() const noexcept { return conflicts_; }
+
     void set_expanded() noexcept { expanded_ = true; }
     bool expanded() const noexcept { return expanded_; }
 
@@ -90,6 +94,8 @@ class StateMachine {
     unordered_map<Symbol, size_t> transitions_;
 
     vector_set<size_t> reduceTargets_;
+    // reduce state conflicts
+    unordered_map<Symbol, vector_set<size_t>> conflicts_;
 
     bool mergable_ = false;
     bool reduce_ = false;
@@ -180,7 +186,7 @@ class StateMachine {
 
   void expand_state(size_t i) {
     // set as reduce target for all lookahead sources
-    mark_reduce_targets(i, states_[i]);
+    mark_as_reduce(i, states_[i]);
     vector<Symbol> postponedSymbols;
     // expand all transitions
     for (auto [symbol, kernel] : lr1::symbol_skip_closures(states_[i].items(), i)) {
@@ -240,13 +246,43 @@ class StateMachine {
   }
 
   vector<vector_set<Symbol>> lookaheads(
-      const State& state, unordered_map<LookaheadSource, vector_set<Symbol>> lookaheadMap = {}) {
+      const State& state) {
+    unordered_map<LookaheadSource, vector_set<Symbol>> lookaheadMap;
     // get all back references
     vector<vector_set<Symbol>> result;
 
     // get all sources
     for (auto&& item : state.items()) {
-      result.push_back({});
+      result.push_back(item.generated_lookaheads());
+      for (auto&& source : item.lookaheads()) {
+        auto it = lookaheadMap.find(source);
+        if (it == lookaheadMap.end()) {
+          // lookahead source not resolved
+          lookahead_lookup(source, lookaheadMap);
+          it = lookaheadMap.find(source);
+        }
+        result.back() = set_union(result.back(), it->second);
+      }
+    }
+    return result;
+  }
+
+  
+  vector<vector_set<Symbol>> lookaheads(
+      const State& state, unordered_map<LookaheadSource, vector_set<Symbol>> lookaheadMap) {
+    // get all back references
+    vector<vector_set<Symbol>> result;
+
+    // get all sources
+    for (size_t i = 0; i < state.items().size(); ++i) {
+      auto& item = state.items()[i];
+      // first check if the item isn't in the map already
+      auto it = lookaheadMap.find({state.id(), i});
+      if (it != lookaheadMap.end()) {
+        result.push_back(it->second);
+        continue;
+      }
+      result.push_back(item.generated_lookaheads());
       for (auto&& source : item.lookaheads()) {
         auto it = lookaheadMap.find(source);
         if (it == lookaheadMap.end()) {
@@ -330,21 +366,23 @@ class StateMachine {
         // set lookaheads
         lookaheadMap[{state, i}] = set_union(existingLookaheads[i], newLookaheads[i]);
       }
+      std::cout << lookaheadMap.size() << ": lookaheadMap size\n";
+      vector<vector_set<Symbol>> mergedLookaheads;
       auto mergedLookups = lookaheads(rstate, lookaheadMap);
       // 2: no conflicts in 1 = OK, skip rest
       auto mergedConflicts = conflicts(rstate, mergedLookups);
+      std::cout << __LINE__ << "\n" << mergedConflicts.size() << "\n";
       if (mergedConflicts.empty()) {
         continue;
       }
-      // TODO: this should be cached in the state
-      // 3: construct actions with old lookaheads
-      // construct original lookaheads
-      for (size_t i = 0; i < existingLookaheads.size(); ++i) {
-        // set lookaheads
-        lookaheadMap[{state, i}] = existingLookaheads[i];
+      // 3: get original conflicts
+      const auto& oldConflicts = rstate.conflicts();
+      std::cout << __LINE__ << "\n" << oldConflicts.size() << "\n";
+
+      if (mergedConflicts != oldConflicts) {
+        // additional conflicts if merged, reject
+        return {0, false};
       }
-      auto oldLookups = lookaheads(rstate, lookaheadMap);
-      auto oldConflicts = conflicts(rstate, oldLookups);
 
       // 4: construct actions with new lookaheads lookaheads
       // construct original lookaheads
@@ -354,17 +392,16 @@ class StateMachine {
       }
       auto newLookups = lookaheads(rstate, lookaheadMap);
       auto newConflicts = conflicts(rstate, newLookups);
-      // 5: both conflict contributions are the same: OK
-      if (newConflicts == oldConflicts) {
-        continue;
+      std::cout << __LINE__ << "\n" << newConflicts.size() << "\n";
+      if (newConflicts != oldConflicts) {
+        // 6: else don't merge
+        return {0, false};
       }
-      // 6: else don't merge
-      return {0, false};
+      // 5: both conflict contributions are the same: OK      
     }
     // if all ok, add lookahead source and reduce targets to source
     merge_lookaheads(existing, newState);
     merge_reduce_targets(existing, newState);
-    // TODO: update cached actions in states
     return {state, true};
   }
 
@@ -442,20 +479,24 @@ class StateMachine {
     }
   }
 
-  void mark_reduce_targets(size_t i, State& state) {
-    if (state.has_reduce()) {
-      // marks predecessors
-      for (auto& item : state.items()) {
-        if (!item.reduce()) {
-          continue;
-        }
-        mark_source(i, item.lookaheads());
-        // can mark itself if this is a mergable state
-        if (state.mergable() && !item.lookaheads().empty()) {
-          state.reduce_targets().insert(i);
-        }
+  void mark_as_reduce(size_t i, State& state) {
+    if (!state.has_reduce()) {
+      return;
+    }
+    // marks predecessors
+    for (auto& item : state.items()) {
+      if (!item.reduce()) {
+        continue;
+      }
+      mark_source(i, item.lookaheads());
+      // can mark itself if this is a mergable state
+      if (state.mergable() && !item.lookaheads().empty()) {
+        state.reduce_targets().insert(i);
       }
     }
+    // calculate conflicts fir this state
+    auto lookaheadSet = lookaheads(state);
+    state.conflicts() = conflicts(state, lookaheadSet);
   }
 
   /**
@@ -496,6 +537,7 @@ class StateMachine {
         item.lookaheads().clear();
         item.lookaheads().shrink_to_fit();
       }
+      std::cout << state.to_string() << "\n";
     }
   }
 

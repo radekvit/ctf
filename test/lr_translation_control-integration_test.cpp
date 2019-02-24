@@ -656,3 +656,26 @@ TEST_CASE("Simple infix to postfix calculator translation in IALR", "[LR1Transla
   os = *it++;
   REQUIRE(os == Symbol::eof());
 }
+
+TEST_CASE("IALR manages to accept a sentence not accepted by LALR", "[LR1TranslationControl]") {
+  // Grammar from Fig. 1 of IELR
+  TranslationGrammar tg{
+      vector<Rule>({
+          {"S"_nt, {"o"_t, "E"_nt, "o"_t}},
+          {"S"_nt, {"i"_t, "E"_nt, "i"_t}},
+          {"E"_nt, {"o"_t}},
+          {"E"_nt, {"o"_t, "o"_t}},
+      }),
+      "S"_nt,
+      vector<PrecedenceSet>({
+          {Associativity::LEFT, {"o"_t}},
+      })};
+  TCTLA a;
+  std::stringstream in;
+  in << "i o o i";
+  InputReader r{in};
+  a.set_reader(r);
+  IALRTranslationControl ialr(a, tg);
+  ialr.run();
+  REQUIRE(ialr.output().size() == 5);
+}
