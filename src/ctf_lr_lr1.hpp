@@ -46,13 +46,6 @@ class Item {
   using Rule = TranslationGrammar::Rule;
   using LR0Item = ctf::lr0::Item;
 
-  class Kernel {
-   public:
-   private:
-    vector_set<Item>::const_iterator _begin;
-    vector_set<Item>::const_iterator _end;
-  };
-
   Item(const LR0Item& item, const TranslationGrammar& tg)
       : _item(item), _generatedLookaheads(tg.terminals()) {}
   Item(LR0Item&& item, const TranslationGrammar& tg)
