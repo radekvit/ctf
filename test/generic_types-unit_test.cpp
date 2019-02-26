@@ -226,5 +226,4 @@ TEST_CASE("bit_set basic operations", "[bit_set]") {
   REQUIRE(!s.test(0));
 
   bit_set s1(128);
-
 }

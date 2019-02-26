@@ -1,7 +1,6 @@
 #ifndef CTF_LR_LR1_HPP
 #define CTF_LR_LR1_HPP
 
-#include<iostream>
 #include "ctf_base.hpp"
 #include "ctf_lr_lr0.hpp"
 #include "ctf_table_sets.hpp"
@@ -444,7 +443,6 @@ class StateMachine {
         item.lookaheads().clear();
         item.lookaheads().shrink_to_fit();
       }
-      std::cout << state.to_string();
     }
   }
 };

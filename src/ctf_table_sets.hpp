@@ -190,8 +190,6 @@ inline predict_t create_predict(const TranslationGrammar& tg,
           } else {
             compoundFirst |= first[i];
           }
-        default:
-          break;
       }
     }
     predict.push_back(compoundFirst);

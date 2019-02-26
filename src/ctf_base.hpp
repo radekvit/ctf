@@ -549,8 +549,8 @@ class TerminalSet : public bit_set {
       insert(symbol);
     }
   }
-  TerminalSet(const bit_set& s): bit_set(s) {}
-  TerminalSet(bit_set&& s): bit_set(std::move(s)) {}
+  TerminalSet(const bit_set& s) : bit_set(s) {}
+  TerminalSet(bit_set&& s) : bit_set(std::move(s)) {}
 
   struct InsertResult {
     reference p;
@@ -590,9 +590,11 @@ class TerminalSet : public bit_set {
 
   string to_string(string (*string_fn)(Symbol s) = [](Symbol s) { return s.to_string(); }) const {
     auto terminals = symbols();
-    if (terminals.empty()) { return "{}"; }
+    if (terminals.empty()) {
+      return "{}";
+    }
     string result = "{ ";
-    for (Symbol symbol: terminals) {
+    for (Symbol symbol : terminals) {
       result += string_fn(symbol) + ", ";
     }
     result.pop_back();

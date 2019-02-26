@@ -324,9 +324,7 @@ class bit_set {
     return true;
   }
 
-  bool operator[](size_t i) const noexcept {
-    return get_value(i);
-  }
+  bool operator[](size_t i) const noexcept { return get_value(i); }
   reference operator[](size_t i) noexcept { return get_reference(i); }
 
   bool test(size_t i) const {
@@ -488,7 +486,7 @@ class bit_set {
 
   size_t hash() const noexcept {
     size_t seed = capacity();
-    for(auto& i : storage_) {
+    for (auto& i : storage_) {
       seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
     return seed;

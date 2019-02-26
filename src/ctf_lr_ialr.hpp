@@ -94,7 +94,8 @@ class StateMachine {
   StateMachine(const TranslationGrammar& grammar)
       : StateMachine(grammar, create_empty(grammar), create_first(grammar, empty_)) {
     // initial item S' -> .S$
-    insert_state({Item({grammar.starting_rule(), 0}, {}, LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
+    insert_state({Item(
+        {grammar.starting_rule(), 0}, {}, LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
     // recursively expand all states: dfs
     expand_state(0);
     // merge or generate postoponed states
@@ -255,8 +256,8 @@ class StateMachine {
     return result;
   }
 
-  vector<LookaheadSet> lookaheads(
-      const State& state, unordered_map<LookaheadSource, LookaheadSet> lookaheadMap) {
+  vector<LookaheadSet> lookaheads(const State& state,
+                                  unordered_map<LookaheadSource, LookaheadSet> lookaheadMap) {
     // get all back references
     vector<LookaheadSet> result;
 
@@ -396,8 +397,8 @@ class StateMachine {
   };
 
   // list all reduce contributions to R/R and S/R conflicts
-  unordered_map<Symbol, vector_set<size_t>> conflicts(
-      State& state, const vector<LookaheadSet>& stateLookaheads) {
+  unordered_map<Symbol, vector_set<size_t>> conflicts(State& state,
+                                                      const vector<LookaheadSet>& stateLookaheads) {
     unordered_map<Symbol, vector_set<size_t>> result;
     vector<tuple<TempAction, size_t>> actions(grammar().terminals(), {TempAction::NONE, 0});
     for (size_t i = 0; i < state.items().size(); ++i) {

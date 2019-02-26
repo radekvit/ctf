@@ -176,6 +176,14 @@ class Translation {
              []() -> std::unique_ptr<TranslationControl> {
                return std::make_unique<SLRTranslationControl>();
              }},
+            {"canonical lr",
+             []() -> std::unique_ptr<TranslationControl> {
+               return std::make_unique<LR1TranslationControl>();
+             }},
+            {"lalr",
+             []() -> std::unique_ptr<TranslationControl> {
+               return std::make_unique<LALRTranslationControl>();
+             }},
         };
     auto it = controls.find(name);
     if (it == controls.end())

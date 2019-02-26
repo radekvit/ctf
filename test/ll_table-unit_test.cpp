@@ -54,7 +54,10 @@ TEST_CASE("LLTable construction", "[LLTable]") {
 
   SECTION("non-LL Translation Grammar") {
     TranslationGrammar tg{{{"E"_nt, {"i"_t}}, {"E"_nt, {"i"_t}}}, "E"_nt};
-    REQUIRE_THROWS_AS(LLTable(tg, {{tg.terminals(), {"i"_t}}, {tg.terminals(), {"i"_t}}, {tg.terminals(), {"i"_t}}}), std::invalid_argument);
+    REQUIRE_THROWS_AS(
+        LLTable(tg,
+                {{tg.terminals(), {"i"_t}}, {tg.terminals(), {"i"_t}}, {tg.terminals(), {"i"_t}}}),
+        std::invalid_argument);
   }
 
   SECTION("regular Translation Grammar") {

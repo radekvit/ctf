@@ -167,7 +167,8 @@ class LLTranslationControlGeneral : public TranslationControl {
       message =
           error_function(top, token, lastDerivedNonterminal, empty_[i], first_[i], follow_[i]);
     } else {
-      message = error_function(top, token, lastDerivedNonterminal, false, TerminalSet{0}, TerminalSet{0});
+      message =
+          error_function(top, token, lastDerivedNonterminal, false, TerminalSet{0}, TerminalSet{0});
     }
     err() << token.location().to_string() << ": " << message << "\n";
   }
@@ -243,7 +244,6 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
             lastDerivedNonterminal = top.symbol();
 
             auto& rule = translationGrammar_->rules()[ruleIndex];
-
             obegin = output_.replace(top, rule.output(), obegin);
             input_.replace(input_.begin(), rule.input());
             create_attibute_actions(obegin, rule.actions(), attributeActions);
