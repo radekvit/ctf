@@ -540,6 +540,67 @@ inline constexpr Symbol operator""_t(unsigned long long int id) { return Termina
 inline constexpr Symbol operator""_nt(unsigned long long int id) { return Nonterminal(id); }
 }  // namespace literals
 #endif
+
+class TerminalSet : public bit_set {
+ public:
+  explicit TerminalSet(size_t bits) : bit_set(bits) {}
+  TerminalSet(size_t bits, std::initializer_list<Symbol> il) : bit_set(bits) {
+    for (auto& symbol : il) {
+      insert(symbol);
+    }
+  }
+  TerminalSet(const bit_set& s): bit_set(s) {}
+  TerminalSet(bit_set&& s): bit_set(std::move(s)) {}
+
+  struct InsertResult {
+    reference p;
+    bool inserted;
+  };
+
+  InsertResult insert(Symbol s) noexcept {
+    reference p = (*this)[s];
+    bool inserted = ~p;
+    p = true;
+    return {p, inserted};
+  }
+
+  bool operator[](size_t i) const noexcept {
+    return ((storage_[i / bitsPerStorage]) >> (bitsPerStorage - (i % bitsPerStorage + 1))) & 0x1;
+  }
+  reference operator[](size_t i) noexcept { return get_reference(i); }
+
+  reference operator[](Symbol s) noexcept { return (*this)[s.id()]; }
+  bool operator[](Symbol s) const noexcept { return (*this)[s.id()]; }
+
+  vector<Symbol> symbols() const {
+    vector<Symbol> result;
+    if (capacity() == 0)
+      return result;
+    result.reserve(capacity());
+    if ((*this)[0]) {
+      result.push_back(Symbol::eof());
+    }
+    for (size_t i = 1; i < capacity(); ++i) {
+      if ((*this)[i]) {
+        result.push_back(Terminal(i - 1));
+      }
+    }
+    return result;
+  }
+
+  string to_string(string (*string_fn)(Symbol s) = [](Symbol s) { return s.to_string(); }) const {
+    auto terminals = symbols();
+    if (terminals.empty()) { return "{}"; }
+    string result = "{ ";
+    for (Symbol symbol: terminals) {
+      result += string_fn(symbol) + ", ";
+    }
+    result.pop_back();
+    result.pop_back();
+    result += " }";
+    return result;
+  }
+};
 }  // namespace ctf
 
 namespace std {
@@ -547,9 +608,7 @@ inline void swap(ctf::Attribute& lhs, ctf::Attribute& rhs) noexcept { lhs.swap(r
 
 template <>
 struct hash<ctf::Symbol> {
-  using argument_type = ctf::Symbol;
-  using result_type = std::hash<size_t>::result_type;
-  result_type operator()(argument_type const& s) const noexcept {
+  size_t operator()(const ctf::Symbol& s) const noexcept {
     // reinterpret as a size_t
     return std::hash<size_t>{}(reinterpret_cast<const size_t&>(s));
   }

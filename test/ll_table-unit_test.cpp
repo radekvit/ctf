@@ -40,21 +40,21 @@ static constexpr Symbol operator""_t(const char* s, size_t) {
 TEST_CASE("LLTable construction", "[LLTable]") {
   SECTION("Multiple terminals and nonterminals.") {
     TranslationGrammar tg{2, 3, {}, "E"_nt};
-    REQUIRE_NOTHROW(LLTable(tg, {{Symbol::eof()}}));
+    REQUIRE_NOTHROW(LLTable(tg, {{tg.terminals(), {Symbol::eof()}}}));
   }
 
   SECTION("No terminals, at least one nonterminal") {
     TranslationGrammar tg{2, 1, {}, "E"_nt};
-    REQUIRE_NOTHROW(LLTable(tg, {{Symbol::eof()}}));
+    REQUIRE_NOTHROW(LLTable(tg, {{tg.terminals(), {Symbol::eof()}}}));
   }
 
   SECTION("empty TranslationGrammar") {
-    REQUIRE_NOTHROW(LLTable({}, {{Symbol::eof()}, {Symbol::eof()}}));
+    REQUIRE_NOTHROW(LLTable({}, {{1, {Symbol::eof()}}, {1, {Symbol::eof()}}}));
   }
 
   SECTION("non-LL Translation Grammar") {
     TranslationGrammar tg{{{"E"_nt, {"i"_t}}, {"E"_nt, {"i"_t}}}, "E"_nt};
-    REQUIRE_THROWS_AS(LLTable(tg, {{"i"_t}, {"i"_t}, {"i"_t}}), std::invalid_argument);
+    REQUIRE_THROWS_AS(LLTable(tg, {{tg.terminals(), {"i"_t}}, {tg.terminals(), {"i"_t}}, {tg.terminals(), {"i"_t}}}), std::invalid_argument);
   }
 
   SECTION("regular Translation Grammar") {
@@ -71,15 +71,15 @@ TEST_CASE("LLTable construction", "[LLTable]") {
                           "E"_nt};
     REQUIRE(tg.starting_symbol().id() == tg.nonterminals() - 1);
     REQUIRE_NOTHROW(LLTable(tg,
-                            {{"i"_t, "("_t},
-                             {")"_t, Symbol::eof()},
-                             {"+"_t},
-                             {"("_t},
-                             {"i"_t},
-                             {"i"_t, "("_t},
-                             {"+"_t, ")"_t, Symbol::eof()},
-                             {"*"_t},
-                             {"i"_t, "("_t}}));
+                            {{tg.terminals(), {"i"_t, "("_t}},
+                             {tg.terminals(), {")"_t, Symbol::eof()}},
+                             {tg.terminals(), {"+"_t}},
+                             {tg.terminals(), {"("_t}},
+                             {tg.terminals(), {"i"_t}},
+                             {tg.terminals(), {"i"_t, "("_t}},
+                             {tg.terminals(), {"+"_t, ")"_t, Symbol::eof()}},
+                             {tg.terminals(), {"*"_t}},
+                             {tg.terminals(), {"i"_t, "("_t}}}));
   }
 }
 
@@ -96,15 +96,15 @@ TEST_CASE("rule index returning", "[LLTable]") {
                         },
                         "E"_nt};
   LLTable ll{tg,
-             {{"i"_t, "("_t},
-              {")"_t, Symbol::eof()},
-              {"+"_t},
-              {"("_t},
-              {"i"_t},
-              {"i"_t, "("_t},
-              {"+"_t, ")"_t, Symbol::eof()},
-              {"*"_t},
-              {"i"_t, "("_t}}};
+             {{tg.terminals(), {"i"_t, "("_t}},
+              {tg.terminals(), {")"_t, Symbol::eof()}},
+              {tg.terminals(), {"+"_t}},
+              {tg.terminals(), {"("_t}},
+              {tg.terminals(), {"i"_t}},
+              {tg.terminals(), {"i"_t, "("_t}},
+              {tg.terminals(), {"+"_t, ")"_t, Symbol::eof()}},
+              {tg.terminals(), {"*"_t}},
+              {tg.terminals(), {"i"_t, "("_t}}}};
   REQUIRE(ll.rule_index("X"_nt, "+"_t) == tg.rules().size());
   REQUIRE(ll.rule_index("F"_nt, "("_t) == 3);
   REQUIRE(ll.rule_index("E"_nt, ")"_t) == tg.rules().size());

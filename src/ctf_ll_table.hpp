@@ -105,14 +105,11 @@ class LLGenericTable {
 
     /* fill table */
     for (size_t i = 0; i < tg.rules().size(); ++i) {
-      auto& terminals = predict[i];
       // TranslationGrammar requires this to be always found
       size_t ni = tg.rules()[i].nonterminal().id();
 
-      for (auto& t : terminals) {
+      for (auto& t : predict[i].symbols()) {
         auto ti = t.id();
-        assert(ti < terminals_);
-
         insert_rule(i, index(ni, ti));
       }  // for all terminals
     }    // for all i

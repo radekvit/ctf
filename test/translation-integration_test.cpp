@@ -155,7 +155,7 @@ TEST_CASE("Constructing translation", "[Translation]") {
           std::make_unique<LexicalAnalyzer>(), "fail, please", tg, std::make_unique<TITOG>()),
       std::invalid_argument);
 }
-
+#if 0
 TEST_CASE("Running translation", "[Translation]") {
   SECTION("full translation") {
     TranslationGrammar tg{{
@@ -203,3 +203,4 @@ TEST_CASE("Running translation", "[Translation]") {
     REQUIRE(out.str() == "");
   }
 }
+#endif

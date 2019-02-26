@@ -109,7 +109,7 @@ class SLRTable : public LRGenericTable {
       lr_action_item(state, Symbol::eof()) = {LRAction::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
       size_t ni = rule.nonterminal().id();
-      for (auto&& terminal : follow[ni]) {
+      for (auto&& terminal : follow[ni].symbols()) {
         if (lr_action(state, terminal).action != LRAction::ERROR) {
           throw std::invalid_argument("Constructing SLRTable from a non-SLR TranslationGrammar.");
         }
@@ -161,7 +161,7 @@ class LR1GenericTable : public LRGenericTable {
     if (rule == grammar.starting_rule() && mark == 1) {
       lr_action_item(id, Symbol::eof()) = {LRAction::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
-      for (auto&& terminal : item.generated_lookaheads()) {
+      for (auto&& terminal : item.generated_lookaheads().symbols()) {
         auto& action = lr_action_item(id, terminal);
         if (action.action != LRAction::ERROR) {
           action = conflict_resolution(
@@ -260,7 +260,7 @@ class LR1StrictGenericTable : public LRGenericTable {
     if (rule == grammar.starting_rule() && mark == 1) {
       lr_action_item(state, Symbol::eof()) = {LRAction::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
-      for (auto&& terminal : item.generated_lookaheads()) {
+      for (auto&& terminal : item.generated_lookaheads().symbols()) {
         if (lr_action(state, terminal).action != LRAction::ERROR) {
           throw std::invalid_argument("Translation grammar is not "s + type);
         }

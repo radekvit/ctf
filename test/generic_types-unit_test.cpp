@@ -7,6 +7,8 @@
 #include "../src/ctf_generic_types.hpp"
 
 using ctf::tstack;
+using ctf::vector_set;
+using ctf::bit_set;
 
 using std::vector;
 using std::list;
@@ -155,26 +157,6 @@ TEST_CASE("tstack swap", "[tstack]") {
   REQUIRE(stack1.top() == 'x');
 }
 
-TEST_CASE("make_set") {
-  vector<int> vec{4, 3, 4, 2, 5, 1, 3};
-
-  ctf::make_set(vec);
-
-  REQUIRE(vec.size() == 5);
-  int last = -1;
-  for (int i : vec) {
-    REQUIRE(i > last);
-    last = i;
-  }
-}
-
-TEST_CASE("is_in") {
-  vector<int> vec{1, 2, 5, 6, 10};
-
-  REQUIRE(ctf::is_in(vec, 6) == true);
-  REQUIRE(ctf::is_in(vec, 3) == false);
-}
-
 TEST_CASE("reverse") {
   using ctf::reverse;
 
@@ -205,4 +187,44 @@ TEST_CASE("transform") {
     ++vit;
     ++lit;
   }
+}
+
+TEST_CASE("bit_set basic operations", "[bit_set]") {
+  bit_set s(6);
+  const bit_set& sr = s;
+
+  REQUIRE(s.empty());
+  REQUIRE(s.none());
+  REQUIRE(!s.any());
+  REQUIRE(!s.all());
+  REQUIRE_THROWS_AS(s.test(6), std::out_of_range);
+  REQUIRE_NOTHROW(!s.test(5));
+  REQUIRE_NOTHROW(!s.test(0));
+  REQUIRE(!s.test(5));
+  REQUIRE(!s.test(4));
+  REQUIRE(!s.test(0));
+  auto ref = s[4];
+  REQUIRE(!ref);
+  REQUIRE(~ref);
+  ref = true;
+  REQUIRE(static_cast<bool>(ref));
+  REQUIRE(!~ref);
+  REQUIRE(!s.empty());
+  REQUIRE(!s.none());
+  REQUIRE(s.any());
+  REQUIRE(!s.all());
+  REQUIRE(!s.test(5));
+  REQUIRE(s.test(4));
+  REQUIRE(!s.test(0));
+  ref = false;
+  REQUIRE(s.empty());
+  REQUIRE(s.none());
+  REQUIRE(!s.any());
+  REQUIRE(!s.all());
+  REQUIRE(!s.test(5));
+  REQUIRE(!s.test(4));
+  REQUIRE(!s.test(0));
+
+  bit_set s1(128);
+
 }

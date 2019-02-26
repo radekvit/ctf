@@ -266,6 +266,235 @@ class vector_set {
       : elements_(vec), compare_(compare), equals_(equals) {}
 };
 
+class bit_set {
+ protected:
+  using storage_type = size_t;
+  static_assert(std::is_unsigned<storage_type>::value, "storage_type must be unsigned");
+  friend struct ::std::hash<bit_set>;
+
+ public:
+  class reference {
+    friend class bit_set;
+    using storage_type = bit_set::storage_type;
+
+   public:
+    reference& operator=(bool t) noexcept {
+      storage_type e = *element_;
+      // reset bit
+      e &= ~(static_cast<storage_type>(0x1) << offset_);
+      // set
+      *element_ = e | static_cast<storage_type>(t) << offset_;
+      return *this;
+    }
+    reference& operator=(const reference& r) noexcept {
+      *this = static_cast<bool>(r);
+      return *this;
+    }
+
+    operator bool() const noexcept { return (*element_ >> offset_) & 0x1; }
+
+    bool operator~() const noexcept { return !((*element_ >> offset_) & 0x1); }
+
+    reference& flip() noexcept { return *this = ~*this; }
+
+   private:
+    reference(storage_type* p, size_t offset) noexcept : element_(p), offset_(offset) {}
+
+    storage_type* element_;
+    size_t offset_;
+  };
+
+  explicit bit_set(size_t bits)
+      : storage_(bits != 0 ? (bits - 1) / bitsPerStorage + 1 : 0, 0), capacity_(bits) {}
+
+  friend bool operator==(const bit_set& lhs, const bit_set& rhs) {
+    assert(lhs.storage_.capacity() == rhs.storage_.capacity());
+    for (size_t i = 0; i < lhs.storage_.size(); ++i) {
+      if (lhs.storage_[i] != rhs.storage_[i])
+        return false;
+    }
+    return true;
+  }
+  friend bool operator!=(const bit_set& lhs, const bit_set& rhs) {
+    assert(lhs.storage_.capacity() == rhs.storage_.capacity());
+    for (size_t i = 0; i < lhs.storage_.size(); ++i) {
+      if (lhs.storage_[i] == rhs.storage_[i])
+        return false;
+    }
+    return true;
+  }
+
+  bool operator[](size_t i) const noexcept {
+    return get_value(i);
+  }
+  reference operator[](size_t i) noexcept { return get_reference(i); }
+
+  bool test(size_t i) const {
+    if (i >= capacity()) {
+      throw std::out_of_range("bit_set::test(): out of range.");
+    }
+    return get_value(i);
+  }
+
+  bool all() const noexcept {
+    for (auto& cell : storage_) {
+      if (cell != std::numeric_limits<storage_type>::max()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool any() const noexcept { return !none(); }
+
+  bool none() const noexcept {
+    for (auto& cell : storage_) {
+      if (cell != 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool empty() const noexcept { return none(); }
+
+  size_t count() const noexcept {
+    size_t result = 0;
+    size_t j = 0;
+    const storage_type* s = &(storage_[0]);
+    storage_type test = *s;
+    for (size_t i = 0; i < capacity(); ++i) {
+      if (j == bitsPerStorage) {
+        j = 0;
+        ++s;
+        test = *s;
+      }
+      result += static_cast<bool>(test & (static_cast<storage_type>(0x1) << (bitsPerStorage - 1)));
+      test <<= 1;
+      ++j;
+    }
+    return result;
+  }
+
+  size_t size() const noexcept { return count(); }
+  size_t capacity() const noexcept { return capacity_; }
+
+  bit_set& operator&=(const bit_set& rhs) noexcept {
+    for (size_t i = 0; i < storage_.size(); ++i) {
+      storage_[i] &= rhs.storage_[i];
+    }
+    return *this;
+  }
+  bit_set& operator|=(const bit_set& rhs) noexcept {
+    for (size_t i = 0; i < storage_.size(); ++i) {
+      storage_[i] |= rhs.storage_[i];
+    }
+    return *this;
+  }
+  bit_set& operator^=(const bit_set& rhs) noexcept {
+    for (size_t i = 0; i < storage_.size(); ++i) {
+      storage_[i] ^= rhs.storage_[i];
+    }
+    correct_trailing();
+    return *this;
+  }
+  bit_set operator~() {
+    bit_set result(*this);
+    for (size_t i = 0; i < storage_.size(); ++i) {
+      result.storage_[i] = ~storage_[i];
+    }
+    result.correct_trailing();
+    return result;
+  }
+
+  string to_string(string (*string_fn)(size_t) = std::to_string) const {
+    bool any = false;
+    string result = "{ ";
+    for (size_t i = 0; i < capacity(); ++i) {
+      if ((*this)[i]) {
+        any = true;
+        result += string_fn(i) + ", ";
+      }
+    }
+    if (!any) {
+      return "{}";
+    }
+    result.pop_back();
+    result.pop_back();
+    result += " }";
+    return result;
+  }
+
+  bool set_union(const bit_set& rhs) noexcept {
+    assert(capacity() == rhs.capacity());
+    bool changed = false;
+    for (size_t i = 0; i < storage_.size(); ++i) {
+      storage_type old = storage_[i];
+      storage_[i] |= rhs.storage_[i];
+      changed |= storage_[i] != old;
+    }
+    return changed;
+  }
+
+  bool set_intersection(const bit_set& rhs) noexcept {
+    assert(capacity() == rhs.capacity());
+    bool changed = false;
+    for (size_t i = 0; i < storage_.size(); ++i) {
+      changed |= storage_[i] != rhs.storage_[i];
+      storage_[i] &= rhs.storage_[i];
+    }
+    return changed;
+  }
+
+  // precondition: both sets are the same size
+  friend bit_set operator|(const bit_set& lhs, const bit_set& rhs) {
+    bit_set result(lhs);
+    result |= rhs;
+    return result;
+  }
+  friend bit_set operator&(const bit_set& lhs, const bit_set& rhs) {
+    bit_set result(lhs);
+    result &= rhs;
+    return result;
+  }
+  friend bit_set operator^(const bit_set& lhs, const bit_set& rhs) {
+    bit_set result(lhs);
+    result ^= rhs;
+    return result;
+  }
+
+ protected:
+  static constexpr size_t bitsPerStorage = sizeof(storage_type) * 8;
+
+  std::vector<storage_type> storage_;
+  size_t capacity_;
+
+  reference get_reference(size_t i) {
+    return reference(&(storage_[i / bitsPerStorage]), bitsPerStorage - (i % bitsPerStorage + 1));
+  }
+
+  bool get_value(size_t i) const noexcept {
+    return ((storage_[i / bitsPerStorage]) >> (bitsPerStorage - (i % bitsPerStorage + 1))) & 0x1;
+  }
+
+  void correct_trailing() noexcept {
+    if (capacity() == 0)
+      return;
+    // mask trailing bits
+    storage_type mask = std::numeric_limits<storage_type>::max()
+                        << (storage_.size() * bitsPerStorage - capacity());
+    storage_.back() &= mask;
+  }
+
+  size_t hash() const noexcept {
+    size_t seed = capacity();
+    for(auto& i : storage_) {
+      seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+    return seed;
+  }
+};
+
 /**
  \brief Translation stack. Similar to STL stack with extra search and replace
  operations.
@@ -763,36 +992,6 @@ using std::sort;
 using std::unique;
 
 /*-
-FUNCTIONS
--*/
-
-/**
-\brief Makes contents of a container a set.
-
-\param[in,out] container Container to be made into a set.
-
-Sorts the container and removes duplicates.
-*/
-template <class T>
-void make_set(T& container) {
-  // sort the contents
-  sort(container.begin(), container.end());
-  // remove duplicates
-  container.erase(unique(container.begin(), container.end()), container.end());
-}
-
-/**
-\brief Get element presence in a sorted container.
-
-\returns True if element e is contained in sorted container c. False otherwise.
-*/
-template <class T, class CT>
-bool is_in(const CT& c, const T& e) {
-  auto it = std::lower_bound(c.begin(), c.end(), e);
-  return it != c.end() && *it == e;
-}
-
-/*-
 ADAPTERS
 -*/
 
@@ -899,5 +1098,12 @@ inline constexpr int c_streq(const char* a, const char* b) {
 }
 
 }  // namespace ctf
+
+namespace std {
+template <>
+struct hash<ctf::bit_set> {
+  size_t operator()(const ctf::bit_set& s) const noexcept { return s.hash(); }
+};
+}  // namespace std
 #endif
 /*** Enf of file generic_types.hpp ***/

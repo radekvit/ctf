@@ -1,7 +1,7 @@
 #ifndef CTF_LR_LR1_HPP
 #define CTF_LR_LR1_HPP
 
-#include <iostream>
+#include<iostream>
 #include "ctf_base.hpp"
 #include "ctf_lr_lr0.hpp"
 #include "ctf_table_sets.hpp"
@@ -26,6 +26,8 @@ struct LookaheadSource {
   }
   explicit operator string() const { return to_string(); }
 };
+
+using LookaheadSet = TerminalSet;
 }  // namespace ctf::lr1
 
 namespace std {
@@ -46,17 +48,19 @@ class Item {
   using LR0Item = ctf::lr0::Item;
   // pair of (state, item)
 
-  Item(const LR0Item& item) : item_(item) {}
-  Item(LR0Item&& item) : item_(item) {}
+  Item(const LR0Item& item, const TranslationGrammar& tg)
+      : item_(item), generatedLookaheads_(tg.terminals()) {}
+  Item(LR0Item&& item, const TranslationGrammar& tg)
+      : item_(item), generatedLookaheads_(tg.terminals()) {}
 
   Item(const LR0Item& item,
        const vector_set<LookaheadSource>& lookaheads,
-       const vector_set<Symbol>& generatedLookaheads = {})
+       const LookaheadSet& generatedLookaheads)
       : item_(item), lookaheads_(lookaheads), generatedLookaheads_(generatedLookaheads) {}
 
   Item(const LR0Item& item,
        const vector_set<LookaheadSource>& lookaheads,
-       vector_set<Symbol>&& generatedLookaheads)
+       LookaheadSet&& generatedLookaheads)
       : item_(item), lookaheads_(lookaheads), generatedLookaheads_(generatedLookaheads) {}
 
   Item(const Item& item) = default;
@@ -73,11 +77,9 @@ class Item {
 
   LR0Item&& lr0_item() && noexcept { return std::move(item_); }
 
-  vector_set<Symbol>& generated_lookaheads() & noexcept { return generatedLookaheads_; }
-  const vector_set<Symbol>& generated_lookaheads() const& noexcept { return generatedLookaheads_; }
-  vector_set<Symbol>&& generated_lookaheads() && noexcept {
-    return std::move(generatedLookaheads_);
-  }
+  LookaheadSet& generated_lookaheads() & noexcept { return generatedLookaheads_; }
+  const LookaheadSet& generated_lookaheads() const& noexcept { return generatedLookaheads_; }
+  LookaheadSet&& generated_lookaheads() && noexcept { return std::move(generatedLookaheads_); }
 
   vector_set<LookaheadSource>& lookaheads() & noexcept { return lookaheads_; }
   const vector_set<LookaheadSource>& lookaheads() const& noexcept { return lookaheads_; }
@@ -92,7 +94,7 @@ class Item {
     } else {
       lookaheads = lookaheads_;
     }
-    return Item(item_.next(), lookaheads);
+    return Item(item_.next(), lookaheads, LookaheadSet(generatedLookaheads_.capacity()));
   }
 
   friend bool operator<(const Item& lhs, const Item& rhs) { return lhs.item_ < rhs.item_; }
@@ -102,7 +104,7 @@ class Item {
   string to_string() const {
     using namespace std::literals;
     string result = "["s + item_.to_string() + ", {";
-    for (auto&& symbol : generated_lookaheads()) {
+    for (auto&& symbol : generated_lookaheads().symbols()) {
       result += ' ';
       result += symbol.to_string();
     }
@@ -122,19 +124,20 @@ class Item {
  private:
   LR0Item item_;
   vector_set<LookaheadSource> lookaheads_;
-  vector_set<Symbol> generatedLookaheads_;
+  LookaheadSet generatedLookaheads_;
 };
 
 struct FirstResult {
-  vector_set<Symbol> symbols;
+  LookaheadSet symbols;
   bool empty;
 };
 
 inline FirstResult first(const vector<Symbol>& symbols,
                          const empty_t& empty,
-                         const first_t& first) {
+                         const first_t& first,
+                         const TranslationGrammar& tg) {
   using Type = Symbol::Type;
-  vector_set<Symbol> result;
+  LookaheadSet result(tg.terminals());
   for (auto&& symbol : symbols) {
     switch (symbol.type()) {
       case Type::TERMINAL:
@@ -143,7 +146,7 @@ inline FirstResult first(const vector<Symbol>& symbols,
         return {result, false};
       case Type::NONTERMINAL: {
         size_t i = symbol.id();
-        result = set_union(result, first[i]);
+        result |= first[i];
         if (!empty[i]) {
           return {result, false};
         }
@@ -172,24 +175,23 @@ inline vector_set<Item> closure(vector_set<Item> items,
         if (!item.reduce()) {
           followingSymbols = {input.begin() + item.mark() + 1, input.end()};
         }
-        auto [generatedLookaheads, propagateLookahead] = first(followingSymbols, e, f);
+        auto [generatedLookaheads, propagateLookahead] = first(followingSymbols, e, f, grammar);
         vector_set<LookaheadSource> propagatedLookaheads;
         if (propagateLookahead) {
           propagatedLookaheads = item.lookaheads();
-          generatedLookaheads = set_union(generatedLookaheads, item.generated_lookaheads());
+          generatedLookaheads |= item.generated_lookaheads();
         }
         // TODO optimization point
         for (auto&& rule : grammar.rules()) {
           if (rule.nonterminal() == nonterminal) {
-            Item newItem{{rule, 0}, propagatedLookaheads, generatedLookaheads};
+            Item newItem({rule, 0}, propagatedLookaheads, generatedLookaheads);
             auto it = closure.find(newItem);
             if (it != closure.end()) {
-              size_t originalSize = it->lookaheads().size() + it->generated_lookaheads().size();
+              size_t originalSize = it->lookaheads().size();
               it->lookaheads() = set_union(it->lookaheads(), propagatedLookaheads);
-              it->generated_lookaheads() =
-                  set_union(it->generated_lookaheads(), generatedLookaheads);
-              size_t newSize = it->lookaheads().size() + it->generated_lookaheads().size();
-              if (newSize > originalSize) {
+              bool addedGenerated = it->generated_lookaheads().set_union(generatedLookaheads);
+              size_t newSize = it->lookaheads().size();
+              if (newSize > originalSize || addedGenerated) {
                 // TODO would it ultimately be faster to create in-state lookahead sources instead?
                 newItems.erase(*it);
                 newItems.insert(*it);
@@ -221,7 +223,7 @@ inline unordered_map<Symbol, vector_set<Item>> symbol_skip_closures(const vector
     if (symbol == Symbol::eof() || !item.has_next()) {
       continue;
     }
-    Item newItem{item.next({id, i})};
+    Item newItem(item.next({id, i}));
     result[symbol] = set_union(result[symbol], {newItem});
   }
   return result;
@@ -289,11 +291,11 @@ class StateMachine {
   StateMachine(const TranslationGrammar& grammar)
       : StateMachine(grammar, create_empty(grammar), create_first(grammar, empty_)) {
     // initial item S' -> .S$
-    insert_state({Item({grammar.starting_rule(), 0}, {}, {Symbol::eof()})});
+    insert_state({Item(
+        {grammar.starting_rule(), 0}, {}, LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
     // recursively expand all states: dfs
     expand_state(0);
     // push all lookaheads to their items
-    std::cout << "LR1: how many states? " << states_.size() << "\n";
     finalize_lookaheads();
   }
 
@@ -370,14 +372,14 @@ class StateMachine {
     return {0, false};
   }
 
-  vector<vector_set<Symbol>> lookaheads(const State& state) {
+  vector<LookaheadSet> lookaheads(const State& state) {
     // get all back references
-    unordered_map<LookaheadSource, vector_set<Symbol>> lookaheadMap;
-    vector<vector_set<Symbol>> result;
+    unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
+    vector<LookaheadSet> result;
 
     // get all sources
     for (auto&& item : state.items()) {
-      result.push_back({});
+      result.push_back(TerminalSet(grammar().terminals()));
       for (auto&& source : item.lookaheads()) {
         auto it = lookaheadMap.find(source);
         if (it == lookaheadMap.end()) {
@@ -385,20 +387,20 @@ class StateMachine {
           lookahead_lookup(source, lookaheadMap);
           it = lookaheadMap.find(source);
         }
-        result.back() = set_union(result.back(), it->second);
+        result.back() |= it->second;
       }
     }
     return result;
   }
 
   void lookahead_lookup(const LookaheadSource& source,
-                        unordered_map<LookaheadSource, vector_set<Symbol>>& lookaheadMap) {
+                        unordered_map<LookaheadSource, LookaheadSet>& lookaheadMap) {
     const auto& state = states_[source.state];
     // stop infinite loops
-    lookaheadMap[source] = {};
+    lookaheadMap.insert_or_assign(source, LookaheadSet(grammar().terminals()));
     // get all sources
     auto&& item = state.items()[source.item];
-    vector_set<Symbol> symbols(item.generated_lookaheads());
+    LookaheadSet symbols(item.generated_lookaheads());
     for (auto&& nextSource : item.lookaheads()) {
       auto it = lookaheadMap.find(nextSource);
       if (it == lookaheadMap.end()) {
@@ -406,9 +408,9 @@ class StateMachine {
         lookahead_lookup(nextSource, lookaheadMap);
         it = lookaheadMap.find(nextSource);
       }
-      symbols = set_union(symbols, it->second);
+      symbols |= it->second;
     }
-    lookaheadMap[source] = std::move(symbols);
+    lookaheadMap.insert_or_assign(source, std::move(symbols));
   }
 
   void expand_state(size_t i) {
@@ -426,7 +428,7 @@ class StateMachine {
   void finalize_lookaheads() {
     // a single map for all lookaheads
     for (auto& state : states_) {
-      unordered_map<LookaheadSource, vector_set<Symbol>> lookaheadMap;
+      unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
       for (auto& item : state.items()) {
         for (auto&& source : item.lookaheads()) {
           auto it = lookaheadMap.find(source);
@@ -435,13 +437,14 @@ class StateMachine {
             lookahead_lookup(source, lookaheadMap);
             it = lookaheadMap.find(source);
           }
-          item.generated_lookaheads() = set_union(item.generated_lookaheads(), it->second);
+          item.generated_lookaheads() |= it->second;
           // TODO set lookup in map
         }
         // remove all relative lookaheads from this item
         item.lookaheads().clear();
         item.lookaheads().shrink_to_fit();
       }
+      std::cout << state.to_string();
     }
   }
 };

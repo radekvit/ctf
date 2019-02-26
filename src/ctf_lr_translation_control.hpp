@@ -5,7 +5,7 @@
 */
 #ifndef CTF_LR_TRANSLATION_CONTROL_H
 #define CTF_LR_TRANSLATION_CONTROL_H
-#include <iostream>
+
 #include "ctf_lr_lalr.hpp"
 #include "ctf_lr_lr0.hpp"
 #include "ctf_lr_table.hpp"

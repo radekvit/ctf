@@ -1,27 +1,14 @@
 #ifndef CTF_LR_IALR_HPP
 #define CTF_LR_IALR_HPP
 
-#include <iostream>
 #include "ctf_lr_lr1.hpp"
-#include <iostream>
+
 namespace ctf::ialr {
 
 using LookaheadSource = lr1::LookaheadSource;
+using LookaheadSet = lr1::LookaheadSet;
 using Item = lr1::Item;
 
-// smarter LR(1), different merge
-
-// merge: it existing is closed, check creation of:
-// mysterious new conflicts
-// mysterious invasive conflicts
-// mysterious mutated conflicts
-
-// if existing is not closed,
-// current solution:
-// merge if lookahead set is the same
-// merge if no new conflict contributions arise for done states
-// if none of the above and at least one isocore not closed, pospone
-// else create a new statef
 class StateMachine {
  public:
   using Item = ctf::ialr::Item;
@@ -62,7 +49,9 @@ class StateMachine {
     const vector_set<size_t>& reduce_targets() const noexcept { return reduceTargets_; }
 
     unordered_map<Symbol, vector_set<size_t>>& conflicts() noexcept { return conflicts_; }
-    const unordered_map<Symbol, vector_set<size_t>>& conflicts() const noexcept { return conflicts_; }
+    const unordered_map<Symbol, vector_set<size_t>>& conflicts() const noexcept {
+      return conflicts_;
+    }
 
     void set_expanded() noexcept { expanded_ = true; }
     bool expanded() const noexcept { return expanded_; }
@@ -105,7 +94,7 @@ class StateMachine {
   StateMachine(const TranslationGrammar& grammar)
       : StateMachine(grammar, create_empty(grammar), create_first(grammar, empty_)) {
     // initial item S' -> .S$
-    insert_state({Item({grammar.starting_rule(), 0}, {}, {Symbol::eof()})});
+    insert_state({Item({grammar.starting_rule(), 0}, {}, LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
     // recursively expand all states: dfs
     expand_state(0);
     // merge or generate postoponed states
@@ -211,7 +200,7 @@ class StateMachine {
 
   MergeResult merge(const std::vector<size_t>& isocores, const State& newState) {
     auto newLookaheads = lookaheads(newState);
-    vector<vector<vector_set<Symbol>>> existingLookaheads;
+    vector<vector<LookaheadSet>> existingLookaheads;
     // first try to merge as canonical LR(1)
     for (auto other : isocores) {
       auto& existing = states_[other];
@@ -245,11 +234,10 @@ class StateMachine {
     return {speculative, false};
   }
 
-  vector<vector_set<Symbol>> lookaheads(
-      const State& state) {
-    unordered_map<LookaheadSource, vector_set<Symbol>> lookaheadMap;
+  vector<LookaheadSet> lookaheads(const State& state) {
+    unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
     // get all back references
-    vector<vector_set<Symbol>> result;
+    vector<LookaheadSet> result;
 
     // get all sources
     for (auto&& item : state.items()) {
@@ -261,17 +249,16 @@ class StateMachine {
           lookahead_lookup(source, lookaheadMap);
           it = lookaheadMap.find(source);
         }
-        result.back() = set_union(result.back(), it->second);
+        result.back() |= it->second;
       }
     }
     return result;
   }
 
-  
-  vector<vector_set<Symbol>> lookaheads(
-      const State& state, unordered_map<LookaheadSource, vector_set<Symbol>> lookaheadMap) {
+  vector<LookaheadSet> lookaheads(
+      const State& state, unordered_map<LookaheadSource, LookaheadSet> lookaheadMap) {
     // get all back references
-    vector<vector_set<Symbol>> result;
+    vector<LookaheadSet> result;
 
     // get all sources
     for (size_t i = 0; i < state.items().size(); ++i) {
@@ -290,20 +277,20 @@ class StateMachine {
           lookahead_lookup(source, lookaheadMap);
           it = lookaheadMap.find(source);
         }
-        result.back() = set_union(result.back(), it->second);
+        result.back() |= it->second;
       }
     }
     return result;
   }
 
   void lookahead_lookup(const LookaheadSource& source,
-                        unordered_map<LookaheadSource, vector_set<Symbol>>& lookaheadMap) {
+                        unordered_map<LookaheadSource, LookaheadSet>& lookaheadMap) {
     const auto& state = states_[source.state];
     // stop infinite loops
-    lookaheadMap[source] = {};
+    lookaheadMap.insert_or_assign(source, LookaheadSet(grammar().terminals()));
     // get all sources
     auto&& item = state.items()[source.item];
-    vector_set<Symbol> symbols(item.generated_lookaheads());
+    LookaheadSet symbols(item.generated_lookaheads());
     for (auto&& nextSource : item.lookaheads()) {
       auto it = lookaheadMap.find(nextSource);
       if (it == lookaheadMap.end()) {
@@ -311,9 +298,9 @@ class StateMachine {
         lookahead_lookup(nextSource, lookaheadMap);
         it = lookaheadMap.find(nextSource);
       }
-      symbols = set_union(symbols, it->second);
+      symbols |= it->second;
     }
-    lookaheadMap[source] = std::move(symbols);
+    lookaheadMap.insert_or_assign(source, std::move(symbols));
   }
 
   // try to merge postponed transitions
@@ -352,32 +339,29 @@ class StateMachine {
   // precondition: state is expanded
   MergeResult ialr_merge(size_t state,
                          const State& newState,
-                         const vector<vector_set<Symbol>>& existingLookaheads,
-                         const vector<vector_set<Symbol>>& newLookaheads) {
+                         const vector<LookaheadSet>& existingLookaheads,
+                         const vector<LookaheadSet>& newLookaheads) {
     assert(existingLookaheads.size() == newLookaheads.size());
 
     auto& existing = states_[state];
-    unordered_map<LookaheadSource, vector_set<Symbol>> lookaheadMap;
+    unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
     // for all states that are la targets
     for (auto rstatei : existing.reduce_targets()) {
       auto& rstate = states_[rstatei];
       // 1: construct actions with additional lookaheads
       for (size_t i = 0; i < existingLookaheads.size(); ++i) {
         // set lookaheads
-        lookaheadMap[{state, i}] = set_union(existingLookaheads[i], newLookaheads[i]);
+        lookaheadMap.insert_or_assign({state, i}, existingLookaheads[i] | newLookaheads[i]);
       }
-      std::cout << lookaheadMap.size() << ": lookaheadMap size\n";
-      vector<vector_set<Symbol>> mergedLookaheads;
+      vector<LookaheadSet> mergedLookaheads;
       auto mergedLookups = lookaheads(rstate, lookaheadMap);
       // 2: no conflicts in 1 = OK, skip rest
       auto mergedConflicts = conflicts(rstate, mergedLookups);
-      std::cout << __LINE__ << "\n" << mergedConflicts.size() << "\n";
       if (mergedConflicts.empty()) {
         continue;
       }
       // 3: get original conflicts
       const auto& oldConflicts = rstate.conflicts();
-      std::cout << __LINE__ << "\n" << oldConflicts.size() << "\n";
 
       if (mergedConflicts != oldConflicts) {
         // additional conflicts if merged, reject
@@ -388,16 +372,15 @@ class StateMachine {
       // construct original lookaheads
       for (size_t i = 0; i < newLookaheads.size(); ++i) {
         // set lookaheads
-        lookaheadMap[{state, i}] = newLookaheads[i];
+        lookaheadMap.insert_or_assign({state, i}, newLookaheads[i]);
       }
       auto newLookups = lookaheads(rstate, lookaheadMap);
       auto newConflicts = conflicts(rstate, newLookups);
-      std::cout << __LINE__ << "\n" << newConflicts.size() << "\n";
       if (newConflicts != oldConflicts) {
         // 6: else don't merge
         return {0, false};
       }
-      // 5: both conflict contributions are the same: OK      
+      // 5: both conflict contributions are the same: OK
     }
     // if all ok, add lookahead source and reduce targets to source
     merge_lookaheads(existing, newState);
@@ -414,14 +397,14 @@ class StateMachine {
 
   // list all reduce contributions to R/R and S/R conflicts
   unordered_map<Symbol, vector_set<size_t>> conflicts(
-      State& state, const vector<vector_set<Symbol>>& stateLookaheads) {
+      State& state, const vector<LookaheadSet>& stateLookaheads) {
     unordered_map<Symbol, vector_set<size_t>> result;
     vector<tuple<TempAction, size_t>> actions(grammar().terminals(), {TempAction::NONE, 0});
     for (size_t i = 0; i < state.items().size(); ++i) {
       auto& item = state.items()[i];
       auto& lookahead = stateLookaheads[i];
       if (item.reduce()) {
-        for (auto& symbol : lookahead) {
+        for (auto& symbol : lookahead.symbols()) {
           auto& [action, item] = actions[symbol.id()];
           switch (action) {
             case TempAction::NONE:
@@ -518,8 +501,7 @@ class StateMachine {
   \brief Removes all lookahead sources and replaces them with generated lookaheads.
   */
   void finalize_lookaheads() {
-    std::cout << "IALR: how many states? " << states_.size() << "\n";
-    unordered_map<LookaheadSource, vector_set<Symbol>> lookaheadMap;
+    unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
     for (auto& state : states_) {
       // reset for each state in case of lookahead loops
       lookaheadMap.clear();
@@ -531,13 +513,12 @@ class StateMachine {
             lookahead_lookup(source, lookaheadMap);
             it = lookaheadMap.find(source);
           }
-          item.generated_lookaheads() = set_union(item.generated_lookaheads(), it->second);
+          item.generated_lookaheads() |= it->second;
         }
         // remove all relative lookaheads from this item
         item.lookaheads().clear();
         item.lookaheads().shrink_to_fit();
       }
-      std::cout << state.to_string() << "\n";
     }
   }
 

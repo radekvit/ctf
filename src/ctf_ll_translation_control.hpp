@@ -22,8 +22,8 @@ inline string default_LL_error_message(const Token& top,
                                        const Token& token,
                                        [[maybe_unused]] const Symbol& lastDerivedNonterminal,
                                        [[maybe_unused]] bool empty,
-                                       [[maybe_unused]] const vector_set<Symbol>& first,
-                                       [[maybe_unused]] const vector_set<Symbol>& follow) {
+                                       [[maybe_unused]] const TerminalSet& first,
+                                       [[maybe_unused]] const TerminalSet& follow) {
   using Type = Symbol::Type;
 
   string errorString{};
@@ -39,11 +39,11 @@ inline string default_LL_error_message(const Token& top,
     case Type::NONTERMINAL:
       errorString += "Unexpected token '" + token.to_string() + "' when deriving '" +
                      top.to_string() + "'; expected one of:\n";
-      for (auto&& expected : first) {
+      for (auto&& expected : first.symbols()) {
         errorString += "'" + expected.to_string() + "', ";
       }
       if (empty) {
-        for (auto&& expected : follow) {
+        for (auto&& expected : follow.symbols()) {
           errorString += "'" + expected.to_string() + "', ";
         }
       }
@@ -65,8 +65,8 @@ class LLTranslationControlGeneral : public TranslationControl {
                                                       const Token& token,
                                                       const Symbol& lastDerived,
                                                       bool empty,
-                                                      const vector_set<Symbol>& first,
-                                                      const vector_set<Symbol>& follow)>;
+                                                      const TerminalSet& first,
+                                                      const TerminalSet& follow)>;
 
   /**
   \brief Constructs a LLTranslationControlGeneral.
@@ -167,7 +167,7 @@ class LLTranslationControlGeneral : public TranslationControl {
       message =
           error_function(top, token, lastDerivedNonterminal, empty_[i], first_[i], follow_[i]);
     } else {
-      message = error_function(top, token, lastDerivedNonterminal, false, {}, {});
+      message = error_function(top, token, lastDerivedNonterminal, false, TerminalSet{0}, TerminalSet{0});
     }
     err() << token.location().to_string() << ": " << message << "\n";
   }
@@ -253,22 +253,8 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
               return;
           }
           break;
-        default:
-          // unexpected symbol type on input stack
-          input_.pop();
-          break;
       }
     }
-  }
-
-  /**
-  \brief Sets translation grammar.
-
-  \param[in] tg The translation grammar for this translation.
-  */
-  void set_grammar(const TranslationGrammar& tg) override {
-    translationGrammar_ = &tg;
-    create_ll_table();
   }
 
  protected:
@@ -303,7 +289,7 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
       return false;
     auto& ntFollow = follow_[ntIndex];
     // get a token from follow(lastNonterminal_)
-    while (!is_in(ntFollow, token) && token != Symbol::eof()) {
+    while (!ntFollow[token.symbol()] && token != Symbol::eof()) {
       token = next_token();
     }
     // pop stack until a rule is applicable or the same token is on top
