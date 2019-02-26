@@ -87,7 +87,7 @@ class Item {
   bool has_next() const noexcept { return _item.has_next(); }
   Item next(const LookaheadSource& las) const {
     vector_set<LookaheadSource> lookaheads;
-    if ((mark() == 0 && !generated_lookaheads().empty()) || mark() == 1) {
+    if (mark() < 2) {
       lookaheads.insert(las);
     } else {
       lookaheads = _lookaheads;
