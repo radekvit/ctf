@@ -9,7 +9,7 @@ class StateMachine : public ctf::lr1::StateMachine {
  public:
   // use the same constructors
   StateMachine(const TranslationGrammar& grammar)
-      : ctf::lr1::StateMachine(grammar, create_empty(grammar), create_first(grammar, empty_)) {
+      : ctf::lr1::StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
     // initial item S' -> .S$
     insert_state({Item({grammar.starting_rule(), 0},
                        {},
@@ -23,7 +23,7 @@ class StateMachine : public ctf::lr1::StateMachine {
  protected:
   MergeResult merge(const std::vector<size_t>& existingStates, const State& newState) override {
     assert(existingStates.size() == 1);
-    auto& state = states_[existingStates[0]];
+    auto& state = _states[existingStates[0]];
     // always succeeds, merge lookahead sources
     for (size_t i = 0; i < state.items().size(); ++i) {
       auto& item = state.items()[i];

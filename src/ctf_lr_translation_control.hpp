@@ -66,7 +66,7 @@ class LRTranslationControlGeneral : public TranslationControl {
     }
   }
 
-  void set_error() { errorFlag_ = true; }
+  void set_error() { _errorFlag = true; }
 
   void add_error(const Token& token, const string& message) {
     set_error();
@@ -102,7 +102,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   }
 
   /**
-  \brief Runs the translation. Output symbols are stored in output_.
+  \brief Runs the translation. Output symbols are stored in _output.
   */
   void run() override {
     if (!lexicalAnalyzer_)
@@ -110,8 +110,8 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     else if (!translationGrammar_)
       throw TranslationException("No translation grammar was attached.");
 
-    input_.clear();
-    output_.clear();
+    _input.clear();
+    _output.clear();
 
     size_t state = 0;
     vector<size_t> pushdown;
@@ -122,7 +122,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     Token token = next_token();
 
     while (true) {
-      switch (auto&& item = lrTable_.lr_action(state, token.symbol()); item.action) {
+      switch (auto&& item = _lrTable.lr_action(state, token.symbol()); item.action) {
         case LRAction::SHIFT:
           state = item.argument;
           pushdown.push_back(state);
@@ -134,7 +134,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
             pushdown.pop_back();
           }
           const auto& stackState = pushdown.back();
-          state = lrTable_.lr_goto(stackState, rule.nonterminal());
+          state = _lrTable.lr_goto(stackState, rule.nonterminal());
           pushdown.push_back(state);
           appliedRules.push_back(item.argument);
           break;
@@ -157,27 +157,27 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   void produce_output(const vector<size_t>& appliedRules) {
     tstack<vector<tstack<Token>::iterator>> attributeActions;
 
-    input_.push(translationGrammar_->starting_symbol());
-    output_.push(translationGrammar_->starting_symbol());
+    _input.push(translationGrammar_->starting_symbol());
+    _output.push(translationGrammar_->starting_symbol());
 
-    auto obegin = output_.begin();
-    auto tokenIt = tokens_.crbegin();
+    auto obegin = _output.begin();
+    auto tokenIt = _tokens.crbegin();
     for (auto&& ruleIndex : reverse(appliedRules)) {
       auto& rule = translationGrammar_->rules()[ruleIndex];
-      input_.replace_last(rule.nonterminal(), rule.input());
-      obegin = output_.replace_last(rule.nonterminal(), rule.output(), obegin);
+      _input.replace_last(rule.nonterminal(), rule.input());
+      obegin = _output.replace_last(rule.nonterminal(), rule.output(), obegin);
       create_attibute_actions(obegin, rule.actions(), rule.output().size(), attributeActions);
 
       // apply attribute actions for all current rightmost terminals
-      for (auto workingTerminalIt = input_.crbegin();
-           workingTerminalIt != input_.crend() &&
+      for (auto workingTerminalIt = _input.crbegin();
+           workingTerminalIt != _input.crend() &&
            workingTerminalIt->type() != Symbol::Type::NONTERMINAL;
            ++tokenIt) {
         for (auto symbolIt : attributeActions.pop()) {
           symbolIt->set_attribute(*tokenIt);
         }
-        input_.pop_bottom();
-        workingTerminalIt = input_.crbegin();
+        _input.pop_bottom();
+        workingTerminalIt = _input.crbegin();
       }
     }
     assert(attributeActions.empty());
@@ -198,12 +198,12 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     string message = "Unexpected symbol '";
     message += token.to_string();
     message += "'\nexpected one of:";
-    if (lrTable_.lr_action(state, Symbol::eof()).action != LRAction::ERROR) {
+    if (_lrTable.lr_action(state, Symbol::eof()).action != LRAction::ERROR) {
       message += " EOF";
     }
     for (auto terminal = Symbol::eof(); terminal.id() < translationGrammar_->terminals();
          terminal = Terminal(terminal.id())) {
-      if (lrTable_.lr_action(state, terminal).action != LRAction::ERROR) {
+      if (_lrTable.lr_action(state, terminal).action != LRAction::ERROR) {
         message += " '";
         message += terminal.to_string() + "'";
       }
@@ -222,20 +222,20 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   /**
   \brief LR table used to control the translation.
   */
-  LRTableType lrTable_;
+  LRTableType _lrTable;
   /**
   \brief All read tokens
   */
-  vector<Token> tokens_;
+  vector<Token> _tokens;
 
   /**
   Creates all predictive sets and creates a new LR table.
   */
-  void create_lr_table() { lrTable_ = LRTableType(*translationGrammar_); }
+  void create_lr_table() { _lrTable = LRTableType(*translationGrammar_); }
 
   Token next_token() override {
-    tokens_.push_back(TranslationControl::next_token());
-    return tokens_.back();
+    _tokens.push_back(TranslationControl::next_token());
+    return _tokens.back();
   }
 };
 

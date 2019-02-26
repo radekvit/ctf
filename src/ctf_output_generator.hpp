@@ -32,21 +32,21 @@ Outputs tokens to output stream. Base class.
 class OutputGenerator {
  public:
   OutputGenerator() = default;
-  explicit OutputGenerator(std::ostream& os) : os_(&os) {}
+  explicit OutputGenerator(std::ostream& os) : _os(&os) {}
   virtual ~OutputGenerator() noexcept = default;
   /**
   \brief Returns true if an output stream has been set.
 
   \returns True if an output stream has been set. False otherwise.
   */
-  bool has_stream() const { return os_ != nullptr; }
+  bool has_stream() const { return _os != nullptr; }
   /**
   \brief Sets the output stream.
 
   \param[in] o Output stream.
   */
   void set_output_stream(std::ostream& o) noexcept {
-    os_ = &o;
+    _os = &o;
     reset();
   }
   /**
@@ -54,18 +54,18 @@ class OutputGenerator {
 
   \param[in] o Error stream.
   */
-  void set_error_stream(std::ostream& o) noexcept { error_ = &o; }
+  void set_error_stream(std::ostream& o) noexcept { _error = &o; }
   /**
   \brief Get the error flag.
 
   \returns True when an error has been encountered.
   */
-  bool error() const noexcept { return errorFlag_; }
+  bool error() const noexcept { return _errorFlag; }
   /**
   \brief Clears the error flag.
   */
   void reset() noexcept {
-    errorFlag_ = false;
+    _errorFlag = false;
     reset_private();
   }
 
@@ -105,15 +105,15 @@ class OutputGenerator {
   \returns A reference to the output stream if set.
   */
   std::ostream& os() const {
-    if (!os_) {
+    if (!_os) {
       throw std::runtime_error("ctf::OutputGenerator::os() output stream not set.");
     }
-    return *os_;
+    return *_os;
   }
   /**
   \brief Set the error flag.
   */
-  void set_error() noexcept { errorFlag_ = true; }
+  void set_error() noexcept { _errorFlag = true; }
 
   /**
   \brief Clears the inner state and errors.
@@ -124,29 +124,29 @@ class OutputGenerator {
   \brief Get the error stream.
   */
   std::ostream& err() {
-    if (!error_) {
+    if (!_error) {
       throw std::runtime_error("ctf::OutputGenerator::err() error stream not set.");
     }
-    return *error_;
+    return *_error;
   }
 
-  void error_message(const string& message) { err() << message << "\n"; }
+  void _errormessage(const string& message) { err() << message << "\n"; }
   /**
   \brief Outputs an error message with the location automatically printed before
   it.
   */
-  void error_message(const tstack<Token>::const_iterator it, const string& message) {
+  void _errormessage(const tstack<Token>::const_iterator it, const string& message) {
     err() << it->location().to_string() << ": " << message << "\n";
   }
 
   void fatal_error(const string& message) {
-    error_message(message);
+    _errormessage(message);
     set_error();
     throw SemanticException("Semantic error encountered.");
   }
 
   void fatal_error(tstack<Token>::const_iterator it, const string& message) {
-    error_message(it, message);
+    _errormessage(it, message);
     set_error();
     throw SemanticException("Semantic error encountered.");
   }
@@ -155,17 +155,17 @@ class OutputGenerator {
   /**
   \brief
   */
-  bool errorFlag_ = false;
+  bool _errorFlag = false;
 
   /**
   \brief Pointer to the output stream tokens will be output to.
   */
-  std::ostream* os_;
+  std::ostream* _os;
 
   /**
   \brief The error stream.
   */
-  std::ostream* error_;
+  std::ostream* _error;
 };
 }  // namespace ctf
 

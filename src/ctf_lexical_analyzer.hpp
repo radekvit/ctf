@@ -60,7 +60,7 @@ class LexicalAnalyzer {
   */
   void reset() {
     clear_error();
-    location_ = Location::invalid();
+    _location = Location::invalid();
     if (reader_) {
       reader_->reset();
     }
@@ -71,7 +71,7 @@ class LexicalAnalyzer {
 
   \returns True when an error has been encountered.
   */
-  bool error() const noexcept { return errorFlag_; }
+  bool error() const noexcept { return _errorFlag; }
 
   /**
   \brief Resets location and gets next Token from the input stream.
@@ -88,7 +88,7 @@ class LexicalAnalyzer {
 
   \param[in] os The output stream to be set.
   */
-  void set_error_stream(std::ostream& os) { error_ = &os; }
+  void set_error_stream(std::ostream& os) { _error = &os; }
 
  protected:
   /**
@@ -128,8 +128,8 @@ class LexicalAnalyzer {
   \returns The int value of the read character.
   */
   int get() {
-    if (location_ == Location::invalid()) {
-      return reader_->get(location_);
+    if (_location == Location::invalid()) {
+      return reader_->get(_location);
     }
     return reader_->get();
   }
@@ -147,8 +147,8 @@ class LexicalAnalyzer {
       result = reader_->get();
     } while (!accept(result));
     reader_->unget();
-    if (location_ == Location::invalid()) {
-      return reader_->get(location_);
+    if (_location == Location::invalid()) {
+      return reader_->get(_location);
     }
     return reader_->get();
   }
@@ -165,13 +165,13 @@ class LexicalAnalyzer {
   /**
   \brief Resets the current token's location.
   */
-  void reset_location() { location_ = Location::invalid(); }
+  void reset_location() { _location = Location::invalid(); }
   /**
   \brief Get the current stored location.
 
   \returns A const reference to the current location.
   */
-  const Location& location() const noexcept { return location_; }
+  const Location& location() const noexcept { return _location; }
 
   /**
   \brief Constructs a terminal symbol and inserts the current symbol location
@@ -180,9 +180,9 @@ class LexicalAnalyzer {
   \param[in] name The name of the created Terminal
   \param[in] attr The attribute of the created Terminal
 
-  \returns A terminal Symbol with the current stored location_.
+  \returns A terminal Symbol with the current stored _location.
   */
-  Token token(Symbol s, const Attribute& attr = Attribute{}) { return Token(s, attr, location_); }
+  Token token(Symbol s, const Attribute& attr = Attribute{}) { return Token(s, attr, _location); }
 
   /**
   \brief Constructs a terminal symbol and inserts the current symbol location
@@ -191,35 +191,35 @@ class LexicalAnalyzer {
   \param[in] name The name of the created Terminal
   \param[in] attr The attribute of the created Terminal
 
-  \returns A terminal Symbol with the current stored location_.
+  \returns A terminal Symbol with the current stored _location.
   */
   Token token(size_t i, const Attribute& attr = Attribute{}) {
-    return Token(Terminal(i), attr, location_);
+    return Token(Terminal(i), attr, _location);
   }
 
   /**
   \brief Constructs an EOI Symbol and inserts the current symbol location
   automatically.
 
-  \returns An EOI Symbol with the current stored location_.
+  \returns An EOI Symbol with the current stored _location.
   */
-  Token token_eof() { return Token(Symbol::eof(), Attribute{}, location_); }
+  Token token_eof() { return Token(Symbol::eof(), Attribute{}, _location); }
 
   /**
   \brief Returns a reference to the error flag.
   */
-  void set_error() noexcept { errorFlag_ = true; }
+  void set_error() noexcept { _errorFlag = true; }
 
   /**
   \brief Outputs an error message with the location automatically printed before
   it.
   */
-  void error_message(const string& message) {
-    err() << location_.to_string() << ": " << message << "\n";
+  void _errormessage(const string& message) {
+    err() << _location.to_string() << ": " << message << "\n";
   }
 
   void fatal_error(const string& message) {
-    error_message(message);
+    _errormessage(message);
     set_error();
     throw LexicalException("Lexical error encountered.");
   }
@@ -228,10 +228,10 @@ class LexicalAnalyzer {
   \brief Get the error stream.
   */
   std::ostream& err() {
-    if (!error_) {
+    if (!_error) {
       throw std::runtime_error("ctf::OutputGenerator::err() error stream not set.");
     }
-    return *error_;
+    return *_error;
   }
 
  private:
@@ -244,22 +244,22 @@ class LexicalAnalyzer {
   /**
   \brief The error stream.
   */
-  std::ostream* error_ = nullptr;
+  std::ostream* _error = nullptr;
 
   /**
   \brief Error flag. This flag should be set by subclasses on invalid input.
   */
-  bool errorFlag_ = false;
+  bool _errorFlag = false;
 
   /**
   \brief Current token location.
   */
-  Location location_ = Location::invalid();
+  Location _location = Location::invalid();
 
   /**
   \brief Clears the error flag and resets all error messages.
   */
-  void clear_error() noexcept { errorFlag_ = false; }
+  void clear_error() noexcept { _errorFlag = false; }
 
   virtual void reset_private() {}
 };

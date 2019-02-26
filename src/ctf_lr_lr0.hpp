@@ -11,7 +11,7 @@ class Item {
  public:
   using Rule = TranslationGrammar::Rule;
 
-  Item(const Rule& rule, size_t mark) : rule_(&rule), mark_(mark) {}
+  Item(const Rule& rule, size_t mark) : _rule(&rule), _mark(mark) {}
   Item(const Item& item) = default;
   Item(Item&& item) = default;
 
@@ -21,8 +21,8 @@ class Item {
   vector_set<Item> closure(const TranslationGrammar& grammar) const {
     vector_set<Item> closure = {*this};
     // item with the mark at the last position or a mark before the
-    if (mark_ == rule_->input().size() ||
-        rule_->input()[mark_].type() != Symbol::Type::NONTERMINAL) {
+    if (_mark == _rule->input().size() ||
+        _rule->input()[_mark].type() != Symbol::Type::NONTERMINAL) {
       return closure;
     }
 
@@ -52,8 +52,8 @@ class Item {
     return closure;
   }
 
-  const Rule& rule() const noexcept { return *rule_; }
-  size_t mark() const noexcept { return mark_; }
+  const Rule& rule() const noexcept { return *_rule; }
+  size_t mark() const noexcept { return _mark; }
 
   bool reduce() const noexcept { return mark() == rule().input().size(); }
   bool has_next() const noexcept { return mark() < rule().input().size(); }
@@ -62,11 +62,11 @@ class Item {
 
   // only valid comparing items with the same rule sources
   friend bool operator<(const Item& lhs, const Item& rhs) {
-    return lhs.mark() > rhs.mark() || (lhs.mark() == rhs.mark() && lhs.rule_ < rhs.rule_);
+    return lhs.mark() > rhs.mark() || (lhs.mark() == rhs.mark() && lhs._rule < rhs._rule);
   }
 
   friend bool operator==(const Item& lhs, const Item& rhs) {
-    return lhs.mark_ == rhs.mark_ && lhs.rule_ == rhs.rule_;
+    return lhs._mark == rhs._mark && lhs._rule == rhs._rule;
   }
 
   string to_string() const {
@@ -88,8 +88,8 @@ class Item {
   explicit operator string() const { return to_string(); }
 
  private:
-  const Rule* rule_;
-  size_t mark_;
+  const Rule* _rule;
+  size_t _mark;
 };
 
 using State = vector_set<Item>;
@@ -102,25 +102,25 @@ class LR0StateMachine {
   explicit LR0StateMachine(const TranslationGrammar& grammar) {
     auto& startingRule = grammar.starting_rule();
 
-    states_.push_back(lr0::Item{startingRule, 0}.closure(grammar));
-    transitions_.push_back({});
+    _states.push_back(lr0::Item{startingRule, 0}.closure(grammar));
+    _transitions.push_back({});
 
-    for (size_t i = 0; i < states_.size(); ++i) {
-      auto&& state = states_[i];
+    for (size_t i = 0; i < _states.size(); ++i) {
+      auto&& state = _states[i];
       // get all nonempty closures
-      auto&& statetransitions_ = next_states(grammar, state);
-      // add transitions_
-      for (auto&& transitionPair : statetransitions_) {
+      auto&& state_transitions = next_states(grammar, state);
+      // add _transitions
+      for (auto&& transitionPair : state_transitions) {
         const Symbol& symbol = transitionPair.first;
         auto&& state = transitionPair.second;
         size_t j = insert_state(state);
-        transitions_[i][symbol] = j;
+        _transitions[i][symbol] = j;
       }
     }
   }
 
-  const vector<lr0::State>& states() const { return states_; }
-  const vector<unordered_map<Symbol, size_t>>& transitions() const { return transitions_; }
+  const vector<lr0::State>& states() const { return _states; }
+  const vector<unordered_map<Symbol, size_t>>& transitions() const { return _transitions; }
 
  protected:
   unordered_map<Symbol, lr0::State> next_states(const TranslationGrammar& grammar,
@@ -139,19 +139,19 @@ class LR0StateMachine {
   }
 
   size_t insert_state(const lr0::State& state) {
-    auto it = std::find(states_.begin(), states_.end(), state);
-    if (it == states_.end()) {
+    auto it = std::find(_states.begin(), _states.end(), state);
+    if (it == _states.end()) {
       // insert
-      states_.push_back(state);
-      transitions_.push_back({});
-      return states_.size() - 1;
+      _states.push_back(state);
+      _transitions.push_back({});
+      return _states.size() - 1;
     } else {
-      return it - states_.begin();
+      return it - _states.begin();
     }
   }
 
-  vector<lr0::State> states_;
-  vector<unordered_map<Symbol, size_t>> transitions_;
+  vector<lr0::State> _states;
+  vector<unordered_map<Symbol, size_t>> _transitions;
 };
 }  // namespace ctf
 

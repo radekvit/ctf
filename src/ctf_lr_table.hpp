@@ -35,45 +35,45 @@ struct LRActionItem {
 class LRGenericTable {
  public:
   const LRActionItem& lr_action(size_t state, const Symbol& terminal) const {
-    return actionTable_[actionIndex(state, terminal.id())];
+    return _actionTable[actionIndex(state, terminal.id())];
   }
 
   const size_t& lr_goto(size_t state, const Symbol& nonterminal) const {
-    return gotoTable_[gotoIndex(state, nonterminal.id())];
+    return _gotoTable[gotoIndex(state, nonterminal.id())];
   }
 
-  size_t total_states() const { return states_; }
+  size_t total_states() const { return _states; }
 
  protected:
-  vector<LRActionItem> actionTable_;
-  vector<size_t> gotoTable_;
+  vector<LRActionItem> _actionTable;
+  vector<size_t> _gotoTable;
 
-  size_t states_;
-  size_t terminals_;
-  size_t nonterminals_;
+  size_t _states;
+  size_t _terminals;
+  size_t _nonterminals;
 
   LRActionItem& lr_action_item(size_t state, const Symbol& terminal) {
-    return actionTable_[actionIndex(state, terminal.id())];
+    return _actionTable[actionIndex(state, terminal.id())];
   }
 
   size_t& lr_goto_item(size_t state, const Symbol& nonterminal) {
-    return gotoTable_[gotoIndex(state, nonterminal.id())];
+    return _gotoTable[gotoIndex(state, nonterminal.id())];
   }
 
   /**
   \brief Maps 2D indices to 1D indices.
   */
-  size_t actionIndex(size_t y, size_t x) const { return terminals_ * y + x; }
+  size_t actionIndex(size_t y, size_t x) const { return _terminals * y + x; }
   /**
   \brief Maps 2D indices to 1D indices.
   */
-  size_t gotoIndex(size_t y, size_t x) const { return nonterminals_ * y + x; }
+  size_t gotoIndex(size_t y, size_t x) const { return _nonterminals * y + x; }
 
   void initialize_tables(size_t size) {
-    actionTable_ = {size * terminals_, {LRAction::ERROR, 0}};
-    gotoTable_ = vector<size_t>(size * nonterminals_, 0);
+    _actionTable = {size * _terminals, {LRAction::ERROR, 0}};
+    _gotoTable = vector<size_t>(size * _nonterminals, 0);
 
-    states_ = size;
+    _states = size;
   }
 };
 
@@ -84,8 +84,8 @@ class SLRTable : public LRGenericTable {
     const empty_t empty = create_empty(grammar);
     const first_t first = create_first(grammar, empty);
     const follow_t follow = create_follow(grammar, empty, first);
-    terminals_ = grammar.terminals();
-    nonterminals_ = grammar.nonterminals();
+    _terminals = grammar.terminals();
+    _nonterminals = grammar.nonterminals();
     LR0StateMachine sm(grammar);
     initialize_tables(sm.states().size());
 
@@ -136,8 +136,8 @@ class LR1GenericTable : public LRGenericTable {
   LR1GenericTable() {}
   LR1GenericTable(const TranslationGrammar& grammar) {
     StateMachine sm(grammar);
-    terminals_ = grammar.terminals();
-    nonterminals_ = grammar.nonterminals();
+    _terminals = grammar.terminals();
+    _nonterminals = grammar.nonterminals();
     initialize_tables(sm.states().size());
 
     for (auto&& state : sm.states()) {
@@ -237,8 +237,8 @@ class LR1StrictGenericTable : public LRGenericTable {
   LR1StrictGenericTable() {}
   LR1StrictGenericTable(const TranslationGrammar& grammar) {
     StateMachine sm(grammar);
-    terminals_ = grammar.terminals();
-    nonterminals_ = grammar.nonterminals();
+    _terminals = grammar.terminals();
+    _nonterminals = grammar.nonterminals();
     initialize_tables(sm.states().size());
 
     for (auto&& state : sm.states()) {

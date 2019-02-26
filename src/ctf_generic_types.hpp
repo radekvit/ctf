@@ -70,15 +70,15 @@ class vector_set {
     iterator it;
   };
 
-  vector_set() : compare_(Compare()), equals_(Equals()) {}
-  explicit vector_set(const Compare& compare) : compare_(compare), equals_(Equals()) {}
+  vector_set() : _compare(Compare()), _equals(Equals()) {}
+  explicit vector_set(const Compare& compare) : _compare(compare), _equals(Equals()) {}
   vector_set(std::initializer_list<T> il,
              const Compare& compare = Compare(),
              const Equals& equals = Equals())
-      : elements_(il), compare_(compare), equals_(equals) {
-    std::sort(elements_.begin(), elements_.end(), compare_);
-    auto newEnd = std::unique(elements_.begin(), elements_.end(), equals_);
-    elements_.erase(newEnd, elements_.end());
+      : _elements(il), _compare(compare), _equals(equals) {
+    std::sort(_elements.begin(), _elements.end(), _compare);
+    auto newEnd = std::unique(_elements.begin(), _elements.end(), _equals);
+    _elements.erase(newEnd, _elements.end());
   }
 
   vector_set(const vector_set&) = default;
@@ -87,130 +87,130 @@ class vector_set {
   vector_set& operator=(const vector_set&) = default;
   vector_set& operator=(vector_set&&) = default;
   vector_set& operator=(std::initializer_list<T> il) {
-    elements_ = il;
-    std::sort(elements_.begin(), elements_.end(), Compare());
-    auto newEnd = std::unique(elements_.begin(), elements_.end());
-    elements_.erase(newEnd, elements_.end());
+    _elements = il;
+    std::sort(_elements.begin(), _elements.end(), Compare());
+    auto newEnd = std::unique(_elements.begin(), _elements.end());
+    _elements.erase(newEnd, _elements.end());
 
     return *this;
   }
 
-  iterator begin() { return elements_.begin(); }
-  const_iterator begin() const { return elements_.cbegin(); }
-  const_iterator cbegin() const { return elements_.cbegin(); }
+  iterator begin() { return _elements.begin(); }
+  const_iterator begin() const { return _elements.cbegin(); }
+  const_iterator cbegin() const { return _elements.cbegin(); }
 
-  iterator end() { return elements_.end(); }
-  const_iterator end() const { return elements_.cend(); }
-  const_iterator cend() const { return elements_.cend(); }
+  iterator end() { return _elements.end(); }
+  const_iterator end() const { return _elements.cend(); }
+  const_iterator cend() const { return _elements.cend(); }
 
-  reverse_iterator rbegin() { return elements_.rbegin(); }
-  const_reverse_iterator rbegin() const { return elements_.crbegin(); }
-  const_reverse_iterator crbegin() const { return elements_.crbegin(); }
+  reverse_iterator rbegin() { return _elements.rbegin(); }
+  const_reverse_iterator rbegin() const { return _elements.crbegin(); }
+  const_reverse_iterator crbegin() const { return _elements.crbegin(); }
 
-  reverse_iterator rend() { return elements_.rend(); }
-  const_reverse_iterator rend() const { return elements_.crend(); }
-  const_reverse_iterator crend() const { return elements_.crend(); }
+  reverse_iterator rend() { return _elements.rend(); }
+  const_reverse_iterator rend() const { return _elements.crend(); }
+  const_reverse_iterator crend() const { return _elements.crend(); }
 
-  bool empty() const noexcept { return elements_.empty(); }
-  size_type size() const noexcept { return elements_.size(); }
-  size_type max_size() const noexcept { return elements_.max_size(); }
+  bool empty() const noexcept { return _elements.empty(); }
+  size_type size() const noexcept { return _elements.size(); }
+  size_type max_size() const noexcept { return _elements.max_size(); }
 
-  void clear() noexcept { elements_.clear(); }
+  void clear() noexcept { _elements.clear(); }
 
-  void shrink_to_fit() { elements_.shrink_to_fit(); }
+  void shrink_to_fit() { _elements.shrink_to_fit(); }
 
-  T& operator[](size_t i) & noexcept { return elements_[i]; }
-  const T& operator[](size_t i) const& noexcept { return elements_[i]; }
-  T&& operator[](size_t i) && noexcept { return std::move(elements_[i]); }
+  T& operator[](size_t i) & noexcept { return _elements[i]; }
+  const T& operator[](size_t i) const& noexcept { return _elements[i]; }
+  T&& operator[](size_t i) && noexcept { return std::move(_elements[i]); }
 
   insert_return_type insert(const T& element) {
     auto it = lower_bound(element);
-    if (it == elements_.end() || !equals_(*it, element)) {
-      return {true, elements_.insert(it, element)};
+    if (it == _elements.end() || !_equals(*it, element)) {
+      return {true, _elements.insert(it, element)};
     }
-    return {false, elements_.end()};
+    return {false, _elements.end()};
   }
 
   insert_return_type insert(T&& element) {
     auto it = lower_bound(element);
-    if (it == elements_.end() || !equals_(*it, element)) {
-      return {true, elements_.insert(it, element)};
+    if (it == _elements.end() || !_equals(*it, element)) {
+      return {true, _elements.insert(it, element)};
     }
-    return {false, elements_.end()};
+    return {false, _elements.end()};
   }
 
   bool erase(const T& element) noexcept {
     auto it = lower_bound(element);
-    if (it == elements_.end() || !equals_(*it, element)) {
+    if (it == _elements.end() || !_equals(*it, element)) {
       return false;
     }
-    elements_.erase(it);
+    _elements.erase(it);
     return true;
   }
 
-  void erase(iterator it) { elements_.erase(it); }
+  void erase(iterator it) { _elements.erase(it); }
 
   void swap(vector_set& other) {
-    elements_.swap(other.elements_);
-    std::swap(compare_, other.compare_);
+    _elements.swap(other._elements);
+    std::swap(_compare, other._compare);
   }
 
   bool contains(const T& element) const noexcept {
     auto it = lower_bound(element);
-    return it != elements_.end() && equals_(*it, element);
+    return it != _elements.end() && _equals(*it, element);
   }
 
   size_t count(const T& element) noexcept { return find(element) ? 1 : 0; }
 
   iterator find(const T& element) noexcept {
     auto it = lower_bound(element);
-    if (it != end() && equals_(*it, element))
+    if (it != end() && _equals(*it, element))
       return it;
     return end();
   }
 
   const_iterator find(const T& element) const noexcept {
     auto it = lower_bound(element);
-    if (it != end() && equals_(*it, element))
+    if (it != end() && _equals(*it, element))
       return it;
     return end();
   }
 
   iterator lower_bound(const T& element) noexcept {
-    return std::lower_bound(begin(), end(), element, compare_);
+    return std::lower_bound(begin(), end(), element, _compare);
   }
 
   const_iterator lower_bound(const T& element) const noexcept {
-    return std::lower_bound(begin(), end(), element, compare_);
+    return std::lower_bound(begin(), end(), element, _compare);
   }
 
   iterator upper_bound(const T& element) noexcept {
-    return std::upper_bound(begin(), end(), element, compare_);
+    return std::upper_bound(begin(), end(), element, _compare);
   }
 
   const_iterator upper_bound(const T& element) const noexcept {
-    return std::upper_bound(begin(), end(), element, compare_);
+    return std::upper_bound(begin(), end(), element, _compare);
   }
 
   friend bool operator==(const vector_set& lhs, const vector_set& rhs) {
-    return lhs.elements_ == rhs.elements_;
+    return lhs._elements == rhs._elements;
   }
   friend bool operator!=(const vector_set& lhs, const vector_set& rhs) {
-    return lhs.elements_ != rhs.elements_;
+    return lhs._elements != rhs._elements;
   }
   friend bool operator<(const vector_set& lhs, const vector_set& rhs) {
-    return lhs.elements_ < rhs.elements_;
+    return lhs._elements < rhs._elements;
   }
   friend bool operator<=(const vector_set& lhs, const vector_set& rhs) {
-    return lhs.elements_ <= rhs.elements_;
+    return lhs._elements <= rhs._elements;
   }
   friend bool operator>=(const vector_set& lhs, const vector_set& rhs) {
-    return lhs.elements_ >= rhs.elements_;
+    return lhs._elements >= rhs._elements;
   }
   friend bool operator>(const vector_set& lhs, const vector_set& rhs) { return rhs < lhs; }
 
   friend bool subset(const vector_set& lhs, const vector_set& rhs) {
-    for (auto&& e : lhs.elements_) {
+    for (auto&& e : lhs._elements) {
       if (!rhs.contains(e)) {
         return false;
       }
@@ -218,7 +218,7 @@ class vector_set {
     return true;
   }
   friend bool proper_subset(const vector_set& lhs, const vector_set& rhs) {
-    return lhs.elements_.size() < rhs.elements_.size() && subset(lhs, rhs);
+    return lhs._elements.size() < rhs._elements.size() && subset(lhs, rhs);
   }
   friend bool disjoint(const vector_set& lhs, const vector_set& rhs) {
     return set_intersection(lhs, rhs).size() == 0;
@@ -232,8 +232,8 @@ class vector_set {
                    rhs.begin(),
                    rhs.end(),
                    std::back_inserter<vector<T>>(vec),
-                   lhs.compare_);
-    return vector_set(vec, lhs.compare_, lhs.equals_);
+                   lhs._compare);
+    return vector_set(vec, lhs._compare, lhs._equals);
   }
 
   friend vector_set set_intersection(const vector_set& lhs, const vector_set& rhs) {
@@ -244,8 +244,8 @@ class vector_set {
                           rhs.begin(),
                           rhs.end(),
                           std::back_inserter<vector<T>>(vec),
-                          lhs.compare_);
-    return vector_set(vec, lhs.compare_, lhs.equals_);
+                          lhs._compare);
+    return vector_set(vec, lhs._compare, lhs._equals);
   }
 
   bool modify_set_union(const vector_set& other) {
@@ -255,15 +255,15 @@ class vector_set {
   }
 
  private:
-  vector<T> elements_;
+  vector<T> _elements;
 
-  Compare compare_;
-  Equals equals_;
+  Compare _compare;
+  Equals _equals;
 
   vector_set(vector<T>& vec, Compare compare, Equals equals)
-      : elements_(vec), compare_(compare), equals_(equals) {}
+      : _elements(vec), _compare(compare), _equals(equals) {}
   vector_set(vector<T>&& vec, Compare&& compare, Equals&& equals)
-      : elements_(vec), compare_(compare), equals_(equals) {}
+      : _elements(vec), _compare(compare), _equals(equals) {}
 };
 
 class bit_set {
@@ -279,11 +279,11 @@ class bit_set {
 
    public:
     reference& operator=(bool t) noexcept {
-      storage_type e = *element_;
+      storage_type e = *_element;
       // reset bit
-      e &= ~(static_cast<storage_type>(0x1) << offset_);
+      e &= ~(static_cast<storage_type>(0x1) << _offset);
       // set
-      *element_ = e | static_cast<storage_type>(t) << offset_;
+      *_element = e | static_cast<storage_type>(t) << _offset;
       return *this;
     }
     reference& operator=(const reference& r) noexcept {
@@ -291,34 +291,34 @@ class bit_set {
       return *this;
     }
 
-    operator bool() const noexcept { return (*element_ >> offset_) & 0x1; }
+    operator bool() const noexcept { return (*_element >> _offset) & 0x1; }
 
-    bool operator~() const noexcept { return !((*element_ >> offset_) & 0x1); }
+    bool operator~() const noexcept { return !((*_element >> _offset) & 0x1); }
 
     reference& flip() noexcept { return *this = ~*this; }
 
    private:
-    reference(storage_type* p, size_t offset) noexcept : element_(p), offset_(offset) {}
+    reference(storage_type* p, size_t offset) noexcept : _element(p), _offset(offset) {}
 
-    storage_type* element_;
-    size_t offset_;
+    storage_type* _element;
+    size_t _offset;
   };
 
   explicit bit_set(size_t bits)
-      : storage_(bits != 0 ? (bits - 1) / bitsPerStorage + 1 : 0, 0), capacity_(bits) {}
+      : _storage(bits != 0 ? (bits - 1) / bitsPerStorage + 1 : 0, 0), _capacity(bits) {}
 
   friend bool operator==(const bit_set& lhs, const bit_set& rhs) {
-    assert(lhs.storage_.capacity() == rhs.storage_.capacity());
-    for (size_t i = 0; i < lhs.storage_.size(); ++i) {
-      if (lhs.storage_[i] != rhs.storage_[i])
+    assert(lhs._storage.capacity() == rhs._storage.capacity());
+    for (size_t i = 0; i < lhs._storage.size(); ++i) {
+      if (lhs._storage[i] != rhs._storage[i])
         return false;
     }
     return true;
   }
   friend bool operator!=(const bit_set& lhs, const bit_set& rhs) {
-    assert(lhs.storage_.capacity() == rhs.storage_.capacity());
-    for (size_t i = 0; i < lhs.storage_.size(); ++i) {
-      if (lhs.storage_[i] == rhs.storage_[i])
+    assert(lhs._storage.capacity() == rhs._storage.capacity());
+    for (size_t i = 0; i < lhs._storage.size(); ++i) {
+      if (lhs._storage[i] == rhs._storage[i])
         return false;
     }
     return true;
@@ -335,7 +335,7 @@ class bit_set {
   }
 
   bool all() const noexcept {
-    for (auto& cell : storage_) {
+    for (auto& cell : _storage) {
       if (cell != std::numeric_limits<storage_type>::max()) {
         return false;
       }
@@ -346,7 +346,7 @@ class bit_set {
   bool any() const noexcept { return !none(); }
 
   bool none() const noexcept {
-    for (auto& cell : storage_) {
+    for (auto& cell : _storage) {
       if (cell != 0) {
         return false;
       }
@@ -359,7 +359,7 @@ class bit_set {
   size_t count() const noexcept {
     size_t result = 0;
     size_t j = 0;
-    const storage_type* s = &(storage_[0]);
+    const storage_type* s = &(_storage[0]);
     storage_type test = *s;
     for (size_t i = 0; i < capacity(); ++i) {
       if (j == bitsPerStorage) {
@@ -375,31 +375,31 @@ class bit_set {
   }
 
   size_t size() const noexcept { return count(); }
-  size_t capacity() const noexcept { return capacity_; }
+  size_t capacity() const noexcept { return _capacity; }
 
   bit_set& operator&=(const bit_set& rhs) noexcept {
-    for (size_t i = 0; i < storage_.size(); ++i) {
-      storage_[i] &= rhs.storage_[i];
+    for (size_t i = 0; i < _storage.size(); ++i) {
+      _storage[i] &= rhs._storage[i];
     }
     return *this;
   }
   bit_set& operator|=(const bit_set& rhs) noexcept {
-    for (size_t i = 0; i < storage_.size(); ++i) {
-      storage_[i] |= rhs.storage_[i];
+    for (size_t i = 0; i < _storage.size(); ++i) {
+      _storage[i] |= rhs._storage[i];
     }
     return *this;
   }
   bit_set& operator^=(const bit_set& rhs) noexcept {
-    for (size_t i = 0; i < storage_.size(); ++i) {
-      storage_[i] ^= rhs.storage_[i];
+    for (size_t i = 0; i < _storage.size(); ++i) {
+      _storage[i] ^= rhs._storage[i];
     }
     correct_trailing();
     return *this;
   }
   bit_set operator~() {
     bit_set result(*this);
-    for (size_t i = 0; i < storage_.size(); ++i) {
-      result.storage_[i] = ~storage_[i];
+    for (size_t i = 0; i < _storage.size(); ++i) {
+      result._storage[i] = ~_storage[i];
     }
     result.correct_trailing();
     return result;
@@ -426,10 +426,10 @@ class bit_set {
   bool set_union(const bit_set& rhs) noexcept {
     assert(capacity() == rhs.capacity());
     bool changed = false;
-    for (size_t i = 0; i < storage_.size(); ++i) {
-      storage_type old = storage_[i];
-      storage_[i] |= rhs.storage_[i];
-      changed |= storage_[i] != old;
+    for (size_t i = 0; i < _storage.size(); ++i) {
+      storage_type old = _storage[i];
+      _storage[i] |= rhs._storage[i];
+      changed |= _storage[i] != old;
     }
     return changed;
   }
@@ -437,9 +437,9 @@ class bit_set {
   bool set_intersection(const bit_set& rhs) noexcept {
     assert(capacity() == rhs.capacity());
     bool changed = false;
-    for (size_t i = 0; i < storage_.size(); ++i) {
-      changed |= storage_[i] != rhs.storage_[i];
-      storage_[i] &= rhs.storage_[i];
+    for (size_t i = 0; i < _storage.size(); ++i) {
+      changed |= _storage[i] != rhs._storage[i];
+      _storage[i] &= rhs._storage[i];
     }
     return changed;
   }
@@ -464,15 +464,15 @@ class bit_set {
  protected:
   static constexpr size_t bitsPerStorage = sizeof(storage_type) * 8;
 
-  std::vector<storage_type> storage_;
-  size_t capacity_;
+  std::vector<storage_type> _storage;
+  size_t _capacity;
 
   reference get_reference(size_t i) {
-    return reference(&(storage_[i / bitsPerStorage]), bitsPerStorage - (i % bitsPerStorage + 1));
+    return reference(&(_storage[i / bitsPerStorage]), bitsPerStorage - (i % bitsPerStorage + 1));
   }
 
   bool get_value(size_t i) const noexcept {
-    return ((storage_[i / bitsPerStorage]) >> (bitsPerStorage - (i % bitsPerStorage + 1))) & 0x1;
+    return ((_storage[i / bitsPerStorage]) >> (bitsPerStorage - (i % bitsPerStorage + 1))) & 0x1;
   }
 
   void correct_trailing() noexcept {
@@ -480,13 +480,13 @@ class bit_set {
       return;
     // mask trailing bits
     storage_type mask = std::numeric_limits<storage_type>::max()
-                        << (storage_.size() * bitsPerStorage - capacity());
-    storage_.back() &= mask;
+                        << (_storage.size() * bitsPerStorage - capacity());
+    _storage.back() &= mask;
   }
 
   size_t hash() const noexcept {
     size_t seed = capacity();
-    for (auto& i : storage_) {
+    for (auto& i : _storage) {
       seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
     return seed;
@@ -521,7 +521,7 @@ class tstack {
   \param[in] ilist Initializer list containing all elements. The first element
   is at top of the stack.
   */
-  tstack(std::initializer_list<T> ilist) : list_(ilist) {}
+  tstack(std::initializer_list<T> ilist) : _list(ilist) {}
   tstack(const tstack&) = default;
   tstack(tstack&&) = default;
 
@@ -531,60 +531,60 @@ class tstack {
   \brief Is the tstack empty predicate.
   \returns True when the tstack is empty. False otherwise.
   */
-  bool empty() const noexcept { return list_.empty(); }
+  bool empty() const noexcept { return _list.empty(); }
   /**
   \brief Get the number of elements on the tstack.
   \returns The number of elements on the tstack.
   */
-  size_type size() const noexcept { return list_.size(); }
+  size_type size() const noexcept { return _list.size(); }
   /**
   \brief Removes all elements from the tstack.
   */
-  void clear() noexcept { list_.clear(); }
+  void clear() noexcept { _list.clear(); }
   /**
   \brief Pushes an element to the tstack.
   \param[in] args Arguments for the construction of T.
   */
   template <typename... Args>
   void push(Args&&... args) {
-    list_.emplace_front(std::forward<Args>(args)...);
+    _list.emplace_front(std::forward<Args>(args)...);
   }
   /**
   \brief Get a reference to the top element of the tstack.
   \returns A reference to the top element of the tstack.
   */
-  T& top() noexcept { return list_.front(); }
+  T& top() noexcept { return _list.front(); }
   /**
   \brief Get a constant reference to the top element of the tstack.
   \returns A const reference to the top element of the tstack.
   */
-  const T& top() const noexcept { return list_.front(); }
+  const T& top() const noexcept { return _list.front(); }
   /**
   \brief Pops the top element from the tstack and returns it.
   \returns The element that was on the top of the tstack before its removal.
   */
   T pop() noexcept {
-    T temp{std::move(list_.front())};
-    list_.pop_front();
+    T temp{std::move(_list.front())};
+    _list.pop_front();
     return std::move(temp);
   }
   /**
   \brief Get a reference to the bottom element of the tstack.
   \returns A reference to the bottom element of the tstack.
   */
-  T& bottom() noexcept { return list_.back(); }
+  T& bottom() noexcept { return _list.back(); }
   /**
   \brief Get a constant reference to the bottom element of the tstack.
   \returns A const reference to the bottom element of the tstack.
   */
-  const T& bottom() const noexcept { return list_.back(); }
+  const T& bottom() const noexcept { return _list.back(); }
   /**
   \brief Pops the bottom element from the tstack and returns it.
   \returns The element that was on the bottom of the tstack before its removal.
   */
   T pop_bottom() noexcept {
-    T temp{std::move(list_.front())};
-    list_.pop_back();
+    T temp{std::move(_list.front())};
+    _list.pop_back();
     return std::move(temp);
   }
   /**
@@ -604,7 +604,7 @@ class tstack {
                     return lhs == rhs;
                   }) {
     iterator it;
-    for (it = from; it != list_.end(); ++it) {
+    for (it = from; it != _list.end(); ++it) {
       if (predicate(*it, target))
         break;
     }
@@ -627,7 +627,7 @@ class tstack {
                           return lhs == rhs;
                         }) const {
     const_iterator it;
-    for (it = from; it != list_.cend(); ++it) {
+    for (it = from; it != _list.cend(); ++it) {
       if (predicate(*it, target))
         break;
     }
@@ -682,13 +682,13 @@ class tstack {
                          return lhs == rhs;
                        }) {
     iterator it;
-    for (it = from; it != list_.begin(); --it) {
+    for (it = from; it != _list.begin(); --it) {
       if (predicate(*it, target))
         return it;
     }
     if (predicate(*it, target))
       return it;
-    return list_.end();
+    return _list.end();
   }
   /**
   \brief Searches for an element in a const tstack.
@@ -707,13 +707,13 @@ class tstack {
                                return lhs == rhs;
                              }) const {
     const_iterator it;
-    for (it = from; it != list_.cbegin(); --it) {
+    for (it = from; it != _list.cbegin(); --it) {
       if (predicate(*it, target))
         return it;
     }
     if (predicate(*it, target))
       return it;
-    return list_.end();
+    return _list.end();
   }
   /**
   \brief Searches for an element.
@@ -774,14 +774,14 @@ class tstack {
   */
   template <class TS>
   ReplaceResult replace(iterator it, const TS& string) {
-    if (it == list_.end())
+    if (it == _list.end())
       return {it, it};
     auto insert = it;
     ++insert;
     for (auto& t : string) {
-      list_.insert(insert, t);
+      _list.insert(insert, t);
     }
-    list_.erase(it++);
+    _list.erase(it++);
     return {it, insert};
   }
   /**
@@ -891,7 +891,7 @@ class tstack {
 
   \param[in] other The other tstack to be swapped.
   */
-  void swap(tstack& other) noexcept { std::swap(list_, other.list_); }
+  void swap(tstack& other) noexcept { std::swap(_list, other._list); }
 
   ///@{
   /**
@@ -901,9 +901,9 @@ class tstack {
 
   If the tstack is empty, the returned iterator will be equal to end().
   */
-  iterator begin() noexcept { return list_.begin(); }
-  const_iterator begin() const noexcept { return list_.begin(); }
-  const_iterator cbegin() const noexcept { return list_.cbegin(); }
+  iterator begin() noexcept { return _list.begin(); }
+  const_iterator begin() const noexcept { return _list.begin(); }
+  const_iterator cbegin() const noexcept { return _list.cbegin(); }
   ///@}
 
   ///@{
@@ -917,9 +917,9 @@ class tstack {
   This element acts as a placeholder. Trying to access it results in undefined
   behavior.
   */
-  iterator end() noexcept { return list_.end(); }
-  const_iterator end() const noexcept { return list_.end(); }
-  const_iterator cend() const noexcept { return list_.cend(); }
+  iterator end() noexcept { return _list.end(); }
+  const_iterator end() const noexcept { return _list.end(); }
+  const_iterator cend() const noexcept { return _list.cend(); }
   ///@}
 
   ///@{
@@ -928,9 +928,9 @@ class tstack {
 
   \returns A reverse iterator to the furthest element from the top.
   */
-  reverse_iterator rbegin() noexcept { return list_.rbegin(); }
-  const_reverse_iterator rbegin() const noexcept { return list_.rbegin(); }
-  const_reverse_iterator crbegin() const noexcept { return list_.crbegin(); }
+  reverse_iterator rbegin() noexcept { return _list.rbegin(); }
+  const_reverse_iterator rbegin() const noexcept { return _list.rbegin(); }
+  const_reverse_iterator crbegin() const noexcept { return _list.crbegin(); }
   ///@}
 
   ///@{
@@ -942,9 +942,9 @@ class tstack {
   This element acts as a placeholder. Trying to access it results in undefined
   behavior.
   */
-  reverse_iterator rend() noexcept { return list_.rend(); }
-  const_reverse_iterator rend() const noexcept { return list_.rend(); }
-  const_reverse_iterator crend() const noexcept { return list_.crend(); }
+  reverse_iterator rend() noexcept { return _list.rend(); }
+  const_reverse_iterator rend() const noexcept { return _list.rend(); }
+  const_reverse_iterator crend() const noexcept { return _list.crend(); }
   ///@}
 
   /**
@@ -958,16 +958,16 @@ class tstack {
   */
   ///@{
   friend bool operator==(const tstack<T>& lhs, const tstack<T>& rhs) noexcept {
-    return lhs.list_ == rhs.list_;
+    return lhs._list == rhs._list;
   }
   friend bool operator!=(const tstack<T>& lhs, const tstack<T>& rhs) noexcept {
     return !(lhs == rhs);
   }
   friend bool operator<(const tstack<T>& lhs, const tstack<T>& rhs) noexcept {
-    return lhs.list_ < rhs.list_;
+    return lhs._list < rhs._list;
   }
   friend bool operator>(const tstack<T>& lhs, const tstack<T>& rhs) noexcept {
-    return rhs.list_ < lhs.list_;
+    return rhs._list < lhs._list;
   }
   friend bool operator<=(const tstack<T>& lhs, const tstack<T>& rhs) noexcept {
     return lhs == rhs || lhs < rhs;
@@ -979,7 +979,7 @@ class tstack {
   /**
   \brief Underlying list.
   */
-  std::list<T> list_;
+  std::list<T> _list;
 };
 
 /*-

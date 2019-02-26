@@ -59,49 +59,49 @@ class LLGenericTable {
     // iterator to terminal index;
     auto tid = t.id();
     // either of the arguments not found
-    if (ntid >= nonterminals_ || tid >= terminals_)
-      return invalid_;
+    if (ntid >= _nonterminals || tid >= _terminals)
+      return _invalid;
     // returning from LL table
-    return table_[index(ntid, tid)];
+    return _table[index(ntid, tid)];
   }
 
  protected:
   /**
   \brief Table storing rule indices. 2D array mapped to 1D array.
   */
-  row table_;
+  row _table;
   /**
-  \brief Mapping nonterminals to table_ indices.
+  \brief Mapping nonterminals to _table indices.
   */
-  size_t nonterminals_;
+  size_t _nonterminals;
   /**
-  \brief Mapping terminals to table_ row indices.
+  \brief Mapping terminals to _table row indices.
   */
-  size_t terminals_;
+  size_t _terminals;
   /**
   \brief Stores invalid value.
   */
-  cell invalid_;
+  cell _invalid;
   /**
   \brief Maps 2D indices to 1D indices.
   */
-  size_t index(size_t y, size_t x) const { return terminals_ * y + x; }
+  size_t index(size_t y, size_t x) const { return _terminals * y + x; }
 
   virtual void initialize_invalid(const TranslationGrammar&) { return; }
 
   virtual void insert_rule(const size_t insertedRule, const size_t i) {
-    table_[i] = {insertedRule};
+    _table[i] = {insertedRule};
   }
 
   void initialize() {}
 
   void initialize(const TranslationGrammar& tg, const predict_t& predict) {
     initialize_invalid(tg);
-    table_ = row(tg.nonterminals() * tg.terminals(), invalid_);
+    _table = row(tg.nonterminals() * tg.terminals(), _invalid);
     assert(predict.size() == tg.rules().size());
 
-    nonterminals_ = tg.nonterminals();
-    terminals_ = tg.terminals();
+    _nonterminals = tg.nonterminals();
+    _terminals = tg.terminals();
 
     /* fill table */
     for (size_t i = 0; i < tg.rules().size(); ++i) {
@@ -120,20 +120,20 @@ class LLGenericTable {
 \brief Class containing rule indices to be used in a LL controlled translation.
 */
 class LLTable : public LLGenericTable<size_t> {
-  void initialize_invalid(const TranslationGrammar& tg) override { invalid_ = tg.rules().size(); }
+  void initialize_invalid(const TranslationGrammar& tg) override { _invalid = tg.rules().size(); }
 
   void insert_rule(const size_t insertedRule, const size_t i) override {
     // a rule is already present
-    if (table_[i] != invalid_) {
+    if (_table[i] != _invalid) {
       throw std::invalid_argument("Constructing LLTable from a non-LL TranslationGrammar.");
     }
-    table_[i] = insertedRule;
+    _table[i] = insertedRule;
   }
 
  public:
   LLTable(const TranslationGrammar& tg, const predict_t& predict) { initialize(tg, predict); }
 
-  LLTable() { invalid_ = 0; }
+  LLTable() { _invalid = 0; }
 };
 
 class PriorityLLTable : public LLTable {
@@ -142,13 +142,13 @@ class PriorityLLTable : public LLTable {
     initialize(tg, predict);
   }
 
-  PriorityLLTable() { invalid_ = 0; }
+  PriorityLLTable() { _invalid = 0; }
 
  private:
   void insert_rule(const size_t insertedRule, const size_t i) override {
     // insert high priority rule
-    if (table_[i] == invalid_ || table_[i] > insertedRule) {
-      table_[i] = insertedRule;
+    if (_table[i] == _invalid || _table[i] > insertedRule) {
+      _table[i] = insertedRule;
     }
   }
 };
@@ -163,10 +163,10 @@ class GeneralLLTable : public LLGenericTable<vector_set<size_t>> {
 
  private:
   void insert_rule(const size_t insertedRule, const size_t i) override {
-    table_[i].insert(insertedRule);
+    _table[i].insert(insertedRule);
   }
 
-  void initialize_invalid(const TranslationGrammar&) override { invalid_ = {}; }
+  void initialize_invalid(const TranslationGrammar&) override { _invalid = {}; }
 };
 }  // namespace ctf
 

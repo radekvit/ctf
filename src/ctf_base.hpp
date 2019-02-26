@@ -77,9 +77,9 @@ class Symbol {
   \brief Returns the type of the symbol.
   \returns The symbol's type.
   */
-  constexpr Type type() const noexcept { return Type((storage_ & type_mask()) >> type_shift()); }
+  constexpr Type type() const noexcept { return Type((_storage & type_mask()) >> type_shift()); }
 
-  constexpr size_t id() const noexcept { return storage_ & id_mask(); }
+  constexpr size_t id() const noexcept { return _storage & id_mask(); }
 
   /**
   \brief Returns true if the symbol is a terminal and false otherwise.
@@ -87,12 +87,12 @@ class Symbol {
   Symbol::eof() is a terminal symbol as well.
   */
   constexpr bool terminal() const noexcept {
-    return storage_ & (static_cast<size_t>(0x1) << type_shift());
+    return _storage & (static_cast<size_t>(0x1) << type_shift());
   }
   /**
   \brief Returns true if the symbol is a nonterminal.
   */
-  constexpr bool nonterminal() const noexcept { return (storage_ & type_mask()) == 0; }
+  constexpr bool nonterminal() const noexcept { return (_storage & type_mask()) == 0; }
 
   /**
   \name Comparison operators
@@ -105,11 +105,11 @@ class Symbol {
   ///@{
   friend constexpr bool operator<(const Symbol& lhs, const Symbol& rhs) {
     static_assert(sizeof(Symbol) == sizeof(size_t), "Symbol must match size_t size");
-    return lhs.storage_ < rhs.storage_;
+    return lhs._storage < rhs._storage;
   }
 
   friend constexpr bool operator==(const Symbol& lhs, const Symbol& rhs) {
-    return lhs.storage_ == rhs.storage_;
+    return lhs._storage == rhs._storage;
   }
 
   friend constexpr bool operator!=(const Symbol& lhs, const Symbol& rhs) { return !(lhs == rhs); }
@@ -135,12 +135,12 @@ class Symbol {
 
  protected:
   constexpr Symbol(Type type, size_t id = 0) noexcept
-      : storage_((static_cast<size_t>(type) << type_shift()) | (id & id_mask())) {}
+      : _storage((static_cast<size_t>(type) << type_shift()) | (id & id_mask())) {}
 
   /**
   \brief Id of this Symbol.
   */
-  size_t storage_;
+  size_t _storage;
 
   static constexpr size_t id_mask() noexcept {
     return (std::numeric_limits<size_t>::max() << 2) >> 2;
@@ -301,20 +301,20 @@ class Attribute {
       typename = typename std::enable_if<
           !std::is_same<typename std::remove_reference<T>::type, Attribute>::value &&
           !std::is_same<typename std::remove_reference<T>::type, const Attribute>::value>::type>
-  explicit Attribute(T&& arg) : storage_(arg) {}
+  explicit Attribute(T&& arg) : _storage(arg) {}
 
   /**
   \brief Default assignment operator.
   */
   Attribute& operator=(const Attribute& other) & {
-    storage_ = other.storage_;
+    _storage = other._storage;
     return *this;
   }
   /**
   \brief Default assignment operator.
   */
   Attribute& operator=(Attribute&& other) & {
-    storage_ = other.storage_;
+    _storage = other._storage;
     return *this;
   }
   /**
@@ -324,7 +324,7 @@ class Attribute {
   */
   template <typename T>
   Attribute& operator=(T& rhs) & {
-    storage_ = rhs;
+    _storage = rhs;
     return *this;
   }
   /**
@@ -334,7 +334,7 @@ class Attribute {
   */
   template <typename T>
   Attribute& operator=(T&& rhs) {
-    storage_ = rhs;
+    _storage = rhs;
     return *this;
   }
 
@@ -352,7 +352,7 @@ class Attribute {
   */
   template <typename T>
   T get() const {
-    return std::any_cast<T>(storage_);
+    return std::any_cast<T>(_storage);
   }
   /**
   \brief Sets a value.
@@ -363,7 +363,7 @@ class Attribute {
   */
   template <typename T>
   void set(const T& value) {
-    storage_.emplace(value);
+    _storage.emplace(value);
   }
   /**
   \brief Sets a value.
@@ -374,7 +374,7 @@ class Attribute {
   */
   template <typename T>
   void set(T&& value) {
-    storage_.emplace(value);
+    _storage.emplace(value);
   }
 
   /**
@@ -389,31 +389,31 @@ class Attribute {
   */
   template <typename T, typename... Args>
   auto emplace(Args&&... args) {
-    return storage_.emplace<T>(std::forward(args)...);
+    return _storage.emplace<T>(std::forward(args)...);
   }
 
   /**
   \brief Resets the stored value.
   */
-  void clear() noexcept { storage_.reset(); }
+  void clear() noexcept { _storage.reset(); }
   /**
   \brief Staps the contents of an Attribute with another.
 
   \param[in/out] other The other Attribute to be swapped.
   */
-  void swap(Attribute& other) { storage_.swap(other.storage_); }
+  void swap(Attribute& other) { _storage.swap(other._storage); }
 
   /**
   \brief Returns true if there is no value stored.
 
   \returns True when no value is stored in the Attribute.
   */
-  bool empty() const noexcept { return !storage_.has_value(); }
+  bool empty() const noexcept { return !_storage.has_value(); }
 
   /**
   \brief Get the type info of the stored object.
   */
-  const std::type_info& type() const noexcept { return storage_.type(); }
+  const std::type_info& type() const noexcept { return _storage.type(); }
 
   /**
   \name Comparison operators
@@ -441,7 +441,7 @@ class Attribute {
   /**
   \brief Stores any value.
   */
-  std::any storage_;
+  std::any _storage;
 };
 
 class Token {
@@ -449,41 +449,41 @@ class Token {
   Token(const Symbol symbol,
         const Attribute& atr = Attribute{},
         const Location& loc = Location::invalid())
-      : symbol_(symbol), attribute_(atr), location_(loc) {}
+      : _symbol(symbol), _attribute(atr), _location(loc) {}
   /**
   \brief Merges symbol's attribute and sets location if not set.
   */
   void set_attribute(const Token& other) {
-    attribute_ = other.attribute();
-    if (location_ == Location::invalid())
-      location_ = other.location();
+    _attribute = other.attribute();
+    if (_location == Location::invalid())
+      _location = other.location();
   }
 
-  Symbol& symbol() noexcept { return symbol_; }
-  const Symbol& symbol() const noexcept { return symbol_; }
+  Symbol& symbol() noexcept { return _symbol; }
+  const Symbol& symbol() const noexcept { return _symbol; }
 
-  size_t id() const noexcept { return symbol_.id(); }
-  Symbol::Type type() const noexcept { return symbol_.type(); }
+  size_t id() const noexcept { return _symbol.id(); }
+  Symbol::Type type() const noexcept { return _symbol.type(); }
 
-  bool terminal() const noexcept { return symbol_.terminal(); }
-  bool nonterminal() const noexcept { return symbol_.nonterminal(); }
+  bool terminal() const noexcept { return _symbol.terminal(); }
+  bool nonterminal() const noexcept { return _symbol.nonterminal(); }
 
   /**
   \brief Returns a reference to attribute.
   \returns A reference to attribute.
   */
-  Attribute& attribute() { return attribute_; }
+  Attribute& attribute() { return _attribute; }
   /**
   \brief Returns a const reference to attribute.
   \returns A const reference to attribute.
   */
-  const Attribute& attribute() const { return attribute_; }
+  const Attribute& attribute() const { return _attribute; }
 
   /**
   \brief Returns the Token's location.
   \returns The Token's original location.
   */
-  const Location& location() const { return location_; }
+  const Location& location() const { return _location; }
 
   friend bool operator<(const Token& lhs, const Token& rhs) { return lhs.symbol() < rhs.symbol(); }
 
@@ -504,7 +504,7 @@ class Token {
     if (location() != Location::invalid()) {
       result = location().to_string() + ": ";
     }
-    result += symbol_.to_string();
+    result += _symbol.to_string();
     return result;
   }
 
@@ -513,15 +513,15 @@ class Token {
   explicit operator Symbol() const { return symbol(); }
 
  private:
-  Symbol symbol_;
+  Symbol _symbol;
   /**
   \brief Attribute of this Symbol. Only valid for some types of symbols.
   */
-  Attribute attribute_;
+  Attribute _attribute;
   /**
   \brief Location of the origin of this Token.
   */
-  Location location_;
+  Location _location;
 };
 
 #ifndef CTF_NO_LITERALS
@@ -565,7 +565,7 @@ class TerminalSet : public bit_set {
   }
 
   bool operator[](size_t i) const noexcept {
-    return ((storage_[i / bitsPerStorage]) >> (bitsPerStorage - (i % bitsPerStorage + 1))) & 0x1;
+    return ((_storage[i / bitsPerStorage]) >> (bitsPerStorage - (i % bitsPerStorage + 1))) & 0x1;
   }
   reference operator[](size_t i) noexcept { return get_reference(i); }
 

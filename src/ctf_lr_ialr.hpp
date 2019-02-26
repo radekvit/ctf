@@ -2,7 +2,10 @@
 #define CTF_LR_IALR_HPP
 
 #include "ctf_lr_lr1.hpp"
-
+// TODO: new approach
+// 1) LALR
+// 2) identify conflicts
+// 3) mark all mergable kernels states with the potential contributions
 namespace ctf::ialr {
 
 using LookaheadSource = lr1::LookaheadSource;
@@ -19,42 +22,42 @@ class StateMachine {
           const TranslationGrammar& grammar,
           const empty_t& empty,
           const first_t& first)
-        : id_(id), items_(closure(kernel, grammar, empty, first)), reduceTargets_() {
+        : _id(id), _items(closure(kernel, grammar, empty, first)), _reduceTargets() {
       // we can only merge states when the kernel only contains rules in the form A -> x.Y
       for (auto&& item : kernel) {
         if (item.mark() == 1) {
-          mergable_ = true;
+          _mergable = true;
           break;
         }
       }
-      for (auto&& item : items_) {
+      for (auto&& item : _items) {
         if (item.reduce()) {
-          reduce_ = true;
+          _reduce = true;
           break;
         }
       }
     }
 
-    size_t id() const noexcept { return id_; }
-    vector_set<Item>& items() noexcept { return items_; }
-    const vector_set<Item>& items() const noexcept { return items_; }
+    size_t id() const noexcept { return _id; }
+    vector_set<Item>& items() noexcept { return _items; }
+    const vector_set<Item>& items() const noexcept { return _items; }
 
-    unordered_map<Symbol, size_t>& transitions() noexcept { return transitions_; }
-    const unordered_map<Symbol, size_t>& transitions() const noexcept { return transitions_; }
+    unordered_map<Symbol, size_t>& transitions() noexcept { return _transitions; }
+    const unordered_map<Symbol, size_t>& transitions() const noexcept { return _transitions; }
 
-    bool mergable() const noexcept { return mergable_; }
-    bool has_reduce() const noexcept { return reduce_; }
+    bool mergable() const noexcept { return _mergable; }
+    bool has_reduce() const noexcept { return _reduce; }
 
-    vector_set<size_t>& reduce_targets() noexcept { return reduceTargets_; }
-    const vector_set<size_t>& reduce_targets() const noexcept { return reduceTargets_; }
+    vector_set<size_t>& _reducetargets() noexcept { return _reduceTargets; }
+    const vector_set<size_t>& _reducetargets() const noexcept { return _reduceTargets; }
 
-    unordered_map<Symbol, vector_set<size_t>>& conflicts() noexcept { return conflicts_; }
+    unordered_map<Symbol, vector_set<size_t>>& conflicts() noexcept { return _conflicts; }
     const unordered_map<Symbol, vector_set<size_t>>& conflicts() const noexcept {
-      return conflicts_;
+      return _conflicts;
     }
 
-    void set_expanded() noexcept { expanded_ = true; }
-    bool expanded() const noexcept { return expanded_; }
+    void set_expanded() noexcept { _expanded = true; }
+    bool expanded() const noexcept { return _expanded; }
 
     string to_string() const {
       string result = std::to_string(id()) + ": {\n";
@@ -75,24 +78,24 @@ class StateMachine {
 
    private:
     // kernel identifier
-    size_t id_;
+    size_t _id;
     // closure of kernel
-    vector_set<Item> items_;
+    vector_set<Item> _items;
 
     // state transitions
-    unordered_map<Symbol, size_t> transitions_;
+    unordered_map<Symbol, size_t> _transitions;
 
-    vector_set<size_t> reduceTargets_;
+    vector_set<size_t> _reduceTargets;
     // reduce state conflicts
-    unordered_map<Symbol, vector_set<size_t>> conflicts_;
+    unordered_map<Symbol, vector_set<size_t>> _conflicts;
 
-    bool mergable_ = false;
-    bool reduce_ = false;
-    bool expanded_ = false;
+    bool _mergable = false;
+    bool _reduce = false;
+    bool _expanded = false;
   };
 
   StateMachine(const TranslationGrammar& grammar)
-      : StateMachine(grammar, create_empty(grammar), create_first(grammar, empty_)) {
+      : StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
     // initial item S' -> .S$
     insert_state({Item(
         {grammar.starting_rule(), 0}, {}, LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
@@ -106,22 +109,22 @@ class StateMachine {
 
   ~StateMachine() = default;
 
-  const vector<State>& states() const noexcept { return states_; }
+  const vector<State>& states() const noexcept { return _states; }
 
  protected:
-  const TranslationGrammar* grammar_;
-  empty_t empty_;
-  first_t first_;
-  vector<State> states_;
+  const TranslationGrammar* _grammar;
+  empty_t _empty;
+  first_t _first;
+  vector<State> _states;
 
-  map<vector_set<Item>, vector<size_t>> kernelMap_;
+  map<vector_set<Item>, vector<size_t>> _kernelMap;
 
   struct PostponedTransition {
     size_t state;
     vector<Symbol> transitionSymbols;
   };
 
-  deque<PostponedTransition> postponed_;
+  deque<PostponedTransition> _postponed;
 
   struct InsertResult {
     size_t state;
@@ -135,22 +138,22 @@ class StateMachine {
   };
 
   StateMachine(const TranslationGrammar& grammar, empty_t empty, first_t first)
-      : grammar_(&grammar), empty_(std::move(empty)), first_(std::move(first)) {}
+      : _grammar(&grammar), _empty(std::move(empty)), _first(std::move(first)) {}
 
-  const TranslationGrammar& grammar() const noexcept { return *grammar_; }
+  const TranslationGrammar& grammar() const noexcept { return *_grammar; }
 
   InsertResult insert_state(const vector_set<Item>& kernel) {
     // identifier for new state
-    size_t i = states_.size();
-    State newState(i, kernel, grammar(), empty_, first_);
+    size_t i = _states.size();
+    State newState(i, kernel, grammar(), _empty, _first);
     if (newState.mergable()) {
       // try to merge with another state
-      auto& kernelStates = kernelMap_[kernel];
+      auto& kernelStates = _kernelMap[kernel];
       if (kernelStates.empty()) {
         // new mergable kernel
         kernelStates.push_back(i);
 
-        states_.push_back(std::move(newState));
+        _states.push_back(std::move(newState));
         return {i, true, false};
       } else {
         // check existing states with this kernel
@@ -164,24 +167,24 @@ class StateMachine {
         }
         // no matching state found, insert as new
         kernelStates.push_back(i);
-        states_.push_back(std::move(newState));
+        _states.push_back(std::move(newState));
         return {i, true, false};
       }
     } else {
       // not a mergable kernel, simply insert
-      states_.push_back(std::move(newState));
+      _states.push_back(std::move(newState));
       return {i, true, false};
     }
   }
 
   void expand_state(size_t i) {
     // set as reduce target for all lookahead sources
-    mark_as_reduce(i, states_[i]);
+    mark_as_reduce(i, _states[i]);
     vector<Symbol> postponedSymbols;
     // expand all transitions
-    for (auto [symbol, kernel] : lr1::symbol_skip_closures(states_[i].items(), i)) {
+    for (auto [symbol, kernel] : lr1::symbol_skip_closures(_states[i].items(), i)) {
       auto [id, inserted, postponed] = insert_state(kernel);
-      auto& state = states_[i];
+      auto& state = _states[i];
       if (postponed) {
         postponedSymbols.push_back(symbol);
         continue;
@@ -193,10 +196,10 @@ class StateMachine {
       }
     }
     if (!postponedSymbols.empty()) {
-      postponed_.push_back({i, std::move(postponedSymbols)});
+      _postponed.push_back({i, std::move(postponedSymbols)});
     }
     // mark; this state knows its lookahead reduce targets
-    states_[i].set_expanded();
+    _states[i].set_expanded();
   }
 
   MergeResult merge(const std::vector<size_t>& isocores, const State& newState) {
@@ -204,13 +207,13 @@ class StateMachine {
     vector<vector<LookaheadSet>> existingLookaheads;
     // first try to merge as canonical LR(1)
     for (auto other : isocores) {
-      auto& existing = states_[other];
+      auto& existing = _states[other];
       existingLookaheads.push_back(lookaheads(existing));
       // always merge if lookahead set is the same
       if (existingLookaheads.back() == newLookaheads) {
         // add lookahead sources
         merge_lookaheads(existing, newState);
-        merge_reduce_targets(existing, newState);
+        merge__reducetargets(existing, newState);
         return {other, true};
       }
     }
@@ -218,7 +221,7 @@ class StateMachine {
     size_t speculative = 0;
     for (size_t i = 0; i < isocores.size(); ++i) {
       auto other = isocores[i];
-      auto& existing = states_[other];
+      auto& existing = _states[other];
       // we can resolve this later
       if (!existing.expanded()) {
         speculative = 1;
@@ -227,7 +230,7 @@ class StateMachine {
       // try to merge state
       auto [state, success] = ialr_merge(other, newState, existingLookaheads[i], newLookaheads);
       if (success) {
-        merge_lookaheads(states_[state], newState);
+        merge_lookaheads(_states[state], newState);
 
         return {state, true};
       }
@@ -286,7 +289,7 @@ class StateMachine {
 
   void lookahead_lookup(const LookaheadSource& source,
                         unordered_map<LookaheadSource, LookaheadSet>& lookaheadMap) {
-    const auto& state = states_[source.state];
+    const auto& state = _states[source.state];
     // stop infinite loops
     lookaheadMap.insert_or_assign(source, LookaheadSet(grammar().terminals()));
     // get all sources
@@ -306,11 +309,11 @@ class StateMachine {
 
   // try to merge postponed transitions
   void handle_postponed() {
-    while (!postponed_.empty()) {
-      auto [i, symbols] = postponed_.front();
-      postponed_.pop_front();
+    while (!_postponed.empty()) {
+      auto [i, symbols] = _postponed.front();
+      _postponed.pop_front();
 
-      auto& state = states_[i];
+      auto& state = _states[i];
       auto transitions = lr1::symbol_skip_closures(state.items(), i);
       vector<Symbol> postponedSymbols;
       for (auto symbol : symbols) {
@@ -327,7 +330,7 @@ class StateMachine {
         }
       }
       if (!postponedSymbols.empty()) {
-        postponed_.push_back({i, std::move(postponedSymbols)});
+        _postponed.push_back({i, std::move(postponedSymbols)});
       }
     }
   }
@@ -344,11 +347,11 @@ class StateMachine {
                          const vector<LookaheadSet>& newLookaheads) {
     assert(existingLookaheads.size() == newLookaheads.size());
 
-    auto& existing = states_[state];
+    auto& existing = _states[state];
     unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
     // for all states that are la targets
-    for (auto rstatei : existing.reduce_targets()) {
-      auto& rstate = states_[rstatei];
+    for (auto rstatei : existing._reducetargets()) {
+      auto& rstate = _states[rstatei];
       // 1: construct actions with additional lookaheads
       for (size_t i = 0; i < existingLookaheads.size(); ++i) {
         // set lookaheads
@@ -385,7 +388,7 @@ class StateMachine {
     }
     // if all ok, add lookahead source and reduce targets to source
     merge_lookaheads(existing, newState);
-    merge_reduce_targets(existing, newState);
+    merge__reducetargets(existing, newState);
     return {state, true};
   }
 
@@ -455,9 +458,9 @@ class StateMachine {
     }
   }
 
-  void merge_reduce_targets(const State& mergeState, const State& newState) {
+  void merge__reducetargets(const State& mergeState, const State& newState) {
     for (auto& item : newState.items()) {
-      for (auto reduceState : mergeState.reduce_targets()) {
+      for (auto reduceState : mergeState._reducetargets()) {
         mark_source(reduceState, item.lookaheads());
       }
     }
@@ -475,7 +478,7 @@ class StateMachine {
       mark_source(i, item.lookaheads());
       // can mark itself if this is a mergable state
       if (state.mergable() && !item.lookaheads().empty()) {
-        state.reduce_targets().insert(i);
+        state._reducetargets().insert(i);
       }
     }
     // calculate conflicts fir this state
@@ -488,10 +491,10 @@ class StateMachine {
   */
   void mark_source(size_t reduceState, const vector_set<LookaheadSource>& lookaheads) {
     for (auto source : lookaheads) {
-      auto& state = states_[source.state];
+      auto& state = _states[source.state];
       // only mark transitional nodes
       const auto& la = state.items()[source.item].lookaheads();
-      if (!la.empty() && state.reduce_targets().insert(reduceState).inserted) {
+      if (!la.empty() && state._reducetargets().insert(reduceState).inserted) {
         // recursively mark its sources
         mark_source(reduceState, la);
       }
@@ -503,7 +506,7 @@ class StateMachine {
   */
   void finalize_lookaheads() {
     unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
-    for (auto& state : states_) {
+    for (auto& state : _states) {
       // reset for each state in case of lookahead loops
       lookaheadMap.clear();
       for (auto& item : state.items()) {

@@ -29,8 +29,8 @@ class TranslationControl {
   */
   virtual void reset() noexcept {
     clear_error();
-    input_.clear();
-    output_.clear();
+    _input.clear();
+    _output.clear();
   }
 
   /**
@@ -38,12 +38,12 @@ class TranslationControl {
 
   \returns The value of the error flag.
   */
-  virtual bool error() const { return errorFlag_; }
+  virtual bool error() const { return _errorFlag; }
 
   /**
   \brief Clears the error flag.
   */
-  virtual void clear_error() noexcept { errorFlag_ = false; }
+  virtual void clear_error() noexcept { _errorFlag = false; }
 
   /**
   \brief Sets lexical analyzer.
@@ -64,10 +64,10 @@ class TranslationControl {
 
   \param[in] os The output stream to be set.
   */
-  void set_error_stream(std::ostream& os) { error_ = &os; }
+  void set_error_stream(std::ostream& os) { _error = &os; }
 
   /**
-  \brief Runs translation. Translation output is stored in output_.
+  \brief Runs translation. Translation output is stored in _output.
   */
   virtual void run() = 0;
 
@@ -76,7 +76,7 @@ class TranslationControl {
 
   \returns All output symbols.
   */
-  virtual const tstack<Token>& output() const noexcept { return output_; }
+  virtual const tstack<Token>& output() const noexcept { return _output; }
 
  protected:
   /**
@@ -97,17 +97,17 @@ class TranslationControl {
   /**
   \brief Tstack of input symbols.
   */
-  tstack<Token> input_;
+  tstack<Token> _input;
 
   /**
   \brief Tstack of output symbols.
   */
-  tstack<Token> output_;
+  tstack<Token> _output;
 
   /**
   \brief Error flag.
   */
-  bool errorFlag_ = false;
+  bool _errorFlag = false;
 
   /**
   \brief Returns the next token obtained from lexicalAnalyzer_.
@@ -118,17 +118,17 @@ class TranslationControl {
   \brief Get the error stream.
   */
   std::ostream& err() {
-    if (!error_) {
+    if (!_error) {
       throw std::runtime_error("ctf::TranslationControl::err() error stream not set.");
     }
-    return *error_;
+    return *_error;
   }
 
  private:
   /**
   \brief The error stream.
   */
-  std::ostream* error_ = nullptr;
+  std::ostream* _error = nullptr;
 };
 }  // namespace ctf
 #endif

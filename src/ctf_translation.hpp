@@ -48,14 +48,14 @@ class Translation {
               TranslationControl& tc,
               const TranslationGrammar& tg,
               std::unique_ptr<OutputGenerator>&& og)
-      : lexer_(std::move(la))
-      , lexicalAnalyzer_(*lexer_)
-      , translationControl_(tc)
-      , translationGrammar_(tg)
-      , generator_(std::move(og))
-      , outputGenerator_(*generator_) {
-    translationControl_.set_lexical_analyzer(lexicalAnalyzer_);
-    translationControl_.set_grammar(translationGrammar_);
+      : _lexer(std::move(la))
+      , _lexicalAnalyzer(*_lexer)
+      , _translationControl(tc)
+      , _translationGrammar(tg)
+      , _generator(std::move(og))
+      , _outputGenerator(*_generator) {
+    _translationControl.set_lexical_analyzer(_lexicalAnalyzer);
+    _translationControl.set_grammar(_translationGrammar);
   }
   /**
   \brief Constructs Translation with given lexical analyzer, translation grammar
@@ -70,15 +70,15 @@ class Translation {
               const string& tcName,
               const TranslationGrammar& tg,
               std::unique_ptr<OutputGenerator>&& og)
-      : lexer_(std::move(la))
-      , lexicalAnalyzer_(*lexer_)
-      , control_(Translation::control(tcName))
-      , translationControl_(*control_)
-      , translationGrammar_(tg)
-      , generator_(std::move(og))
-      , outputGenerator_(*generator_) {
-    translationControl_.set_grammar(translationGrammar_);
-    translationControl_.set_lexical_analyzer(lexicalAnalyzer_);
+      : _lexer(std::move(la))
+      , _lexicalAnalyzer(*_lexer)
+      , _control(Translation::control(tcName))
+      , _translationControl(*_control)
+      , _translationGrammar(tg)
+      , _generator(std::move(og))
+      , _outputGenerator(*_generator) {
+    _translationControl.set_grammar(_translationGrammar);
+    _translationControl.set_lexical_analyzer(_lexicalAnalyzer);
   }
   ~Translation() {}  //= default;
 
@@ -101,43 +101,43 @@ class Translation {
     bool semError = false;
     bool genError = false;
     // setup
-    translationControl_.reset();
-    lexicalAnalyzer_.set_reader(reader_);
-    lexicalAnalyzer_.set_error_stream(errorStream);
-    lexicalAnalyzer_.reset();
-    reader_.set_stream(inputStream, inputName);
+    _translationControl.reset();
+    _lexicalAnalyzer.set_reader(_reader);
+    _lexicalAnalyzer.set_error_stream(errorStream);
+    _lexicalAnalyzer.reset();
+    _reader.set_stream(inputStream, inputName);
 
-    translationControl_.set_error_stream(errorStream);
+    _translationControl.set_error_stream(errorStream);
 
-    outputGenerator_.set_error_stream(errorStream);
-    outputGenerator_.set_output_stream(ss);
+    _outputGenerator.set_error_stream(errorStream);
+    _outputGenerator.set_output_stream(ss);
 
     try {
       // lexical analysis, syntax analysis and translation
-      translationControl_.run();
+      _translationControl.run();
     } catch (LexicalException& le) {
       lexError = true;
     } catch (SyntaxException& se) {
       synError = true;
     }
 
-    if (lexicalAnalyzer_.error() || lexError) {
+    if (_lexicalAnalyzer.error() || lexError) {
       return TranslationResult::LEXICAL_ERROR;
-    } else if (translationControl_.error() || synError) {
+    } else if (_translationControl.error() || synError) {
       return TranslationResult::TRANSLATION_ERROR;
     }
 
     // semantic analysis and code generation
     try {
-      auto&& outputTokens = translationControl_.output();
-      outputGenerator_.output(outputTokens);
+      auto&& outputTokens = _translationControl.output();
+      _outputGenerator.output(outputTokens);
     } catch (SemanticException& se) {
       semError = true;
     } catch (CodeGenerationException& cge) {
       genError = true;
     }
 
-    if (outputGenerator_.error() || semError) {
+    if (_outputGenerator.error() || semError) {
       return TranslationResult::SEMANTIC_ERROR;
     } else if (genError) {
       return TranslationResult::CODE_GENERATION_ERROR;
@@ -196,36 +196,36 @@ class Translation {
   /**
   \brief The input reader and buffer.
   */
-  InputReader reader_;
+  InputReader _reader;
   /**
   \brief Lexical Analyzer ownership.
   */
-  std::unique_ptr<LexicalAnalyzer> lexer_;
+  std::unique_ptr<LexicalAnalyzer> _lexer;
   /**
   \brief Provides input terminals from istream.
   */
-  LexicalAnalyzer& lexicalAnalyzer_;
+  LexicalAnalyzer& _lexicalAnalyzer;
   /**
   \brief Holds standard control when generated with Translation::control().
   */
-  std::unique_ptr<TranslationControl> control_ = nullptr;
+  std::unique_ptr<TranslationControl> _control = nullptr;
   /**
   \brief Reference to TranslationControl to be used.
   */
-  TranslationControl& translationControl_;
+  TranslationControl& _translationControl;
   /**
   \brief Translation grammar that defines accepted language and output
   language.
   */
-  TranslationGrammar translationGrammar_;
+  TranslationGrammar _translationGrammar;
   /**
   \brief Output generator ownership
   */
-  std::unique_ptr<OutputGenerator> generator_;
+  std::unique_ptr<OutputGenerator> _generator;
   /**
   \brief Outputs output terminals to ostream.
   */
-  OutputGenerator& outputGenerator_;
+  OutputGenerator& _outputGenerator;
 };
 }  // namespace ctf
 

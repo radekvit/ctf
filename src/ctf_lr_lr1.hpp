@@ -45,22 +45,28 @@ class Item {
  public:
   using Rule = TranslationGrammar::Rule;
   using LR0Item = ctf::lr0::Item;
-  // pair of (state, item)
+
+  class Kernel {
+   public:
+   private:
+    vector_set<Item>::const_iterator _begin;
+    vector_set<Item>::const_iterator _end;
+  };
 
   Item(const LR0Item& item, const TranslationGrammar& tg)
-      : item_(item), generatedLookaheads_(tg.terminals()) {}
+      : _item(item), _generatedLookaheads(tg.terminals()) {}
   Item(LR0Item&& item, const TranslationGrammar& tg)
-      : item_(item), generatedLookaheads_(tg.terminals()) {}
+      : _item(item), _generatedLookaheads(tg.terminals()) {}
 
   Item(const LR0Item& item,
        const vector_set<LookaheadSource>& lookaheads,
        const LookaheadSet& generatedLookaheads)
-      : item_(item), lookaheads_(lookaheads), generatedLookaheads_(generatedLookaheads) {}
+      : _item(item), _lookaheads(lookaheads), _generatedLookaheads(generatedLookaheads) {}
 
   Item(const LR0Item& item,
        const vector_set<LookaheadSource>& lookaheads,
        LookaheadSet&& generatedLookaheads)
-      : item_(item), lookaheads_(lookaheads), generatedLookaheads_(generatedLookaheads) {}
+      : _item(item), _lookaheads(lookaheads), _generatedLookaheads(generatedLookaheads) {}
 
   Item(const Item& item) = default;
   Item(Item&& item) = default;
@@ -68,41 +74,41 @@ class Item {
   Item& operator=(const Item& other) = default;
   Item& operator=(Item&& other) = default;
 
-  const Rule& rule() const noexcept { return item_.rule(); }
+  const Rule& rule() const noexcept { return _item.rule(); }
 
-  size_t mark() const noexcept { return item_.mark(); }
+  size_t mark() const noexcept { return _item.mark(); }
 
-  const LR0Item& lr0_item() const& noexcept { return item_; }
+  const LR0Item& lr0_item() const& noexcept { return _item; }
 
-  LR0Item&& lr0_item() && noexcept { return std::move(item_); }
+  LR0Item&& lr0_item() && noexcept { return std::move(_item); }
 
-  LookaheadSet& generated_lookaheads() & noexcept { return generatedLookaheads_; }
-  const LookaheadSet& generated_lookaheads() const& noexcept { return generatedLookaheads_; }
-  LookaheadSet&& generated_lookaheads() && noexcept { return std::move(generatedLookaheads_); }
+  LookaheadSet& generated_lookaheads() & noexcept { return _generatedLookaheads; }
+  const LookaheadSet& generated_lookaheads() const& noexcept { return _generatedLookaheads; }
+  LookaheadSet&& generated_lookaheads() && noexcept { return std::move(_generatedLookaheads); }
 
-  vector_set<LookaheadSource>& lookaheads() & noexcept { return lookaheads_; }
-  const vector_set<LookaheadSource>& lookaheads() const& noexcept { return lookaheads_; }
-  vector_set<LookaheadSource>&& lookaheads() && noexcept { return std::move(lookaheads_); }
+  vector_set<LookaheadSource>& lookaheads() & noexcept { return _lookaheads; }
+  const vector_set<LookaheadSource>& lookaheads() const& noexcept { return _lookaheads; }
+  vector_set<LookaheadSource>&& lookaheads() && noexcept { return std::move(_lookaheads); }
 
-  bool reduce() const noexcept { return item_.reduce(); }
-  bool has_next() const noexcept { return item_.has_next(); }
+  bool reduce() const noexcept { return _item.reduce(); }
+  bool has_next() const noexcept { return _item.has_next(); }
   Item next(const LookaheadSource& las) const {
     vector_set<LookaheadSource> lookaheads;
     if ((mark() == 0 && !generated_lookaheads().empty()) || mark() == 1) {
       lookaheads.insert(las);
     } else {
-      lookaheads = lookaheads_;
+      lookaheads = _lookaheads;
     }
-    return Item(item_.next(), lookaheads, LookaheadSet(generatedLookaheads_.capacity()));
+    return Item(_item.next(), lookaheads, LookaheadSet(_generatedLookaheads.capacity()));
   }
 
-  friend bool operator<(const Item& lhs, const Item& rhs) { return lhs.item_ < rhs.item_; }
+  friend bool operator<(const Item& lhs, const Item& rhs) { return lhs._item < rhs._item; }
 
-  friend bool operator==(const Item& lhs, const Item& rhs) { return lhs.item_ == rhs.item_; }
+  friend bool operator==(const Item& lhs, const Item& rhs) { return lhs._item == rhs._item; }
 
   string to_string() const {
     using namespace std::literals;
-    string result = "["s + item_.to_string() + ", {";
+    string result = "["s + _item.to_string() + ", {";
     for (auto&& symbol : generated_lookaheads().symbols()) {
       result += ' ';
       result += symbol.to_string();
@@ -121,9 +127,9 @@ class Item {
   explicit operator string() const { return to_string(); }
 
  private:
-  LR0Item item_;
-  vector_set<LookaheadSource> lookaheads_;
-  LookaheadSet generatedLookaheads_;
+  LR0Item _item;
+  vector_set<LookaheadSource> _lookaheads;
+  LookaheadSet _generatedLookaheads;
 };
 
 struct FirstResult {
@@ -239,24 +245,24 @@ class StateMachine {
           const TranslationGrammar& grammar,
           const empty_t& empty,
           const first_t& first)
-        : id_(id), items_(closure(kernel, grammar, empty, first)) {
-      // we can only merge states when the kernel only contains rules in the form A -> x.Y
+        : _id(id), _items(closure(kernel, grammar, empty, first)) {
+      // we can only merge states when the kernel contains a rule in the form A -> x.Y
       for (auto&& item : kernel) {
         if (item.mark() == 1) {
-          mergable_ = true;
+          _mergable = true;
           break;
         }
       }
     }
 
-    size_t id() const noexcept { return id_; }
-    vector_set<Item>& items() noexcept { return items_; }
-    const vector_set<Item>& items() const noexcept { return items_; }
+    size_t id() const noexcept { return _id; }
+    vector_set<Item>& items() noexcept { return _items; }
+    const vector_set<Item>& items() const noexcept { return _items; }
 
-    unordered_map<Symbol, size_t>& transitions() noexcept { return transitions_; }
-    const unordered_map<Symbol, size_t>& transitions() const noexcept { return transitions_; }
+    unordered_map<Symbol, size_t>& transitions() noexcept { return _transitions; }
+    const unordered_map<Symbol, size_t>& transitions() const noexcept { return _transitions; }
 
-    bool mergable() const noexcept { return mergable_; }
+    bool mergable() const noexcept { return _mergable; }
 
     string to_string() const {
       string result = std::to_string(id()) + ": {\n";
@@ -277,18 +283,18 @@ class StateMachine {
 
    private:
     // state index
-    size_t id_;
+    size_t _id;
     // closure of kernel
-    vector_set<Item> items_;
+    vector_set<Item> _items;
 
     // state transitions
-    unordered_map<Symbol, size_t> transitions_;
+    unordered_map<Symbol, size_t> _transitions;
 
-    bool mergable_ = false;
+    bool _mergable = false;
   };
 
   StateMachine(const TranslationGrammar& grammar)
-      : StateMachine(grammar, create_empty(grammar), create_first(grammar, empty_)) {
+      : StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
     // initial item S' -> .S$
     insert_state({Item(
         {grammar.starting_rule(), 0}, {}, LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
@@ -300,15 +306,15 @@ class StateMachine {
 
   virtual ~StateMachine() = default;
 
-  const vector<State>& states() const noexcept { return states_; }
+  const vector<State>& states() const noexcept { return _states; }
 
  protected:
-  const TranslationGrammar* grammar_;
-  empty_t empty_;
-  first_t first_;
-  vector<State> states_;
+  const TranslationGrammar* _grammar;
+  empty_t _empty;
+  first_t _first;
+  vector<State> _states;
 
-  map<vector_set<Item>, vector<size_t>> kernelMap_;
+  map<vector_set<Item>, vector<size_t>> _kernelMap;
 
   struct InsertResult {
     size_t state;
@@ -321,22 +327,22 @@ class StateMachine {
   };
 
   StateMachine(const TranslationGrammar& grammar, empty_t empty, first_t first)
-      : grammar_(&grammar), empty_(std::move(empty)), first_(std::move(first)) {}
+      : _grammar(&grammar), _empty(std::move(empty)), _first(std::move(first)) {}
 
-  const TranslationGrammar& grammar() const noexcept { return *grammar_; }
+  const TranslationGrammar& grammar() const noexcept { return *_grammar; }
 
   InsertResult insert_state(const vector_set<Item>& kernel) {
-    size_t i = states_.size();
-    State newState(i, kernel, grammar(), empty_, first_);
+    size_t i = _states.size();
+    State newState(i, kernel, grammar(), _empty, _first);
 
     if (newState.mergable()) {
       // try to merge with another state
-      auto& kernelStates = kernelMap_[kernel];
+      auto& kernelStates = _kernelMap[kernel];
       if (kernelStates.empty()) {
         // new mergable kernel
         kernelStates.push_back(i);
 
-        states_.push_back(std::move(newState));
+        _states.push_back(std::move(newState));
         return {i, true};
       } else {
         // check existing states with this kernel
@@ -346,12 +352,12 @@ class StateMachine {
         }
         // no matching state found, insert as new
         kernelStates.push_back(i);
-        states_.push_back(std::move(newState));
+        _states.push_back(std::move(newState));
         return {i, true};
       }
     } else {
       // not a mergable kernel, just insert
-      states_.push_back(std::move(newState));
+      _states.push_back(std::move(newState));
       return {i, true};
     }
   }
@@ -359,7 +365,7 @@ class StateMachine {
   virtual MergeResult merge(const std::vector<size_t>& isocores, const State& newState) {
     auto&& newLookaheads = lookaheads(newState);
     for (auto other : isocores) {
-      auto& existing = states_[other];
+      auto& existing = _states[other];
       auto lookahead = lookaheads(existing);
       // we can insert the lookaheads to the existing
       if (lookahead == newLookaheads) {
@@ -394,7 +400,7 @@ class StateMachine {
 
   void lookahead_lookup(const LookaheadSource& source,
                         unordered_map<LookaheadSource, LookaheadSet>& lookaheadMap) {
-    const auto& state = states_[source.state];
+    const auto& state = _states[source.state];
     // stop infinite loops
     lookaheadMap.insert_or_assign(source, LookaheadSet(grammar().terminals()));
     // get all sources
@@ -413,9 +419,9 @@ class StateMachine {
   }
 
   void expand_state(size_t i) {
-    for (auto&& [symbol, kernel] : symbol_skip_closures(states_[i].items(), i)) {
+    for (auto&& [symbol, kernel] : symbol_skip_closures(_states[i].items(), i)) {
       auto [id, inserted] = insert_state(kernel);
-      states_[i].transitions()[symbol] = id;
+      _states[i].transitions()[symbol] = id;
       // new inserted state
       if (inserted) {
         expand_state(id);
@@ -426,7 +432,7 @@ class StateMachine {
   // goes through all relative lookaheads and changes them to generated lookaheads
   void finalize_lookaheads() {
     // a single map for all lookaheads
-    for (auto& state : states_) {
+    for (auto& state : _states) {
       unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
       for (auto& item : state.items()) {
         for (auto&& source : item.lookaheads()) {
