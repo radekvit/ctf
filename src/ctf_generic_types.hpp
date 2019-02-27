@@ -254,6 +254,12 @@ class vector_set {
     return oldSize != size();
   }
 
+  vector_set split(size_t i) {
+    vector<T> vec = {_elements.begin() + i, _elements.end()};
+    _elements.erase(_elements.begin() + i, _elements.end());
+    return vector_set(vec, _compare, _equals);
+  }
+
  private:
   vector<T> _elements;
 

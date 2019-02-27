@@ -161,7 +161,7 @@ class LR1GenericTable : public LRGenericTable {
     if (rule == grammar.starting_rule() && mark == 1) {
       lr_action_item(id, Symbol::eof()) = {LRAction::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
-      for (auto&& terminal : item.generated_lookaheads().symbols()) {
+      for (auto&& terminal : item.lookaheads().symbols()) {
         auto& action = lr_action_item(id, terminal);
         if (action.action != LRAction::ERROR) {
           action = conflict_resolution(
@@ -260,7 +260,7 @@ class LR1StrictGenericTable : public LRGenericTable {
     if (rule == grammar.starting_rule() && mark == 1) {
       lr_action_item(state, Symbol::eof()) = {LRAction::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
-      for (auto&& terminal : item.generated_lookaheads().symbols()) {
+      for (auto&& terminal : item.lookaheads().symbols()) {
         if (lr_action(state, terminal).action != LRAction::ERROR) {
           throw std::invalid_argument("Translation grammar is not "s + type);
         }

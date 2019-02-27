@@ -75,13 +75,13 @@ class Item {
 
   LR0Item&& lr0_item() && noexcept { return std::move(_item); }
 
-  LookaheadSet& generated_lookaheads() & noexcept { return _generatedLookaheads; }
-  const LookaheadSet& generated_lookaheads() const& noexcept { return _generatedLookaheads; }
-  LookaheadSet&& generated_lookaheads() && noexcept { return std::move(_generatedLookaheads); }
+  LookaheadSet& lookaheads() & noexcept { return _generatedLookaheads; }
+  const LookaheadSet& lookaheads() const& noexcept { return _generatedLookaheads; }
+  LookaheadSet&& lookaheads() && noexcept { return std::move(_generatedLookaheads); }
 
-  vector_set<LookaheadSource>& lookaheads() & noexcept { return _lookaheads; }
-  const vector_set<LookaheadSource>& lookaheads() const& noexcept { return _lookaheads; }
-  vector_set<LookaheadSource>&& lookaheads() && noexcept { return std::move(_lookaheads); }
+  vector_set<LookaheadSource>& lookahead_sources() & noexcept { return _lookaheads; }
+  const vector_set<LookaheadSource>& lookahead_sources() const& noexcept { return _lookaheads; }
+  vector_set<LookaheadSource>&& lookahead_sources() && noexcept { return std::move(_lookaheads); }
 
   bool reduce() const noexcept { return _item.reduce(); }
   bool has_next() const noexcept { return _item.has_next(); }
@@ -102,13 +102,13 @@ class Item {
   string to_string() const {
     using namespace std::literals;
     string result = "["s + _item.to_string() + ", {";
-    for (auto&& symbol : generated_lookaheads().symbols()) {
+    for (auto&& symbol : lookaheads().symbols()) {
       result += ' ';
       result += symbol.to_string();
     }
-    if (!lookaheads().empty()) {
+    if (!lookahead_sources().empty()) {
       result += " }, {";
-      for (auto&& source : lookaheads()) {
+      for (auto&& source : lookahead_sources()) {
         result += ' ';
         result += source.to_string();
       }
@@ -176,8 +176,8 @@ inline vector_set<Item> closure(vector_set<Item> items,
         auto [generatedLookaheads, propagateLookahead] = first(followingSymbols, e, f, grammar);
         vector_set<LookaheadSource> propagatedLookaheads;
         if (propagateLookahead) {
-          propagatedLookaheads = item.lookaheads();
-          generatedLookaheads |= item.generated_lookaheads();
+          propagatedLookaheads = item.lookahead_sources();
+          generatedLookaheads |= item.lookaheads();
         }
         // TODO optimization point
         for (auto&& rule : grammar.rules()) {
@@ -185,10 +185,10 @@ inline vector_set<Item> closure(vector_set<Item> items,
             Item newItem({rule, 0}, propagatedLookaheads, generatedLookaheads);
             auto it = closure.find(newItem);
             if (it != closure.end()) {
-              size_t originalSize = it->lookaheads().size();
-              it->lookaheads() = set_union(it->lookaheads(), propagatedLookaheads);
-              bool addedGenerated = it->generated_lookaheads().set_union(generatedLookaheads);
-              size_t newSize = it->lookaheads().size();
+              size_t originalSize = it->lookahead_sources().size();
+              it->lookahead_sources() = set_union(it->lookahead_sources(), propagatedLookaheads);
+              bool addedGenerated = it->lookaheads().set_union(generatedLookaheads);
+              size_t newSize = it->lookahead_sources().size();
               if (newSize > originalSize || addedGenerated) {
                 // TODO would it ultimately be faster to create in-state lookahead sources instead?
                 newItems.erase(*it);
@@ -208,8 +208,8 @@ inline vector_set<Item> closure(vector_set<Item> items,
   return closure;
 }
 
-inline unordered_map<Symbol, vector_set<Item>> symbol_skip_closures(const vector_set<Item>& state,
-                                                                    const size_t id) {
+inline unordered_map<Symbol, vector_set<Item>> symbol_skip_kernels(const vector_set<Item>& state,
+                                                                   const size_t id) {
   unordered_map<Symbol, vector_set<Item>> result;
 
   for (size_t i = 0; i < state.size(); ++i) {
@@ -246,6 +246,12 @@ class StateMachine {
           break;
         }
       }
+      for (auto&& item : _items) {
+        if (item.reduce()) {
+          _reduce = true;
+          break;
+        }
+      }
     }
 
     size_t id() const noexcept { return _id; }
@@ -256,6 +262,7 @@ class StateMachine {
     const unordered_map<Symbol, size_t>& transitions() const noexcept { return _transitions; }
 
     bool mergable() const noexcept { return _mergable; }
+    bool has_reduce() const noexcept { return _reduce; }
 
     string to_string() const {
       string result = std::to_string(id()) + ": {\n";
@@ -284,6 +291,7 @@ class StateMachine {
     unordered_map<Symbol, size_t> _transitions;
 
     bool _mergable = false;
+    bool _reduce = false;
   };
 
   StateMachine(const TranslationGrammar& grammar)
@@ -345,18 +353,15 @@ class StateMachine {
         }
         // no matching state found, insert as new
         kernelStates.push_back(i);
-        _states.push_back(std::move(newState));
-        return {i, true};
       }
-    } else {
-      // not a mergable kernel, just insert
-      _states.push_back(std::move(newState));
-      return {i, true};
     }
+    // insert new state
+    _states.push_back(std::move(newState));
+    return {i, true};
   }
 
   virtual MergeResult merge(const std::vector<size_t>& isocores, const State& newState) {
-    auto&& newLookaheads = lookaheads(newState);
+    auto newLookaheads = lookaheads(newState);
     for (auto other : isocores) {
       auto& existing = _states[other];
       auto lookahead = lookaheads(existing);
@@ -378,7 +383,7 @@ class StateMachine {
     // get all sources
     for (auto&& item : state.items()) {
       result.push_back(TerminalSet(grammar().terminals()));
-      for (auto&& source : item.lookaheads()) {
+      for (auto&& source : item.lookahead_sources()) {
         auto it = lookaheadMap.find(source);
         if (it == lookaheadMap.end()) {
           // lookahead source not resolved
@@ -398,8 +403,8 @@ class StateMachine {
     lookaheadMap.insert_or_assign(source, LookaheadSet(grammar().terminals()));
     // get all sources
     auto&& item = state.items()[source.item];
-    LookaheadSet symbols(item.generated_lookaheads());
-    for (auto&& nextSource : item.lookaheads()) {
+    LookaheadSet symbols(item.lookaheads());
+    for (auto&& nextSource : item.lookahead_sources()) {
       auto it = lookaheadMap.find(nextSource);
       if (it == lookaheadMap.end()) {
         // recursive source not resolved yet
@@ -412,7 +417,7 @@ class StateMachine {
   }
 
   void expand_state(size_t i) {
-    for (auto&& [symbol, kernel] : symbol_skip_closures(_states[i].items(), i)) {
+    for (auto&& [symbol, kernel] : symbol_skip_kernels(_states[i].items(), i)) {
       auto [id, inserted] = insert_state(kernel);
       _states[i].transitions()[symbol] = id;
       // new inserted state
@@ -426,21 +431,22 @@ class StateMachine {
   void finalize_lookaheads() {
     // a single map for all lookaheads
     for (auto& state : _states) {
+      std::cout << "\n" << state.to_string();
       unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
       for (auto& item : state.items()) {
-        for (auto&& source : item.lookaheads()) {
+        for (auto&& source : item.lookahead_sources()) {
           auto it = lookaheadMap.find(source);
           if (it == lookaheadMap.end()) {
             // lookahead source not resolved
             lookahead_lookup(source, lookaheadMap);
             it = lookaheadMap.find(source);
           }
-          item.generated_lookaheads() |= it->second;
+          item.lookaheads() |= it->second;
           // TODO set lookup in map
         }
         // remove all relative lookaheads from this item
-        item.lookaheads().clear();
-        item.lookaheads().shrink_to_fit();
+        item.lookahead_sources().clear();
+        item.lookahead_sources().shrink_to_fit();
       }
     }
   }

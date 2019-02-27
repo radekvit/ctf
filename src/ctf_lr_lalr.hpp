@@ -29,7 +29,7 @@ class StateMachine : public ctf::lr1::StateMachine {
       auto& item = state.items()[i];
       auto& item2 = newState.items()[i];
 
-      item.lookaheads() = set_union(item.lookaheads(), item2.lookaheads());
+      item.lookahead_sources() = set_union(item.lookahead_sources(), item2.lookahead_sources());
       // there are never any generated lookaheads
     }
     return {existingStates[0], true};

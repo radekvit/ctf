@@ -245,8 +245,8 @@ class StateMachine {
 
     // get all sources
     for (auto&& item : state.items()) {
-      result.push_back(item.generated_lookaheads());
-      for (auto&& source : item.lookaheads()) {
+      result.push_back(item.lookaheads());
+      for (auto&& source : item.lookahead_sources()) {
         auto it = lookaheadMap.find(source);
         if (it == lookaheadMap.end()) {
           // lookahead source not resolved
@@ -273,8 +273,8 @@ class StateMachine {
         result.push_back(it->second);
         continue;
       }
-      result.push_back(item.generated_lookaheads());
-      for (auto&& source : item.lookaheads()) {
+      result.push_back(item.lookaheads());
+      for (auto&& source : item.lookahead_sources()) {
         auto it = lookaheadMap.find(source);
         if (it == lookaheadMap.end()) {
           // lookahead source not resolved
@@ -294,8 +294,8 @@ class StateMachine {
     lookaheadMap.insert_or_assign(source, LookaheadSet(grammar().terminals()));
     // get all sources
     auto&& item = state.items()[source.item];
-    LookaheadSet symbols(item.generated_lookaheads());
-    for (auto&& nextSource : item.lookaheads()) {
+    LookaheadSet symbols(item.lookaheads());
+    for (auto&& nextSource : item.lookahead_sources()) {
       auto it = lookaheadMap.find(nextSource);
       if (it == lookaheadMap.end()) {
         // recursive source not resolved yet
@@ -454,14 +454,14 @@ class StateMachine {
       auto& item = existing.items()[i];
       auto& item2 = newState.items()[i];
 
-      item.lookaheads() = set_union(item.lookaheads(), item2.lookaheads());
+      item.lookahead_sources() = set_union(item.lookahead_sources(), item2.lookahead_sources());
     }
   }
 
   void merge__reducetargets(const State& mergeState, const State& newState) {
     for (auto& item : newState.items()) {
       for (auto reduceState : mergeState._reducetargets()) {
-        mark_source(reduceState, item.lookaheads());
+        mark_source(reduceState, item.lookahead_sources());
       }
     }
   }
@@ -475,9 +475,9 @@ class StateMachine {
       if (!item.reduce()) {
         continue;
       }
-      mark_source(i, item.lookaheads());
+      mark_source(i, item.lookahead_sources());
       // can mark itself if this is a mergable state
-      if (state.mergable() && !item.lookaheads().empty()) {
+      if (state.mergable() && !item.lookahead_sources().empty()) {
         state._reducetargets().insert(i);
       }
     }
@@ -493,7 +493,7 @@ class StateMachine {
     for (auto source : lookaheads) {
       auto& state = _states[source.state];
       // only mark transitional nodes
-      const auto& la = state.items()[source.item].lookaheads();
+      const auto& la = state.items()[source.item].lookahead_sources();
       if (!la.empty() && state._reducetargets().insert(reduceState).inserted) {
         // recursively mark its sources
         mark_source(reduceState, la);
@@ -510,18 +510,18 @@ class StateMachine {
       // reset for each state in case of lookahead loops
       lookaheadMap.clear();
       for (auto& item : state.items()) {
-        for (auto&& source : item.lookaheads()) {
+        for (auto&& source : item.lookahead_sources()) {
           auto it = lookaheadMap.find(source);
           if (it == lookaheadMap.end()) {
             // lookahead source not resolved
             lookahead_lookup(source, lookaheadMap);
             it = lookaheadMap.find(source);
           }
-          item.generated_lookaheads() |= it->second;
+          item.lookaheads() |= it->second;
         }
         // remove all relative lookaheads from this item
-        item.lookaheads().clear();
-        item.lookaheads().shrink_to_fit();
+        item.lookahead_sources().clear();
+        item.lookahead_sources().shrink_to_fit();
       }
     }
   }
