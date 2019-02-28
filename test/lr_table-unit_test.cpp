@@ -32,10 +32,10 @@ static constexpr ctf::Symbol operator""_t(const char* s, size_t) {
 }
 
 static TranslationGrammar grammar{{
-                                      {"S"_nt, {"S"_nt, "o"_t, "A"_nt}},
-                                      {"S"_nt, {"A"_nt}},
-                                      {"A"_nt, {"i"_t}},
-                                      {"A"_nt, {"("_t, "S"_nt, ")"_t}},
+                                    {"S"_nt, {"S"_nt, "o"_t, "A"_nt}},
+                                    {"S"_nt, {"A"_nt}},
+                                    {"A"_nt, {"i"_t}},
+                                    {"A"_nt, {"("_t, "S"_nt, ")"_t}},
                                   },
                                   "S"_nt};
 

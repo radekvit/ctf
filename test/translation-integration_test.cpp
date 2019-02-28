@@ -133,6 +133,31 @@ class TestLexicalAnalyzer : public LexicalAnalyzer {
 
 TEST_CASE("Constructing translation", "[Translation]") {
   TranslationGrammar tg{{
+                          {"E"_nt, {"T"_nt, "E'"_nt}},
+                          {"E'"_nt, {}},
+                          {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
+                          {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
+                          {"F"_nt, {"i"_t}},
+                          {"T"_nt, {"F"_nt, "T'"_nt}},
+                          {"T'"_nt, {}},
+                          {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
+                        },
+                        "E"_nt};
+  REQUIRE_NOTHROW(
+    Translation(std::make_unique<LexicalAnalyzer>(), "ll", tg, std::make_unique<TITOG>()));
+
+  auto tcp = Translation::control("ll");
+  REQUIRE_NOTHROW(
+    Translation(std::make_unique<LexicalAnalyzer>(), *tcp, tg, std::make_unique<TITOG>()));
+
+  REQUIRE_THROWS_AS(
+    Translation(std::make_unique<LexicalAnalyzer>(), "fail, please", tg, std::make_unique<TITOG>()),
+    std::invalid_argument);
+}
+
+TEST_CASE("Running LR translation", "[Translation]") {
+  SECTION("full translation") {
+    TranslationGrammar tg{{
                             {"E"_nt, {"T"_nt, "E'"_nt}},
                             {"E'"_nt, {}},
                             {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
@@ -141,36 +166,10 @@ TEST_CASE("Constructing translation", "[Translation]") {
                             {"T"_nt, {"F"_nt, "T'"_nt}},
                             {"T'"_nt, {}},
                             {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
-                        },
-                        "E"_nt};
-  REQUIRE_NOTHROW(
-      Translation(std::make_unique<LexicalAnalyzer>(), "ll", tg, std::make_unique<TITOG>()));
-
-  auto tcp = Translation::control("ll");
-  REQUIRE_NOTHROW(
-      Translation(std::make_unique<LexicalAnalyzer>(), *tcp, tg, std::make_unique<TITOG>()));
-
-  REQUIRE_THROWS_AS(
-      Translation(
-          std::make_unique<LexicalAnalyzer>(), "fail, please", tg, std::make_unique<TITOG>()),
-      std::invalid_argument);
-}
-
-TEST_CASE("Running LR translation", "[Translation]") {
-  SECTION("full translation") {
-    TranslationGrammar tg{{
-                              {"E"_nt, {"T"_nt, "E'"_nt}},
-                              {"E'"_nt, {}},
-                              {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
-                              {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
-                              {"F"_nt, {"i"_t}},
-                              {"T"_nt, {"F"_nt, "T'"_nt}},
-                              {"T'"_nt, {}},
-                              {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
                           },
                           "E"_nt};
     Translation tr(
-        std::make_unique<TestLexicalAnalyzer>(), "canonical lr", tg, std::make_unique<TITOG>());
+      std::make_unique<TestLexicalAnalyzer>(), "canonical lr", tg, std::make_unique<TITOG>());
     std::stringstream expected;
     std::stringstream out;
     std::stringstream error;
@@ -184,18 +183,18 @@ TEST_CASE("Running LR translation", "[Translation]") {
   }
   SECTION("translation with empty output") {
     TranslationGrammar tg{{
-                              {"E"_nt, {"T"_nt, "E'"_nt}},
-                              {"E'"_nt, {}},
-                              {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "E'"_nt}},
-                              {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
-                              {"F"_nt, {"i"_t}, {}},
-                              {"T"_nt, {"F"_nt, "T'"_nt}},
-                              {"T'"_nt, {}},
-                              {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "T'"_nt}},
+                            {"E"_nt, {"T"_nt, "E'"_nt}},
+                            {"E'"_nt, {}},
+                            {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "E'"_nt}},
+                            {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
+                            {"F"_nt, {"i"_t}, {}},
+                            {"T"_nt, {"F"_nt, "T'"_nt}},
+                            {"T'"_nt, {}},
+                            {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "T'"_nt}},
                           },
                           "E"_nt};
     Translation tr(
-        std::make_unique<TestLexicalAnalyzer>(), "canonical lr", tg, std::make_unique<TITOG>());
+      std::make_unique<TestLexicalAnalyzer>(), "canonical lr", tg, std::make_unique<TITOG>());
     std::stringstream out;
     std::stringstream error;
     std::ifstream in("media/in");

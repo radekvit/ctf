@@ -135,7 +135,7 @@ class Symbol {
 
  protected:
   constexpr Symbol(Type type, size_t id = 0) noexcept
-      : _storage((static_cast<size_t>(type) << type_shift()) | (id & id_mask())) {}
+    : _storage((static_cast<size_t>(type) << type_shift()) | (id & id_mask())) {}
 
   /**
   \brief Id of this Symbol.
@@ -196,7 +196,7 @@ struct Location {
   \param[in] _fileName The name of the source file.
   */
   Location(uint64_t _row, uint64_t _col, string _fileName = "")
-      : row(_row), col(_col), fileName(_fileName) {
+    : row(_row), col(_col), fileName(_fileName) {
     assert(row != 0);
     assert(col != 0);
   }
@@ -296,11 +296,10 @@ class Attribute {
 
   \tparam T The type of stored object.
   */
-  template <
-      typename T,
-      typename = typename std::enable_if<
-          !std::is_same<typename std::remove_reference<T>::type, Attribute>::value &&
-          !std::is_same<typename std::remove_reference<T>::type, const Attribute>::value>::type>
+  template <typename T,
+            typename = typename std::enable_if<
+              !std::is_same<typename std::remove_reference<T>::type, Attribute>::value &&
+              !std::is_same<typename std::remove_reference<T>::type, const Attribute>::value>::type>
   explicit Attribute(T&& arg) : _storage(arg) {}
 
   /**
@@ -449,7 +448,7 @@ class Token {
   Token(const Symbol symbol,
         const Attribute& atr = Attribute{},
         const Location& loc = Location::invalid())
-      : _symbol(symbol), _attribute(atr), _location(loc) {}
+    : _symbol(symbol), _attribute(atr), _location(loc) {}
   /**
   \brief Merges symbol's attribute and sets location if not set.
   */

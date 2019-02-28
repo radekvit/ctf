@@ -29,11 +29,10 @@ class StateMachine : public ctf::lr1::StateMachine {
  public:
   // use the same constructors
   StateMachine(const TranslationGrammar& grammar)
-      : ctf::lr1::StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
+    : ctf::lr1::StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
     // initial item S' -> .S$
-    insert_state({Item({grammar.starting_rule(), 0},
-                       {},
-                       lr1::LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
+    insert_state({Item(
+      {grammar.starting_rule(), 0}, {}, lr1::LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
     // recursively expand all states: dfs
     expand_state(0);
     // TODO: identify states with conflicts
@@ -165,16 +164,14 @@ class StateMachine : public ctf::lr1::StateMachine {
     if (item.lookahead_sources().empty() || (contributions &= ~item.lookaheads()).none()) {
       return;
     }
-    if (state.mergable()) {
-      std::cout << "conflict mark: state " << state.id() << ", item " << itemIndex
-                << ", contributions " << contributions.to_string() << "\n";
-      // TODO: add to conflict contributions
-      auto&& defaultContributions =
-          vector<LookaheadSet>(state.items().size(), LookaheadSet(grammar().terminals()));
-      _contributions.try_emplace(state.id(), defaultContributions).first->second[itemIndex] |=
-          contributions;
-      // conflicts[state, itemIndex] |= contributions;
-    }
+    std::cout << "conflict mark: state " << state.id() << ", item " << itemIndex
+              << ", contributions " << contributions.to_string() << "\n";
+    // TODO: add to conflict contributions
+    auto&& defaultContributions =
+      vector<LookaheadSet>(state.items().size(), LookaheadSet(grammar().terminals()));
+    _contributions.try_emplace(state.id(), defaultContributions).first->second[itemIndex] |=
+      contributions;
+    // conflicts[state, itemIndex] |= contributions;
     if (item.lookahead_sources().size() > 1) {
       // mark to split
       std::cout << "marking to split: " << state.id() << "\n";
@@ -192,7 +189,7 @@ class StateMachine : public ctf::lr1::StateMachine {
       auto& state = _states[stateIndex];
       // always keep the first source state
       vector_set<LookaheadSource> sources = state.items()[0].lookahead_sources().split(1);
-      for (auto& item: state.items()) {
+      for (auto& item : state.items()) {
         item.lookahead_sources().split(1);
       }
       // TODO: 1) remove all other sources
@@ -203,7 +200,7 @@ class StateMachine : public ctf::lr1::StateMachine {
 
         auto& transitionSymbol = targetItem.rule().input()[targetItem.mark()];
         auto [state, inserted] = insert_state_ielr(
-            symbol_skip_kernel(splitState.items(), transitionSymbol, splitState.id()));
+          symbol_skip_kernel(splitState.items(), transitionSymbol, splitState.id()));
         splitState.transitions()[transitionSymbol] = state;
         if (inserted) {
           expand_state_ielr(state);
@@ -217,20 +214,19 @@ class StateMachine : public ctf::lr1::StateMachine {
     size_t i = _states.size();
     State newState(i, kernel, grammar(), _empty, _first);
 
-    if (newState.mergable()) {
-      auto& kernelStates = _kernelMap[kernel];
-      // this is never empty
-      auto [other, merged] = merge_ielr(kernelStates, newState);
-      if (merged) {
-        return {other, false};
-      }
-      kernelStates.push_back(i);
+    auto& kernelStates = _kernelMap[kernel];
+    // this is never empty
+    auto [other, merged] = merge_ielr(kernelStates, newState);
+    if (merged) {
+      return {other, false};
     }
+    kernelStates.push_back(i);
     _states.push_back(std::move(newState));
     return {i, true};
   }
 
   void expand_state_ielr(size_t i) {
+    std::cout << _states[i].to_string();
     for (auto&& [symbol, kernel] : symbol_skip_kernels(_states[i].items(), i)) {
       auto [id, inserted] = insert_state_ielr(kernel);
       _states[i].transitions()[symbol] = id;
@@ -281,7 +277,7 @@ class StateMachine : public ctf::lr1::StateMachine {
     assert(mask.size() == result.size());
 
     for (size_t i = 0; i < result.size(); ++i) {
-      result[i] |= mask[i];
+      result[i] &= mask[i];
     }
     return result;
   }

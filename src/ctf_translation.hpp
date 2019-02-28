@@ -48,12 +48,12 @@ class Translation {
               TranslationControl& tc,
               const TranslationGrammar& tg,
               std::unique_ptr<OutputGenerator>&& og)
-      : _lexer(std::move(la))
-      , _lexicalAnalyzer(*_lexer)
-      , _translationControl(tc)
-      , _translationGrammar(tg)
-      , _generator(std::move(og))
-      , _outputGenerator(*_generator) {
+    : _lexer(std::move(la))
+    , _lexicalAnalyzer(*_lexer)
+    , _translationControl(tc)
+    , _translationGrammar(tg)
+    , _generator(std::move(og))
+    , _outputGenerator(*_generator) {
     _translationControl.set_lexical_analyzer(_lexicalAnalyzer);
     _translationControl.set_grammar(_translationGrammar);
   }
@@ -70,13 +70,13 @@ class Translation {
               const string& tcName,
               const TranslationGrammar& tg,
               std::unique_ptr<OutputGenerator>&& og)
-      : _lexer(std::move(la))
-      , _lexicalAnalyzer(*_lexer)
-      , _control(Translation::control(tcName))
-      , _translationControl(*_control)
-      , _translationGrammar(tg)
-      , _generator(std::move(og))
-      , _outputGenerator(*_generator) {
+    : _lexer(std::move(la))
+    , _lexicalAnalyzer(*_lexer)
+    , _control(Translation::control(tcName))
+    , _translationControl(*_control)
+    , _translationGrammar(tg)
+    , _generator(std::move(og))
+    , _outputGenerator(*_generator) {
     _translationControl.set_grammar(_translationGrammar);
     _translationControl.set_lexical_analyzer(_lexicalAnalyzer);
   }
@@ -155,36 +155,36 @@ class Translation {
   */
   static std::unique_ptr<TranslationControl> control(const string& name) {
     const static unordered_map<string, std::function<std::unique_ptr<TranslationControl>()>>
-        controls{
-            {"ll",
-             []() -> std::unique_ptr<TranslationControl> {
-               return std::make_unique<LLTranslationControl>();
-             }},
-            {"predictive",
-             []() -> std::unique_ptr<TranslationControl> {
-               return std::make_unique<LLTranslationControl>();
-             }},
-            {"priority ll",
-             []() -> std::unique_ptr<TranslationControl> {
-               return std::make_unique<PriorityLLTranslationControl>();
-             }},
-            {"general ll",
-             []() -> std::unique_ptr<TranslationControl> {
-               return std::make_unique<GeneralLLTranslationControl>();
-             }},
-            {"slr",
-             []() -> std::unique_ptr<TranslationControl> {
-               return std::make_unique<SLRTranslationControl>();
-             }},
-            {"canonical lr",
-             []() -> std::unique_ptr<TranslationControl> {
-               return std::make_unique<LR1TranslationControl>();
-             }},
-            {"lalr",
-             []() -> std::unique_ptr<TranslationControl> {
-               return std::make_unique<LALRTranslationControl>();
-             }},
-        };
+      controls{
+        {"ll",
+         []() -> std::unique_ptr<TranslationControl> {
+           return std::make_unique<LLTranslationControl>();
+         }},
+        {"predictive",
+         []() -> std::unique_ptr<TranslationControl> {
+           return std::make_unique<LLTranslationControl>();
+         }},
+        {"priority ll",
+         []() -> std::unique_ptr<TranslationControl> {
+           return std::make_unique<PriorityLLTranslationControl>();
+         }},
+        {"general ll",
+         []() -> std::unique_ptr<TranslationControl> {
+           return std::make_unique<GeneralLLTranslationControl>();
+         }},
+        {"slr",
+         []() -> std::unique_ptr<TranslationControl> {
+           return std::make_unique<SLRTranslationControl>();
+         }},
+        {"canonical lr",
+         []() -> std::unique_ptr<TranslationControl> {
+           return std::make_unique<LR1TranslationControl>();
+         }},
+        {"lalr",
+         []() -> std::unique_ptr<TranslationControl> {
+           return std::make_unique<LALRTranslationControl>();
+         }},
+      };
     auto it = controls.find(name);
     if (it == controls.end())
       throw std::invalid_argument("No translation control with name " + name + ".");

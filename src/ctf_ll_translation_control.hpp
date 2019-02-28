@@ -34,7 +34,7 @@ inline string default_LL_error_message(const Token& top,
       break;
     case Type::TERMINAL:
       errorString +=
-          "Unexpected token '" + token.to_string() + "'; expected '" + top.to_string() + "'.";
+        "Unexpected token '" + token.to_string() + "'; expected '" + top.to_string() + "'.";
       break;
     case Type::NONTERMINAL:
       errorString += "Unexpected token '" + token.to_string() + "' when deriving '" +
@@ -72,8 +72,8 @@ class LLTranslationControlGeneral : public TranslationControl {
   \brief Constructs a LLTranslationControlGeneral.
   */
   explicit LLTranslationControlGeneral(
-      error_message_function error_message = default_LL_error_message)
-      : error_function(error_message) {}
+    error_message_function error_message = default_LL_error_message)
+    : error_function(error_message) {}
   /**
   \brief Constructs LLTranslationControlGeneral with a LexicalAnalyzer and
   TranslationGrammar.
@@ -84,7 +84,7 @@ class LLTranslationControlGeneral : public TranslationControl {
   LLTranslationControlGeneral(LexicalAnalyzer& la,
                               TranslationGrammar& tg,
                               error_message_function error_message = default_LL_error_message)
-      : error_function(error_message) {
+    : error_function(error_message) {
     set_grammar(tg);
     set_lexical_analyzer(la);
   }
@@ -165,10 +165,10 @@ class LLTranslationControlGeneral : public TranslationControl {
     if (top.nonterminal()) {
       size_t i = top.id();
       message =
-          error_function(top, token, lastDerivedNonterminal, _empty[i], _first[i], _follow[i]);
+        error_function(top, token, lastDerivedNonterminal, _empty[i], _first[i], _follow[i]);
     } else {
       message =
-          error_function(top, token, lastDerivedNonterminal, false, TerminalSet{0}, TerminalSet{0});
+        error_function(top, token, lastDerivedNonterminal, false, TerminalSet{0}, TerminalSet{0});
     }
     err() << token.location().to_string() << ": " << message << "\n";
   }
@@ -438,7 +438,7 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
               // store state
               applicableRules.erase(applicableRules.begin());
               _parseStates.push(
-                  ParseState{_input, _output, tokenPosition_, applicableRules, attributeActions});
+                ParseState{_input, _output, tokenPosition_, applicableRules, attributeActions});
             }
 
             obegin = _output.replace(top, rule.output(), obegin);

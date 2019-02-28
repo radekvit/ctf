@@ -165,7 +165,7 @@ class LR1GenericTable : public LRGenericTable {
         auto& action = lr_action_item(id, terminal);
         if (action.action != LRAction::ERROR) {
           action = conflict_resolution(
-              terminal, {LRAction::REDUCE, rule.id}, action, rule, state, grammar);
+            terminal, {LRAction::REDUCE, rule.id}, action, rule, state, grammar);
         } else {
           // regular insert
           lr_action_item(id, terminal) = {LRAction::REDUCE, rule.id};

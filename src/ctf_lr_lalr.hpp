@@ -9,11 +9,10 @@ class StateMachine : public ctf::lr1::StateMachine {
  public:
   // use the same constructors
   StateMachine(const TranslationGrammar& grammar)
-      : ctf::lr1::StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
+    : ctf::lr1::StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
     // initial item S' -> .S$
-    insert_state({Item({grammar.starting_rule(), 0},
-                       {},
-                       lr1::LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
+    insert_state({Item(
+      {grammar.starting_rule(), 0}, {}, lr1::LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
     // recursively expand all states: dfs
     expand_state(0);
     // push all lookaheads to their items

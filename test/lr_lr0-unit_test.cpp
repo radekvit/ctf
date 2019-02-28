@@ -38,11 +38,11 @@ static constexpr ctf::Symbol operator""_t(const char* s, size_t) {
 
 // already augmented
 static TranslationGrammar grammar{{
-                                      {"S"_nt, {"S"_nt, "o"_t, "A"_nt}},
-                                      {"S"_nt, {"A"_nt}},
-                                      {"A"_nt, {"i"_t}},
-                                      {"A"_nt, {"("_t, "S"_nt, ")"_t}},
-                                      {"S'"_nt, {"S"_nt}},
+                                    {"S"_nt, {"S"_nt, "o"_t, "A"_nt}},
+                                    {"S"_nt, {"A"_nt}},
+                                    {"A"_nt, {"i"_t}},
+                                    {"A"_nt, {"("_t, "S"_nt, ")"_t}},
+                                    {"S'"_nt, {"S"_nt}},
                                   },
                                   "S'"_nt};
 
@@ -52,11 +52,11 @@ TEST_CASE("lr0::Item operations", "[lr0::Item]") {
   Item i{grammar.rules()[4], 0};
 
   vector_set<Item> requiredClosure{
-      {grammar.rules()[0], 0},
-      {grammar.rules()[1], 0},
-      {grammar.rules()[2], 0},
-      {grammar.rules()[3], 0},
-      {grammar.rules()[4], 0},
+    {grammar.rules()[0], 0},
+    {grammar.rules()[1], 0},
+    {grammar.rules()[2], 0},
+    {grammar.rules()[3], 0},
+    {grammar.rules()[4], 0},
   };
 
   REQUIRE(i.closure(grammar) == requiredClosure);
@@ -80,16 +80,12 @@ TEST_CASE("LR0StateMachine correctness", "[LR0StateMachine]") {
   size_t state = 0;
 
   vector<State> expected{
-      {Item(rules[2], 1)},
-      {Item(rules[1], 1)},
-      {Item(rules[4], 1), Item(rules[0], 1)},
-      {Item(rules[3], 1),
-       Item(rules[0], 0),
-       Item(rules[1], 0),
-       Item(rules[2], 0),
-       Item(rules[3], 0)},
-      {Item(rules[3], 2), Item(rules[0], 1)},
-      {Item(rules[0], 2), Item(rules[2], 0), Item(rules[3], 0)},
+    {Item(rules[2], 1)},
+    {Item(rules[1], 1)},
+    {Item(rules[4], 1), Item(rules[0], 1)},
+    {Item(rules[3], 1), Item(rules[0], 0), Item(rules[1], 0), Item(rules[2], 0), Item(rules[3], 0)},
+    {Item(rules[3], 2), Item(rules[0], 1)},
+    {Item(rules[0], 2), Item(rules[2], 0), Item(rules[3], 0)},
   };
   REQUIRE(sm.states()[0] == Item(grammar.starting_rule(), 0).closure(grammar));
   // check correctness of at least a part of the state machine

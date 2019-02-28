@@ -75,7 +75,7 @@ class vector_set {
   vector_set(std::initializer_list<T> il,
              const Compare& compare = Compare(),
              const Equals& equals = Equals())
-      : _elements(il), _compare(compare), _equals(equals) {
+    : _elements(il), _compare(compare), _equals(equals) {
     std::sort(_elements.begin(), _elements.end(), _compare);
     auto newEnd = std::unique(_elements.begin(), _elements.end(), _equals);
     _elements.erase(newEnd, _elements.end());
@@ -267,9 +267,9 @@ class vector_set {
   Equals _equals;
 
   vector_set(vector<T>& vec, Compare compare, Equals equals)
-      : _elements(vec), _compare(compare), _equals(equals) {}
+    : _elements(vec), _compare(compare), _equals(equals) {}
   vector_set(vector<T>&& vec, Compare&& compare, Equals&& equals)
-      : _elements(vec), _compare(compare), _equals(equals) {}
+    : _elements(vec), _compare(compare), _equals(equals) {}
 };
 
 class bit_set {
@@ -311,7 +311,7 @@ class bit_set {
   };
 
   explicit bit_set(size_t bits)
-      : _storage(bits != 0 ? (bits - 1) / bitsPerStorage + 1 : 0, 0), _capacity(bits) {}
+    : _storage(bits != 0 ? (bits - 1) / bitsPerStorage + 1 : 0, 0), _capacity(bits) {}
 
   friend bool operator==(const bit_set& lhs, const bit_set& rhs) {
     assert(lhs._storage.capacity() == rhs._storage.capacity());

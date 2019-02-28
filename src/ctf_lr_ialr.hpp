@@ -22,14 +22,8 @@ class StateMachine {
           const TranslationGrammar& grammar,
           const empty_t& empty,
           const first_t& first)
-        : _id(id), _items(closure(kernel, grammar, empty, first)), _reduceTargets() {
+      : _id(id), _items(closure(kernel, grammar, empty, first)), _reduceTargets() {
       // we can only merge states when the kernel only contains rules in the form A -> x.Y
-      for (auto&& item : kernel) {
-        if (item.mark() == 1) {
-          _mergable = true;
-          break;
-        }
-      }
       for (auto&& item : _items) {
         if (item.reduce()) {
           _reduce = true;
@@ -45,7 +39,6 @@ class StateMachine {
     unordered_map<Symbol, size_t>& transitions() noexcept { return _transitions; }
     const unordered_map<Symbol, size_t>& transitions() const noexcept { return _transitions; }
 
-    bool mergable() const noexcept { return _mergable; }
     bool has_reduce() const noexcept { return _reduce; }
 
     vector_set<size_t>& _reducetargets() noexcept { return _reduceTargets; }
@@ -89,16 +82,15 @@ class StateMachine {
     // reduce state conflicts
     unordered_map<Symbol, vector_set<size_t>> _conflicts;
 
-    bool _mergable = false;
     bool _reduce = false;
     bool _expanded = false;
   };
 
   StateMachine(const TranslationGrammar& grammar)
-      : StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
+    : StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
     // initial item S' -> .S$
-    insert_state({Item(
-        {grammar.starting_rule(), 0}, {}, LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
+    insert_state(
+      {Item({grammar.starting_rule(), 0}, {}, LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
     // recursively expand all states: dfs
     expand_state(0);
     // merge or generate postoponed states
@@ -138,7 +130,7 @@ class StateMachine {
   };
 
   StateMachine(const TranslationGrammar& grammar, empty_t empty, first_t first)
-      : _grammar(&grammar), _empty(std::move(empty)), _first(std::move(first)) {}
+    : _grammar(&grammar), _empty(std::move(empty)), _first(std::move(first)) {}
 
   const TranslationGrammar& grammar() const noexcept { return *_grammar; }
 
@@ -146,32 +138,26 @@ class StateMachine {
     // identifier for new state
     size_t i = _states.size();
     State newState(i, kernel, grammar(), _empty, _first);
-    if (newState.mergable()) {
-      // try to merge with another state
-      auto& kernelStates = _kernelMap[kernel];
-      if (kernelStates.empty()) {
-        // new mergable kernel
-        kernelStates.push_back(i);
+    // try to merge with another state
+    auto& kernelStates = _kernelMap[kernel];
+    if (kernelStates.empty()) {
+      // new mergable kernel
+      kernelStates.push_back(i);
 
-        _states.push_back(std::move(newState));
-        return {i, true, false};
-      } else {
-        // check existing states with this kernel
-        auto [other, merged] = merge(kernelStates, newState);
-        if (merged) {
-          return {other, false, false};
-        }
-        // speculative
-        else if (other == 1) {
-          return {0, false, true};
-        }
-        // no matching state found, insert as new
-        kernelStates.push_back(i);
-        _states.push_back(std::move(newState));
-        return {i, true, false};
-      }
+      _states.push_back(std::move(newState));
+      return {i, true, false};
     } else {
-      // not a mergable kernel, simply insert
+      // check existing states with this kernel
+      auto [other, merged] = merge(kernelStates, newState);
+      if (merged) {
+        return {other, false, false};
+      }
+      // speculative
+      else if (other == 1) {
+        return {0, false, true};
+      }
+      // no matching state found, insert as new
+      kernelStates.push_back(i);
       _states.push_back(std::move(newState));
       return {i, true, false};
     }
@@ -182,7 +168,7 @@ class StateMachine {
     mark_as_reduce(i, _states[i]);
     vector<Symbol> postponedSymbols;
     // expand all transitions
-    for (auto [symbol, kernel] : lr1::symbol_skip_closures(_states[i].items(), i)) {
+    for (auto [symbol, kernel] : lr1::symbol_skip_kernels(_states[i].items(), i)) {
       auto [id, inserted, postponed] = insert_state(kernel);
       auto& state = _states[i];
       if (postponed) {
@@ -314,7 +300,7 @@ class StateMachine {
       _postponed.pop_front();
 
       auto& state = _states[i];
-      auto transitions = lr1::symbol_skip_closures(state.items(), i);
+      auto transitions = lr1::symbol_skip_kernels(state.items(), i);
       vector<Symbol> postponedSymbols;
       for (auto symbol : symbols) {
         auto& kernel = transitions[symbol];
@@ -477,7 +463,7 @@ class StateMachine {
       }
       mark_source(i, item.lookahead_sources());
       // can mark itself if this is a mergable state
-      if (state.mergable() && !item.lookahead_sources().empty()) {
+      if (!item.lookahead_sources().empty()) {
         state._reducetargets().insert(i);
       }
     }

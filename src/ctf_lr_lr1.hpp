@@ -1,10 +1,12 @@
 #ifndef CTF_LR_LR1_HPP
 #define CTF_LR_LR1_HPP
 
+#include <iostream>
 #include "ctf_base.hpp"
 #include "ctf_lr_lr0.hpp"
 #include "ctf_table_sets.hpp"
 #include "ctf_translation_grammar.hpp"
+
 namespace ctf::lr1 {
 
 struct LookaheadSource {
@@ -47,19 +49,19 @@ class Item {
   using LR0Item = ctf::lr0::Item;
 
   Item(const LR0Item& item, const TranslationGrammar& tg)
-      : _item(item), _generatedLookaheads(tg.terminals()) {}
+    : _item(item), _generatedLookaheads(tg.terminals()) {}
   Item(LR0Item&& item, const TranslationGrammar& tg)
-      : _item(item), _generatedLookaheads(tg.terminals()) {}
+    : _item(item), _generatedLookaheads(tg.terminals()) {}
 
   Item(const LR0Item& item,
        const vector_set<LookaheadSource>& lookaheads,
        const LookaheadSet& generatedLookaheads)
-      : _item(item), _lookaheads(lookaheads), _generatedLookaheads(generatedLookaheads) {}
+    : _item(item), _lookaheads(lookaheads), _generatedLookaheads(generatedLookaheads) {}
 
   Item(const LR0Item& item,
        const vector_set<LookaheadSource>& lookaheads,
        LookaheadSet&& generatedLookaheads)
-      : _item(item), _lookaheads(lookaheads), _generatedLookaheads(generatedLookaheads) {}
+    : _item(item), _lookaheads(lookaheads), _generatedLookaheads(generatedLookaheads) {}
 
   Item(const Item& item) = default;
   Item(Item&& item) = default;
@@ -87,11 +89,15 @@ class Item {
   bool has_next() const noexcept { return _item.has_next(); }
   Item next(const LookaheadSource& las) const {
     vector_set<LookaheadSource> lookaheads;
+#if 0
     if (mark() < 2) {
       lookaheads.insert(las);
     } else {
       lookaheads = _lookaheads;
     }
+#else
+    lookaheads.insert(las);
+#endif
     return Item(_item.next(), lookaheads, LookaheadSet(_generatedLookaheads.capacity()));
   }
 
@@ -238,14 +244,8 @@ class StateMachine {
           const TranslationGrammar& grammar,
           const empty_t& empty,
           const first_t& first)
-        : _id(id), _items(closure(kernel, grammar, empty, first)) {
+      : _id(id), _items(closure(kernel, grammar, empty, first)) {
       // we can only merge states when the kernel contains a rule in the form A -> x.Y
-      for (auto&& item : kernel) {
-        if (item.mark() == 1) {
-          _mergable = true;
-          break;
-        }
-      }
       for (auto&& item : _items) {
         if (item.reduce()) {
           _reduce = true;
@@ -261,7 +261,6 @@ class StateMachine {
     unordered_map<Symbol, size_t>& transitions() noexcept { return _transitions; }
     const unordered_map<Symbol, size_t>& transitions() const noexcept { return _transitions; }
 
-    bool mergable() const noexcept { return _mergable; }
     bool has_reduce() const noexcept { return _reduce; }
 
     string to_string() const {
@@ -290,15 +289,14 @@ class StateMachine {
     // state transitions
     unordered_map<Symbol, size_t> _transitions;
 
-    bool _mergable = false;
     bool _reduce = false;
   };
 
   StateMachine(const TranslationGrammar& grammar)
-      : StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
+    : StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
     // initial item S' -> .S$
-    insert_state({Item(
-        {grammar.starting_rule(), 0}, {}, LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
+    insert_state(
+      {Item({grammar.starting_rule(), 0}, {}, LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
     // recursively expand all states: dfs
     expand_state(0);
     // push all lookaheads to their items
@@ -328,7 +326,7 @@ class StateMachine {
   };
 
   StateMachine(const TranslationGrammar& grammar, empty_t empty, first_t first)
-      : _grammar(&grammar), _empty(std::move(empty)), _first(std::move(first)) {}
+    : _grammar(&grammar), _empty(std::move(empty)), _first(std::move(first)) {}
 
   const TranslationGrammar& grammar() const noexcept { return *_grammar; }
 
@@ -336,24 +334,22 @@ class StateMachine {
     size_t i = _states.size();
     State newState(i, kernel, grammar(), _empty, _first);
 
-    if (newState.mergable()) {
-      // try to merge with another state
-      auto& kernelStates = _kernelMap[kernel];
-      if (kernelStates.empty()) {
-        // new mergable kernel
-        kernelStates.push_back(i);
+    // try to merge with another state
+    auto& kernelStates = _kernelMap[kernel];
+    if (kernelStates.empty()) {
+      // new mergable kernel
+      kernelStates.push_back(i);
 
-        _states.push_back(std::move(newState));
-        return {i, true};
-      } else {
-        // check existing states with this kernel
-        auto [other, merged] = merge(kernelStates, newState);
-        if (merged) {
-          return {other, false};
-        }
-        // no matching state found, insert as new
-        kernelStates.push_back(i);
+      _states.push_back(std::move(newState));
+      return {i, true};
+    } else {
+      // check existing states with this kernel
+      auto [other, merged] = merge(kernelStates, newState);
+      if (merged) {
+        return {other, false};
       }
+      // no matching state found, insert as new
+      kernelStates.push_back(i);
     }
     // insert new state
     _states.push_back(std::move(newState));

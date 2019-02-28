@@ -55,21 +55,21 @@ TEST_CASE("LLTable construction", "[LLTable]") {
   SECTION("non-LL Translation Grammar") {
     TranslationGrammar tg{{{"E"_nt, {"i"_t}}, {"E"_nt, {"i"_t}}}, "E"_nt};
     REQUIRE_THROWS_AS(
-        LLTable(tg,
-                {{tg.terminals(), {"i"_t}}, {tg.terminals(), {"i"_t}}, {tg.terminals(), {"i"_t}}}),
-        std::invalid_argument);
+      LLTable(tg,
+              {{tg.terminals(), {"i"_t}}, {tg.terminals(), {"i"_t}}, {tg.terminals(), {"i"_t}}}),
+      std::invalid_argument);
   }
 
   SECTION("regular Translation Grammar") {
     TranslationGrammar tg{{
-                              {"E"_nt, {"T"_nt, "E'"_nt}},
-                              {"E'"_nt, {}},
-                              {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
-                              {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
-                              {"F"_nt, {"i"_t}},
-                              {"T"_nt, {"F"_nt, "T'"_nt}},
-                              {"T'"_nt, {}},
-                              {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
+                            {"E"_nt, {"T"_nt, "E'"_nt}},
+                            {"E'"_nt, {}},
+                            {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
+                            {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
+                            {"F"_nt, {"i"_t}},
+                            {"T"_nt, {"F"_nt, "T'"_nt}},
+                            {"T'"_nt, {}},
+                            {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
                           },
                           "E"_nt};
     REQUIRE(tg.starting_symbol().id() == tg.nonterminals() - 1);
@@ -88,14 +88,14 @@ TEST_CASE("LLTable construction", "[LLTable]") {
 
 TEST_CASE("rule index returning", "[LLTable]") {
   TranslationGrammar tg{{
-                            {"E"_nt, {"T"_nt, "E'"_nt}},
-                            {"E'"_nt, {}},
-                            {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
-                            {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
-                            {"F"_nt, {"i"_t}},
-                            {"T"_nt, {"F"_nt, "T'"_nt}},
-                            {"T'"_nt, {}},
-                            {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
+                          {"E"_nt, {"T"_nt, "E'"_nt}},
+                          {"E'"_nt, {}},
+                          {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
+                          {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
+                          {"F"_nt, {"i"_t}},
+                          {"T"_nt, {"F"_nt, "T'"_nt}},
+                          {"T'"_nt, {}},
+                          {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
                         },
                         "E"_nt};
   LLTable ll{tg,

@@ -45,11 +45,11 @@ class Rule {
        const vector<Symbol>& input,
        const vector<Symbol>& output,
        const vector<vector_set<size_t>>& attributeActions = {})
-      : _nonterminal(nonterminal)
-      , _input(input)
-      , _output(output)
-      , _attributeActions(attributeActions)
-      , _precedenceSymbol(Symbol::eof()) {
+    : _nonterminal(nonterminal)
+    , _input(input)
+    , _output(output)
+    , _attributeActions(attributeActions)
+    , _precedenceSymbol(Symbol::eof()) {
     check_nonterminals();
 
     // no actions provided
@@ -63,13 +63,13 @@ class Rule {
     for (auto& target : _attributeActions) {
       if (target.size() > _output.size())
         throw std::invalid_argument(
-            "More assigned actions than symbols in output when constructing class "
-            "Rule.");
+          "More assigned actions than symbols in output when constructing class "
+          "Rule.");
       for (auto i : target) {
         if (i > _output.size() || _output[i].nonterminal())
           throw std::invalid_argument(
-              "Attribute target not an output terminal when constructing class "
-              "Rule.");
+            "Attribute target not an output terminal when constructing class "
+            "Rule.");
       }
     }
     for (auto it = _input.crbegin(); it < _input.crend(); ++it) {
@@ -98,11 +98,11 @@ class Rule {
        const vector<vector_set<size_t>>& attributeActions,
        bool,
        const Symbol precedenceSymbol)
-      : _nonterminal(nonterminal)
-      , _input(input)
-      , _output(output)
-      , _attributeActions(attributeActions)
-      , _precedenceSymbol(precedenceSymbol) {
+    : _nonterminal(nonterminal)
+    , _input(input)
+    , _output(output)
+    , _attributeActions(attributeActions)
+    , _precedenceSymbol(precedenceSymbol) {
     check_nonterminals();
 
     // no actions provided
@@ -154,7 +154,7 @@ class Rule {
   Attribute targets are created to match all terminals to themselves.
   */
   Rule(const Symbol nonterminal, const vector<Symbol>& both, bool, const Symbol precedenceSymbol)
-      : Rule(nonterminal, both, both, {}, true, precedenceSymbol) {
+    : Rule(nonterminal, both, both, {}, true, precedenceSymbol) {
     // implicit target for each terminal is the identical output terminal
     size_t target = 0;
     // attribute actions have the same size as the number of terminals
@@ -314,10 +314,10 @@ class TranslationGrammar {
   0_nt.
   */
   TranslationGrammar()
-      : _terminals(1)
-      , _nonterminals(2)
-      , _rules({Rule(1_nt, {}), Rule(0_nt, {1_nt, Symbol::eof()})})
-      , _startingSymbol(0_nt) {}
+    : _terminals(1)
+    , _nonterminals(2)
+    , _rules({Rule(1_nt, {}), Rule(0_nt, {1_nt, Symbol::eof()})})
+    , _startingSymbol(0_nt) {}
   /**
   \brief Constructs a TranslationGrammar, takes terminals and nonterminals
   from the rules' inputs and starting symbol.
@@ -328,7 +328,7 @@ class TranslationGrammar {
   TranslationGrammar(const vector<Rule>& rules,
                      const Symbol starting_symbol,
                      const vector<PrecedenceSet>& precedences = {})
-      : _rules(rules), _startingSymbol(starting_symbol), _precedences(precedences) {
+    : _rules(rules), _startingSymbol(starting_symbol), _precedences(precedences) {
     init_from_rules();
   }
   /**
@@ -341,7 +341,7 @@ class TranslationGrammar {
   TranslationGrammar(vector<Rule>&& rules,
                      const Symbol starting_symbol,
                      vector<PrecedenceSet>&& precedences = {})
-      : _rules(rules), _startingSymbol(starting_symbol), _precedences(precedences) {
+    : _rules(rules), _startingSymbol(starting_symbol), _precedences(precedences) {
     init_from_rules();
   }
 
@@ -361,11 +361,11 @@ class TranslationGrammar {
                      const vector<Rule>& rules,
                      const Symbol starting_symbol,
                      const vector<PrecedenceSet>& precedences = {})
-      : _terminals(terminals)
-      , _nonterminals(nonterminals)
-      , _rules(rules)
-      , _startingSymbol(starting_symbol)
-      , _precedences(precedences) {
+    : _terminals(terminals)
+    , _nonterminals(nonterminals)
+    , _rules(rules)
+    , _startingSymbol(starting_symbol)
+    , _precedences(precedences) {
     init_from_all();
   }
 
@@ -385,11 +385,11 @@ class TranslationGrammar {
                      vector<Rule>&& rules,
                      const Symbol starting_symbol,
                      vector<PrecedenceSet>&& precedences = {})
-      : _terminals(terminals)
-      , _nonterminals(nonterminals)
-      , _rules(rules)
-      , _startingSymbol(starting_symbol)
-      , _precedences(precedences) {
+    : _terminals(terminals)
+    , _nonterminals(nonterminals)
+    , _rules(rules)
+    , _startingSymbol(starting_symbol)
+    , _precedences(precedences) {
     init_from_all();
   }
 
@@ -446,8 +446,8 @@ class TranslationGrammar {
     // the starting symbol must be a nonterminal
     if (!_startingSymbol.nonterminal())
       throw std::invalid_argument(
-          "Starting symbol is not a nonterminal when constructing "
-          "TranslationGrammar.");
+        "Starting symbol is not a nonterminal when constructing "
+        "TranslationGrammar.");
     _nonterminals = _startingSymbol.id() + 1;
     _terminals = 1;
 
@@ -475,8 +475,8 @@ class TranslationGrammar {
   void init_from_all() {
     if (!_startingSymbol.nonterminal())
       throw std::invalid_argument(
-          "Starting symbol is not a nonterminal when constructing "
-          "TranslationGrammar.");
+        "Starting symbol is not a nonterminal when constructing "
+        "TranslationGrammar.");
     if (_terminals < 1)
       throw std::invalid_argument("All grammars must have at least one terminal (EOF)");
 

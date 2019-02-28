@@ -112,7 +112,7 @@ TEST_CASE("TranslationGrammar construction", "[TranslationGrammar]") {
   REQUIRE_NOTHROW(TranslationGrammar(std::vector<ctf::Rule>(), "X"_nt));
   REQUIRE_NOTHROW(TranslationGrammar({{"X"_nt, {}}}, "X"_nt));
   REQUIRE_NOTHROW(
-      TranslationGrammar({{"X"_nt, {"X"_nt, "X"_t}}, {"X"_nt, {"x"_t, "X"_t}}}, "X"_nt));
+    TranslationGrammar({{"X"_nt, {"X"_nt, "X"_t}}, {"X"_nt, {"x"_t, "X"_t}}}, "X"_nt));
   REQUIRE_THROWS_AS(TranslationGrammar({}, {}, {}, "X"_nt), std::invalid_argument);
   REQUIRE_THROWS_AS(TranslationGrammar({}, {}, {{"X"_nt, {}}}, "X"_nt), std::invalid_argument);
   REQUIRE_THROWS_AS(TranslationGrammar("X"_nt.id() + 1, 1, {{"X"_nt, {"x"_t}}}, "X"_nt),
@@ -126,14 +126,14 @@ TEST_CASE("TranslationGrammar construction", "[TranslationGrammar]") {
 }
 TEST_CASE("TranslationGrammar basic", "[TranslationGrammar]") {
   TranslationGrammar grammar{{
-                                 {"A"_nt, {"B"_nt, "C"_nt}},
-                                 {"C"_nt, {}},
-                                 {"C"_nt, {"a"_t, "B"_nt, "C"_nt}, {"B"_nt, "a"_t, "C"_nt}},
-                                 {"D"_nt, {"b"_t, "A"_nt, "c"_t}, {"A"_nt}},
-                                 {"D"_nt, {"y"_t}},
-                                 {"B"_nt, {"D"_nt, "E"_nt}},
-                                 {"E"_nt, {}},
-                                 {"E"_nt, {"x"_t, "D"_nt, "E"_nt}, {"D"_nt, "x"_t, "E"_nt}},
+                               {"A"_nt, {"B"_nt, "C"_nt}},
+                               {"C"_nt, {}},
+                               {"C"_nt, {"a"_t, "B"_nt, "C"_nt}, {"B"_nt, "a"_t, "C"_nt}},
+                               {"D"_nt, {"b"_t, "A"_nt, "c"_t}, {"A"_nt}},
+                               {"D"_nt, {"y"_t}},
+                               {"B"_nt, {"D"_nt, "E"_nt}},
+                               {"E"_nt, {}},
+                               {"E"_nt, {"x"_t, "D"_nt, "E"_nt}, {"D"_nt, "x"_t, "E"_nt}},
                              },
                              "A"_nt};
   size_t expectedTerminals = "y"_t.id() + 1;
