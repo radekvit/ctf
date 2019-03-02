@@ -182,10 +182,9 @@ class StateMachine : public ctf::lr1::StateMachine {
   }
 
   void split_states() {
-    // TODO: first remove all extra sources from all states, only then generate
     vector<vector_set<LookaheadSource>> splitSources;
     splitSources.reserve(_statesToSplit.size());
-    // remove extra sources
+    // remove extra sources from all states to split
     for (auto& stateIndex : _statesToSplit) {
       auto& state = _states[stateIndex];
       // store sources from the first item
