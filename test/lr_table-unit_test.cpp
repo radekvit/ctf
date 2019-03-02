@@ -5,7 +5,7 @@
 
 using ctf::Symbol;
 using ctf::TranslationGrammar;
-using ctf::SLRTable;
+using ctf::LALRTable;
 using ctf::LRAction;
 
 static constexpr ctf::Symbol operator""_nt(const char* s, size_t) {
@@ -39,12 +39,12 @@ static TranslationGrammar grammar{{
                                   },
                                   "S"_nt};
 
-TEST_CASE("SLRTable construction and deletion", "[SLRTable]") {
-  REQUIRE_NOTHROW(SLRTable(grammar));
+TEST_CASE("LALRTable construction and deletion", "[LALRTable]") {
+  REQUIRE_NOTHROW(LALRTable(grammar));
 }
 
-TEST_CASE("SLRTable base", "[SLRTable]") {
-  SLRTable table{grammar};
+TEST_CASE("LALRTable base", "[LALRTable]") {
+  LALRTable table{grammar};
   size_t state = 0;
 
   // check some of the table contents

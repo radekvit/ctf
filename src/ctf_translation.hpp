@@ -172,10 +172,6 @@ class Translation {
          []() -> std::unique_ptr<TranslationControl> {
            return std::make_unique<GeneralLLTranslationControl>();
          }},
-        {"slr",
-         []() -> std::unique_ptr<TranslationControl> {
-           return std::make_unique<SLRTranslationControl>();
-         }},
         {"canonical lr",
          []() -> std::unique_ptr<TranslationControl> {
            return std::make_unique<LR1TranslationControl>();

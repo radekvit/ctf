@@ -8,11 +8,9 @@
 using ctf::LexicalAnalyzer;
 using ctf::TranslationGrammar;
 using Rule = TranslationGrammar::Rule;
-using ctf::LR0StateMachine;
-using ctf::SLRTranslationControl;
 using ctf::LALRTranslationControl;
 using ctf::LR1TranslationControl;
-using ctf::IALRTranslationControl;
+using ctf::IELRTranslationControl;
 using ctf::LALRStrictTranslationControl;
 using ctf::LR1StrictTranslationControl;
 
@@ -152,99 +150,6 @@ class TCTLA : public LexicalAnalyzer {
     throw std::invalid_argument(name + ": unknown name");
   }
 };
-
-TEST_CASE("SLRTranslationTest", "[SLRTranslationControl]") {
-  TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
-  TCTLA a;
-  SLRTranslationControl(a, tg);
-}
-
-TEST_CASE("Empty SLR translation", "[SLRTranslationControl]") {
-  TCTLA a;
-  TranslationGrammar tg{{{"E"_nt, {}}}, "E"_nt};
-  std::stringstream in;
-  InputReader r{in};
-  a.set_reader(r);
-  SLRTranslationControl slr(a, tg);
-  slr.run();
-  // only eof
-  REQUIRE(slr.output().size() == 1);
-  REQUIRE(slr.output().top() == Symbol::eof());
-  REQUIRE(slr.output().top().location() == Location(1, 1));
-}
-
-TEST_CASE("Regular SLR translation", "[SLRTranslationControl]") {
-  TranslationGrammar tg{{
-                          {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
-                          {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
-                          {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
-                          {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
-                        },
-                        "S"_nt};
-
-  TCTLA a;
-  std::stringstream in;
-  // expected output:
-  // 2 4 1 2 3 4 1 2 3 3 eof
-  in << "( i o ( i o i ) )";
-  InputReader r{in};
-  a.set_reader(r);
-  SLRTranslationControl slr(a, tg);
-  slr.run();
-  REQUIRE(slr.output().size() == 11);
-  auto it = slr.output().begin();
-  Token os = *it++;
-  REQUIRE(os == "2"_t);
-  os = *it++;
-  REQUIRE(os == "4"_t);
-  REQUIRE(os.location() == Location(1, 1));
-  os = *it++;
-  REQUIRE(os == "1"_t);
-  REQUIRE(os.location() == Location(1, 5));
-  os = *it++;
-  REQUIRE(os == "2"_t);
-  os = *it++;
-  REQUIRE(os == "3"_t);
-  REQUIRE(os.location() == Location(1, 3));
-  os = *it++;
-  REQUIRE(os == "4"_t);
-  REQUIRE(os.location() == Location(1, 7));
-  os = *it++;
-  REQUIRE(os == "1"_t);
-  REQUIRE(os.location() == Location(1, 11));
-  os = *it++;
-  REQUIRE(os == "2"_t);
-  os = *it++;
-  REQUIRE(os == "3"_t);
-  REQUIRE(os.location() == Location(1, 9));
-  os = *it++;
-  REQUIRE(os == "3"_t);
-  REQUIRE(os.location() == Location(1, 13));
-  os = *it++;
-  REQUIRE(os == Symbol::eof());
-  REQUIRE(os.location() == Location(1, 18));
-}
-
-TEST_CASE("Failed SLR translation", "[SLRTranslationControl]") {
-  TranslationGrammar tg{{
-                          {"S"_nt, {"S"_nt, "o"_t, "A"_nt}, {"1"_t, "S"_nt, "A"_nt}, {{0}}},
-                          {"S"_nt, {"A"_nt}, {"2"_t, "A"_nt}},
-                          {"A"_nt, {"i"_t}, {"3"_t}, {{0}}},
-                          {"A"_nt, {"("_t, "S"_nt, ")"_t}, {"4"_t, "S"_nt}, {{0}, {}}},
-                        },
-                        "S"_nt};
-
-  TCTLA a;
-  std::stringstream in;
-  std::stringstream err;
-  in << "( ( i o i ) ) )";
-  InputReader r{in};
-  a.set_reader(r);
-  SLRTranslationControl slr(a, tg);
-  slr.set_error_stream(err);
-  slr.run();
-  REQUIRE(slr.error());
-}
 
 TEST_CASE("LALR empty translation", "[LALRStrictTranslationControl]") {
   TCTLA a;
@@ -589,7 +494,7 @@ TEST_CASE("Simple infix to postfix calculator translation in LR1", "[LR1Translat
   REQUIRE(os == Symbol::eof());
 }
 
-TEST_CASE("Simple infix to postfix calculator translation in IALR", "[LR1TranslationControl]") {
+TEST_CASE("Simple infix to postfix calculator translation in IELR", "[LR1TranslationControl]") {
   // TODO state machine error, doesn't find isocores properly
   // https://www.gnu.org/software/bison/manual/html_node/Infix-Calc.html#Infix-Calc
   TranslationGrammar tg{
@@ -619,10 +524,10 @@ TEST_CASE("Simple infix to postfix calculator translation in IALR", "[LR1Transla
   in << "i ^ - i ^ ( i - i * - i / i ) + i";
   InputReader r{in};
   a.set_reader(r);
-  IALRTranslationControl ialr(a, tg);
-  ialr.run();
-  REQUIRE(ialr.output().size() == 16);
-  auto it = ialr.output().begin();
+  IELRTranslationControl ielr(a, tg);
+  ielr.run();
+  REQUIRE(ielr.output().size() == 16);
+  auto it = ielr.output().begin();
   Token os = *it++;
   REQUIRE(os == "i"_t);
   os = *it++;
@@ -657,7 +562,7 @@ TEST_CASE("Simple infix to postfix calculator translation in IALR", "[LR1Transla
   REQUIRE(os == Symbol::eof());
 }
 
-TEST_CASE("IALR manages to accept a sentence not accepted by LALR", "[LR1TranslationControl]") {
+TEST_CASE("IELR manages to accept a sentence not accepted by LALR", "[LR1TranslationControl]") {
   // Grammar from Fig. 1 of IELR
   TranslationGrammar tg{vector<Rule>({
                           {"S"_nt, {"o"_t, "E"_nt, "o"_t}},
@@ -674,7 +579,7 @@ TEST_CASE("IALR manages to accept a sentence not accepted by LALR", "[LR1Transla
   in << "i o o i";
   InputReader r{in};
   a.set_reader(r);
-  IALRTranslationControl ialr(a, tg);
-  ialr.run();
-  REQUIRE(ialr.output().size() == 5);
+  IELRTranslationControl ielr(a, tg);
+  ielr.run();
+  REQUIRE(ielr.output().size() == 5);
 }

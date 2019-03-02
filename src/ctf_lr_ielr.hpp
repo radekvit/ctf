@@ -1,8 +1,8 @@
 #ifndef CTF_LR_IELR_HPP
 #define CTF_LR_IELR_HPP
 
-#include <iostream>
 #include "ctf_lr_lr1.hpp"
+
 namespace ctf::ielr {
 using Item = ctf::lr1::Item;
 using LookaheadSet = ctf::lr1::LookaheadSet;
@@ -29,19 +29,19 @@ class StateMachine : public ctf::lr1::StateMachine {
  public:
   // use the same constructors
   StateMachine(const TranslationGrammar& grammar)
-    : ctf::lr1::StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
+    : ctf::lr1::StateMachine(grammar, true) {
     // initial item S' -> .S$
     insert_state({Item(
       {grammar.starting_rule(), 0}, {}, lr1::LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
     // recursively expand all states: dfs
     expand_state(0);
-    // TODO: identify states with conflicts
+    // identify states with conflicts
     auto conflictedStates = detect_conflicts();
 
     if (!conflictedStates.empty()) {
-      // TODO: mark all but the first lookahead source for renewed merging
+      // mark all but the first lookahead source for renewed merging
       mark_conflicts(conflictedStates);
-      // TODO: split states with conflicts along the way
+      // split states with conflicts along the way
       split_states();
     }
     // push all lookaheads to their items
@@ -74,7 +74,6 @@ class StateMachine : public ctf::lr1::StateMachine {
   vector<Conflict> detect_conflicts() {
     vector<Conflict> result;
     for (auto& state : _states) {
-      std::cout << "\n" << state.to_string();
       if (!state.has_reduce()) {
         continue;
       }
@@ -140,7 +139,6 @@ class StateMachine : public ctf::lr1::StateMachine {
         }
       }
     }
-    std::cout << "no of conflicts: " << result.size() << "\n";
     return result;
   }
 
@@ -151,60 +149,69 @@ class StateMachine : public ctf::lr1::StateMachine {
 
   void mark_conflicts(const vector<Conflict>& conflicts) {
     for (auto& conflict : conflicts) {
-      auto& state = _states[conflict.state];
       for (const auto& [item, contributions] : conflict.contributions) {
-        mark_conflict(state, item, contributions);
+        mark_conflict(conflict.state, item, contributions);
       }
     }
   }
-  // TODO stop infinite loops?
-  void mark_conflict(State& state, size_t itemIndex, LookaheadSet contributions) {
+
+  void mark_conflict(size_t stateIndex, size_t itemIndex, LookaheadSet contributions) {
+    auto& state = _states[stateIndex];
     auto& item = state.items()[itemIndex];
-    // all generated, nothing to mark
     if (item.lookahead_sources().empty() || (contributions &= ~item.lookaheads()).none()) {
+      // all generated, nothing to mark
       return;
     }
-    std::cout << "conflict mark: state " << state.id() << ", item " << itemIndex
-              << ", contributions " << contributions.to_string() << "\n";
-    // TODO: add to conflict contributions
+    // add to conflict contributions
     auto&& defaultContributions =
       vector<LookaheadSet>(state.items().size(), LookaheadSet(grammar().terminals()));
-    _contributions.try_emplace(state.id(), defaultContributions).first->second[itemIndex] |=
-      contributions;
+    if (!_contributions.try_emplace(state.id(), defaultContributions)
+           .first->second[itemIndex]
+           .set_union(contributions)) {
+      // no new contributions added, all has been marked
+      return;
+    }
     // conflicts[state, itemIndex] |= contributions;
     if (item.lookahead_sources().size() > 1) {
       // mark to split
-      std::cout << "marking to split: " << state.id() << "\n";
       _statesToSplit.insert(state.id());
     }
     for (auto& [nextStateIndex, nextItem] : item.lookahead_sources()) {
-      auto& nextState = _states[nextStateIndex];
-      mark_conflict(nextState, nextItem, contributions);
+      mark_conflict(nextStateIndex, nextItem, contributions);
     }
   }
 
   void split_states() {
-    // TODO: does order matter?
+    // TODO: first remove all extra sources from all states, only then generate
+    vector<vector_set<LookaheadSource>> splitSources;
+    splitSources.reserve(_statesToSplit.size());
+    // remove extra sources
     for (auto& stateIndex : _statesToSplit) {
       auto& state = _states[stateIndex];
-      // always keep the first source state
-      vector_set<LookaheadSource> sources = state.items()[0].lookahead_sources().split(1);
+      // store sources from the first item
+      // storing the first item is OK, we only need the transition symbol
+      splitSources.push_back(state.items()[0].lookahead_sources().split(1));
+      // remove all but the first source from all items
       for (auto& item : state.items()) {
         item.lookahead_sources().split(1);
       }
-      // TODO: 1) remove all other sources
-      // TODO: 2) try to merge them one by one
+    }
+
+    // regenerate transitions
+    for (size_t i = 0; i < _statesToSplit.size(); ++i) {
+      auto& sources = splitSources[i];
       for (auto& [sourceState, sourceItem] : sources) {
         auto& splitState = _states[sourceState];
         auto& targetItem = splitState.items()[sourceItem];
-
         auto& transitionSymbol = targetItem.rule().input()[targetItem.mark()];
+
         auto [state, inserted] = insert_state_ielr(
           symbol_skip_kernel(splitState.items(), transitionSymbol, splitState.id()));
+        // modify transition
         splitState.transitions()[transitionSymbol] = state;
         if (inserted) {
+          // inserted new state, generate successor states
           expand_state_ielr(state);
-          // inserted new state
         }
       }
     }
@@ -226,7 +233,6 @@ class StateMachine : public ctf::lr1::StateMachine {
   }
 
   void expand_state_ielr(size_t i) {
-    std::cout << _states[i].to_string();
     for (auto&& [symbol, kernel] : symbol_skip_kernels(_states[i].items(), i)) {
       auto [id, inserted] = insert_state_ielr(kernel);
       _states[i].transitions()[symbol] = id;

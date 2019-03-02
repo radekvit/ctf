@@ -7,10 +7,9 @@
 #define CRF_LR_TABLE_HPP
 
 #include "ctf_base.hpp"
-#include "ctf_lr_ialr.hpp"
-#include "ctf_lr_lalr.hpp"
-#include "ctf_lr_lr0.hpp"
 #include "ctf_lr_lr1.hpp"
+#include "ctf_lr_lalr.hpp"
+#include "ctf_lr_ielr.hpp"
 
 namespace ctf {
 
@@ -77,58 +76,6 @@ class LRGenericTable {
   }
 };
 
-class SLRTable : public LRGenericTable {
- public:
-  SLRTable() {}
-  SLRTable(const TranslationGrammar& grammar) {
-    const empty_t empty = create_empty(grammar);
-    const first_t first = create_first(grammar, empty);
-    const follow_t follow = create_follow(grammar, empty, first);
-    _terminals = grammar.terminals();
-    _nonterminals = grammar.nonterminals();
-    LR0StateMachine sm(grammar);
-    initialize_tables(sm.states().size());
-
-    for (size_t i = 0; i < sm.states().size(); ++i) {
-      for (auto&& item : sm.states()[i]) {
-        slr_insert(i, item, sm.transitions()[i], grammar, follow);
-      }
-    }
-  }
-
- protected:
-  void slr_insert(size_t state,
-                  const lr0::Item& item,
-                  const unordered_map<Symbol, size_t>& transitionMap,
-                  const TranslationGrammar& grammar,
-                  const follow_t& follow) {
-    auto&& rule = item.rule();
-    auto&& mark = item.mark();
-    // special S' -> S EOF. item
-    if (rule == grammar.starting_rule() && mark == 1) {
-      lr_action_item(state, Symbol::eof()) = {LRAction::SUCCESS, 0};
-    } else if (mark == rule.input().size()) {
-      size_t ni = rule.nonterminal().id();
-      for (auto&& terminal : follow[ni].symbols()) {
-        if (lr_action(state, terminal).action != LRAction::ERROR) {
-          throw std::invalid_argument("Constructing SLRTable from a non-SLR TranslationGrammar.");
-        }
-        lr_action_item(state, terminal) = {LRAction::REDUCE, rule.id};
-      }
-    } else if (rule.input()[mark].nonterminal()) {
-      auto&& nonterminal = rule.input()[mark];
-      size_t nextState = transitionMap.at(nonterminal);
-      lr_goto_item(state, nonterminal) = nextState;
-    } else {
-      auto&& terminal = rule.input()[mark];
-      size_t nextState = transitionMap.at(terminal);
-      if (lr_action(state, terminal).action != LRAction::ERROR) {
-        throw std::invalid_argument("Constructing SLRTable from a non-SLR TranslationGrammar.");
-      }
-      lr_action_item(state, terminal) = {LRAction::SHIFT, nextState};
-    }
-  }
-};
 template <typename StateMachine, const char* type>
 class LR1GenericTable : public LRGenericTable {
   // TODO: conflict resolution
@@ -284,13 +231,13 @@ class LR1StrictGenericTable : public LRGenericTable {
 
 inline char CanonicalLR1String[] = "Canonical LR(1)";
 inline char LALRString[] = "LALR";
-inline char IALRString[] = "IALR";
+inline char IELRString[] = "IELR";
 inline char StrictCanonicalLR1String[] = "Strict Canonical LR(1)";
 inline char StrictLALRString[] = "Strict LALR";
 
 using LR1Table = LR1GenericTable<lr1::StateMachine, CanonicalLR1String>;
 using LALRTable = LR1GenericTable<lalr::StateMachine, LALRString>;
-using IALRTable = LR1GenericTable<ialr::StateMachine, IALRString>;
+using IELRTable = LR1GenericTable<ielr::StateMachine, IELRString>;
 
 using LR1StrictTable = LR1StrictGenericTable<lr1::StateMachine, StrictCanonicalLR1String>;
 using LALRStrictTable = LR1StrictGenericTable<lalr::StateMachine, StrictLALRString>;

@@ -168,6 +168,11 @@ inline constexpr Symbol Nonterminal(const size_t id) noexcept {
   return Symbol(Symbol::Type::NONTERMINAL, id);
 }
 
+using symbol_string_fn = string (*)(Symbol s);
+
+inline string to_string(Symbol s) {
+  return s.to_string();
+}
 /**
 \brief POD struct holding location coordinates.
 
@@ -498,12 +503,12 @@ class Token {
 
   friend bool operator>=(const Token& lhs, const Token& rhs) { return rhs <= lhs; }
 
-  string to_string() const {
+  string to_string(symbol_string_fn to_str = ctf::to_string) const {
     string result;
     if (location() != Location::invalid()) {
       result = location().to_string() + ": ";
     }
-    result += _symbol.to_string();
+    result += to_str(_symbol);
     return result;
   }
 
@@ -587,14 +592,14 @@ class TerminalSet : public bit_set {
     return result;
   }
 
-  string to_string(string (*string_fn)(Symbol s) = [](Symbol s) { return s.to_string(); }) const {
+  string to_string(symbol_string_fn to_str = ctf::to_string) const {
     auto terminals = symbols();
     if (terminals.empty()) {
       return "{}";
     }
     string result = "{ ";
     for (Symbol symbol : terminals) {
-      result += string_fn(symbol) + ", ";
+      result += to_str(symbol) + ", ";
     }
     result.pop_back();
     result.pop_back();

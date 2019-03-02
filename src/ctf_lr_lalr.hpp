@@ -2,6 +2,7 @@
 #define CTF_LR_LALR_HPP
 
 #include "ctf_lr_lr1.hpp"
+
 namespace ctf::lalr {
 using Item = ctf::lr1::Item;
 
@@ -9,7 +10,7 @@ class StateMachine : public ctf::lr1::StateMachine {
  public:
   // use the same constructors
   StateMachine(const TranslationGrammar& grammar)
-    : ctf::lr1::StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
+    : ctf::lr1::StateMachine(grammar, true) {
     // initial item S' -> .S$
     insert_state({Item(
       {grammar.starting_rule(), 0}, {}, lr1::LookaheadSet(grammar.terminals(), {Symbol::eof()}))});

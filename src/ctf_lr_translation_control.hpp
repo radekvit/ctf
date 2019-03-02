@@ -239,10 +239,9 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   }
 };
 
-using SLRTranslationControl = LRTranslationControlTemplate<SLRTable>;
 using LALRTranslationControl = LRTranslationControlTemplate<LALRTable>;
 using LR1TranslationControl = LRTranslationControlTemplate<LR1Table>;
-using IALRTranslationControl = LRTranslationControlTemplate<IALRTable>;
+using IELRTranslationControl = LRTranslationControlTemplate<IELRTable>;
 
 using LALRStrictTranslationControl = LRTranslationControlTemplate<LALRStrictTable>;
 using LR1StrictTranslationControl = LRTranslationControlTemplate<LR1StrictTable>;

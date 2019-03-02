@@ -6,8 +6,6 @@
 using ctf::TranslationGrammar;
 using Rule = TranslationGrammar::Rule;
 using ctf::lr0::Item;
-using ctf::lr0::State;
-using ctf::LR0StateMachine;
 using ctf::vector_set;
 using ctf::vector;
 
@@ -70,55 +68,4 @@ TEST_CASE("lr0::Item comparison operators", "[lr0::Item]") {
   REQUIRE(item1 == item2);
   REQUIRE(item1 < item3);
   REQUIRE(!(item3 < item1));
-}
-
-TEST_CASE("LR0StateMachine correctness", "[LR0StateMachine]") {
-  LR0StateMachine sm{grammar};
-  auto& rules = grammar.rules();
-
-  size_t activeState = 0;
-  size_t state = 0;
-
-  vector<State> expected{
-    {Item(rules[2], 1)},
-    {Item(rules[1], 1)},
-    {Item(rules[4], 1), Item(rules[0], 1)},
-    {Item(rules[3], 1), Item(rules[0], 0), Item(rules[1], 0), Item(rules[2], 0), Item(rules[3], 0)},
-    {Item(rules[3], 2), Item(rules[0], 1)},
-    {Item(rules[0], 2), Item(rules[2], 0), Item(rules[3], 0)},
-  };
-  REQUIRE(sm.states()[0] == Item(grammar.starting_rule(), 0).closure(grammar));
-  // check correctness of at least a part of the state machine
-  activeState = 0;
-  // i transition from 0
-  REQUIRE_NOTHROW(state = sm.transitions()[0].at("i"_t));
-  REQUIRE(sm.states()[state] == expected[0]);
-  // A transition from 0
-  REQUIRE_NOTHROW(state = sm.transitions()[0].at("A"_nt));
-  REQUIRE(sm.states()[state] == expected[1]);
-  // S transition from 0
-  REQUIRE_NOTHROW(state = sm.transitions()[0].at("S"_nt));
-  REQUIRE(sm.states()[state] == expected[2]);
-  // ( transition from 0
-  REQUIRE_NOTHROW(state = sm.transitions()[0].at("("_t));
-  REQUIRE(sm.states()[state] == expected[3]);
-  // no o transition from 0
-  REQUIRE_THROWS(sm.transitions()[0].at("o"_t));
-
-  activeState = state;
-  REQUIRE_NOTHROW(state = sm.transitions()[activeState].at("("_t));
-  REQUIRE(activeState == state);
-  REQUIRE_NOTHROW(state = sm.transitions()[activeState].at("i"_t));
-  REQUIRE(sm.states()[state] == expected[0]);
-  REQUIRE_NOTHROW(state = sm.transitions()[activeState].at("A"_nt));
-  REQUIRE(sm.states()[state] == expected[1]);
-  REQUIRE_NOTHROW(state = sm.transitions()[activeState].at("S"_nt));
-  REQUIRE(sm.states()[state] == expected[4]);
-
-  activeState = state;
-  REQUIRE_NOTHROW(state = sm.transitions()[activeState].at("o"_t));
-  REQUIRE(sm.states()[state] == expected[5]);
-  activeState = state;
-  REQUIRE_NOTHROW(state = sm.transitions()[0].at("("_t));
-  REQUIRE(sm.states()[state] == expected[3]);
 }

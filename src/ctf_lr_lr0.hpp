@@ -92,67 +92,6 @@ class Item {
   size_t _mark;
 };
 
-using State = vector_set<Item>;
-
-}  // namespace ctf::lr0
-
-namespace ctf {
-class LR0StateMachine {
- public:
-  explicit LR0StateMachine(const TranslationGrammar& grammar) {
-    auto& startingRule = grammar.starting_rule();
-
-    _states.push_back(lr0::Item{startingRule, 0}.closure(grammar));
-    _transitions.push_back({});
-
-    for (size_t i = 0; i < _states.size(); ++i) {
-      auto&& state = _states[i];
-      // get all nonempty closures
-      auto&& state_transitions = next_states(grammar, state);
-      // add _transitions
-      for (auto&& transitionPair : state_transitions) {
-        const Symbol& symbol = transitionPair.first;
-        auto&& state = transitionPair.second;
-        size_t j = insert_state(state);
-        _transitions[i][symbol] = j;
-      }
-    }
-  }
-
-  const vector<lr0::State>& states() const { return _states; }
-  const vector<unordered_map<Symbol, size_t>>& transitions() const { return _transitions; }
-
- protected:
-  unordered_map<Symbol, lr0::State> next_states(const TranslationGrammar& grammar,
-                                                const lr0::State& state) {
-    unordered_map<Symbol, lr0::State> result;
-
-    for (auto&& item : state) {
-      if (item.mark() == item.rule().input().size()) {
-        continue;
-      }
-      auto&& symbol = item.rule().input()[item.mark()];
-      lr0::Item newItem{item.rule(), item.mark() + 1};
-      result[symbol] = set_union(result[symbol], newItem.closure(grammar));
-    }
-    return result;
-  }
-
-  size_t insert_state(const lr0::State& state) {
-    auto it = std::find(_states.begin(), _states.end(), state);
-    if (it == _states.end()) {
-      // insert
-      _states.push_back(state);
-      _transitions.push_back({});
-      return _states.size() - 1;
-    } else {
-      return it - _states.begin();
-    }
-  }
-
-  vector<lr0::State> _states;
-  vector<unordered_map<Symbol, size_t>> _transitions;
-};
 }  // namespace ctf
 
 #endif

@@ -1,7 +1,6 @@
 #ifndef CTF_LR_LR1_HPP
 #define CTF_LR_LR1_HPP
 
-#include <iostream>
 #include "ctf_base.hpp"
 #include "ctf_lr_lr0.hpp"
 #include "ctf_table_sets.hpp"
@@ -293,7 +292,7 @@ class StateMachine {
   };
 
   StateMachine(const TranslationGrammar& grammar)
-    : StateMachine(grammar, create_empty(grammar), create_first(grammar, _empty)) {
+    :  _grammar(&grammar), _empty(create_empty(grammar)), _first(create_first(grammar, _empty)) {
     // initial item S' -> .S$
     insert_state(
       {Item({grammar.starting_rule(), 0}, {}, LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
@@ -325,8 +324,8 @@ class StateMachine {
     bool merge;
   };
 
-  StateMachine(const TranslationGrammar& grammar, empty_t empty, first_t first)
-    : _grammar(&grammar), _empty(std::move(empty)), _first(std::move(first)) {}
+  StateMachine(const TranslationGrammar& grammar, bool)
+    : _grammar(&grammar), _empty(create_empty(grammar)), _first(create_first(grammar, _empty)) {}
 
   const TranslationGrammar& grammar() const noexcept { return *_grammar; }
 
@@ -336,22 +335,16 @@ class StateMachine {
 
     // try to merge with another state
     auto& kernelStates = _kernelMap[kernel];
-    if (kernelStates.empty()) {
-      // new mergable kernel
-      kernelStates.push_back(i);
-
-      _states.push_back(std::move(newState));
-      return {i, true};
-    } else {
+    if (!kernelStates.empty()) {
       // check existing states with this kernel
       auto [other, merged] = merge(kernelStates, newState);
       if (merged) {
         return {other, false};
       }
       // no matching state found, insert as new
-      kernelStates.push_back(i);
     }
     // insert new state
+    kernelStates.push_back(i);
     _states.push_back(std::move(newState));
     return {i, true};
   }
@@ -427,7 +420,6 @@ class StateMachine {
   void finalize_lookaheads() {
     // a single map for all lookaheads
     for (auto& state : _states) {
-      std::cout << "\n" << state.to_string();
       unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
       for (auto& item : state.items()) {
         for (auto&& source : item.lookahead_sources()) {
