@@ -524,10 +524,10 @@ TEST_CASE("Simple infix to postfix calculator translation in IELR", "[LR1Transla
   in << "i ^ - i ^ ( i - i * - i / i ) + i";
   InputReader r{in};
   a.set_reader(r);
-  IELRTranslationControl ielr(a, tg);
-  ielr.run();
-  REQUIRE(ielr.output().size() == 16);
-  auto it = ielr.output().begin();
+  IELRTranslationControl lscelr(a, tg);
+  lscelr.run();
+  REQUIRE(lscelr.output().size() == 16);
+  auto it = lscelr.output().begin();
   Token os = *it++;
   REQUIRE(os == "i"_t);
   os = *it++;
@@ -579,7 +579,7 @@ TEST_CASE("IELR manages to accept a sentence not accepted by LALR", "[LR1Transla
   in << "i o o i";
   InputReader r{in};
   a.set_reader(r);
-  IELRTranslationControl ielr(a, tg);
-  ielr.run();
-  REQUIRE(ielr.output().size() == 5);
+  IELRTranslationControl lscelr(a, tg);
+  lscelr.run();
+  REQUIRE(lscelr.output().size() == 5);
 }

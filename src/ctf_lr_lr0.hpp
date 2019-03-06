@@ -92,6 +92,6 @@ class Item {
   size_t _mark;
 };
 
-}  // namespace ctf
+}  // namespace ctf::lr0
 
 #endif

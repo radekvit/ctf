@@ -1,5 +1,6 @@
 SRC = src
 INCLUDE = include
+TOOL = grammar
 DOC = docs
 
 .PHONY: all format test pack doc clean
@@ -7,8 +8,9 @@ DOC = docs
 all:
 
 format:
-	clang-format -style=file -i $(SRC)/*.hpp $(SRC)/*.cpp $(INCLUDE)/*.hpp
+	clang-format -style=file -i $(SRC)/*.hpp $(INCLUDE)/*.hpp
 	$(MAKE) -C test format
+	$(MAKE) -C $(TOOL) format
 
 test:
 	$(MAKE) -C test test
@@ -20,4 +22,5 @@ doc:
 	$(MAKE) -C $(DOC)
 
 clean:
-	-rm -r $(DOC)/html
+	$(MAKE) -C test clean
+	$(MAKE) -C $(TOOL) clean

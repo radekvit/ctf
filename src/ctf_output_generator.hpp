@@ -118,7 +118,7 @@ class OutputGenerator {
   /**
   \brief Clears the inner state and errors.
   */
-  virtual void reset_private() noexcept {}
+  virtual void reset_private() {}
 
   /**
   \brief Get the error stream.
@@ -130,23 +130,23 @@ class OutputGenerator {
     return *_error;
   }
 
-  void _errormessage(const string& message) { err() << message << "\n"; }
+  void error_message(const string& message) { err() << message << "\n"; }
   /**
   \brief Outputs an error message with the location automatically printed before
   it.
   */
-  void _errormessage(const tstack<Token>::const_iterator it, const string& message) {
+  void error_message(const tstack<Token>::const_iterator it, const string& message) {
     err() << it->location().to_string() << ": " << message << "\n";
   }
 
   void fatal_error(const string& message) {
-    _errormessage(message);
+    error_message(message);
     set_error();
     throw SemanticException("Semantic error encountered.");
   }
 
   void fatal_error(tstack<Token>::const_iterator it, const string& message) {
-    _errormessage(it, message);
+    error_message(it, message);
     set_error();
     throw SemanticException("Semantic error encountered.");
   }

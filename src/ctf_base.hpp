@@ -170,9 +170,7 @@ inline constexpr Symbol Nonterminal(const size_t id) noexcept {
 
 using symbol_string_fn = string (*)(Symbol s);
 
-inline string to_string(Symbol s) {
-  return s.to_string();
-}
+inline string to_string(Symbol s) { return s.to_string(); }
 /**
 \brief POD struct holding location coordinates.
 

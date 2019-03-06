@@ -7,9 +7,9 @@
 #define CRF_LR_TABLE_HPP
 
 #include "ctf_base.hpp"
-#include "ctf_lr_lr1.hpp"
 #include "ctf_lr_lalr.hpp"
-#include "ctf_lr_ielr.hpp"
+#include "ctf_lr_lr1.hpp"
+#include "ctf_lr_lscelr.hpp"
 
 namespace ctf {
 
@@ -237,7 +237,7 @@ inline char StrictLALRString[] = "Strict LALR";
 
 using LR1Table = LR1GenericTable<lr1::StateMachine, CanonicalLR1String>;
 using LALRTable = LR1GenericTable<lalr::StateMachine, LALRString>;
-using IELRTable = LR1GenericTable<ielr::StateMachine, IELRString>;
+using IELRTable = LR1GenericTable<lscelr::StateMachine, IELRString>;
 
 using LR1StrictTable = LR1StrictGenericTable<lr1::StateMachine, StrictCanonicalLR1String>;
 using LALRStrictTable = LR1StrictGenericTable<lalr::StateMachine, StrictLALRString>;

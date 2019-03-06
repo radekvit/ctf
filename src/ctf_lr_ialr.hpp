@@ -86,8 +86,7 @@ class StateMachine {
     bool _expanded = false;
   };
 
-  StateMachine(const TranslationGrammar& grammar)
-    : StateMachine(grammar) {
+  StateMachine(const TranslationGrammar& grammar) : StateMachine(grammar) {
     // initial item S' -> .S$
     insert_state(
       {Item({grammar.starting_rule(), 0}, {}, LookaheadSet(grammar.terminals(), {Symbol::eof()}))});

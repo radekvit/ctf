@@ -1,9 +1,10 @@
 #ifndef CTF_LR_IELR_HPP
 #define CTF_LR_IELR_HPP
 
+#include <optional>
 #include "ctf_lr_lr1.hpp"
 
-namespace ctf::ielr {
+namespace ctf::lscelr {
 using Item = ctf::lr1::Item;
 using LookaheadSet = ctf::lr1::LookaheadSet;
 using LookaheadSource = ctf::lr1::LookaheadSource;
@@ -28,8 +29,7 @@ inline vector_set<Item> symbol_skip_kernel(const vector_set<Item>& state,
 class StateMachine : public ctf::lr1::StateMachine {
  public:
   // use the same constructors
-  StateMachine(const TranslationGrammar& grammar)
-    : ctf::lr1::StateMachine(grammar, true) {
+  StateMachine(const TranslationGrammar& grammar) : ctf::lr1::StateMachine(grammar, true) {
     // initial item S' -> .S$
     insert_state({Item(
       {grammar.starting_rule(), 0}, {}, lr1::LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
@@ -39,6 +39,8 @@ class StateMachine : public ctf::lr1::StateMachine {
     auto conflictedStates = detect_conflicts();
 
     if (!conflictedStates.empty()) {
+      _contributions = vector<std::optional<vector<LookaheadSet>>>(
+        _states.size(), std::optional<vector<LookaheadSet>>());
       // mark all but the first lookahead source for renewed merging
       mark_conflicts(conflictedStates);
       // split states with conflicts along the way
@@ -49,7 +51,7 @@ class StateMachine : public ctf::lr1::StateMachine {
   }
 
  protected:
-  unordered_map<size_t, vector<LookaheadSet>> _contributions;
+  vector<std::optional<vector<LookaheadSet>>> _contributions;
   vector_set<size_t> _statesToSplit;
 
   MergeResult merge(const std::vector<size_t>& existingStates, const State& newState) override {
@@ -163,15 +165,14 @@ class StateMachine : public ctf::lr1::StateMachine {
       return;
     }
     // add to conflict contributions
-    auto&& defaultContributions =
-      vector<LookaheadSet>(state.items().size(), LookaheadSet(grammar().terminals()));
-    if (!_contributions.try_emplace(state.id(), defaultContributions)
-           .first->second[itemIndex]
-           .set_union(contributions)) {
+    auto& contribution = _contributions[state.id()];
+    if (!contribution) {
+      contribution.emplace(state.items().size(), LookaheadSet(grammar().terminals()));
+      contribution.value()[itemIndex] |= contributions;
+    } else if (!contribution.value()[itemIndex].set_union(contributions)) {
       // no new contributions added, all has been marked
       return;
     }
-    // conflicts[state, itemIndex] |= contributions;
     if (item.lookahead_sources().size() > 1) {
       // mark to split
       _statesToSplit.insert(state.id());
@@ -204,25 +205,25 @@ class StateMachine : public ctf::lr1::StateMachine {
         auto& targetItem = splitState.items()[sourceItem];
         auto& transitionSymbol = targetItem.rule().input()[targetItem.mark()];
 
-        auto [state, inserted] = insert_state_ielr(
+        auto [state, inserted] = insert_state_lscelr(
           symbol_skip_kernel(splitState.items(), transitionSymbol, splitState.id()));
         // modify transition
         splitState.transitions()[transitionSymbol] = state;
         if (inserted) {
           // inserted new state, generate successor states
-          expand_state_ielr(state);
+          expand_state_lscelr(state);
         }
       }
     }
   }
 
-  InsertResult insert_state_ielr(const vector_set<Item>& kernel) {
+  InsertResult insert_state_lscelr(const vector_set<Item>& kernel) {
     size_t i = _states.size();
     State newState(i, kernel, grammar(), _empty, _first);
 
     auto& kernelStates = _kernelMap[kernel];
     // this is never empty
-    auto [other, merged] = merge_ielr(kernelStates, newState);
+    auto [other, merged] = merge_lscelr(kernelStates, newState);
     if (merged) {
       return {other, false};
     }
@@ -231,20 +232,20 @@ class StateMachine : public ctf::lr1::StateMachine {
     return {i, true};
   }
 
-  void expand_state_ielr(size_t i) {
+  void expand_state_lscelr(size_t i) {
     for (auto&& [symbol, kernel] : symbol_skip_kernels(_states[i].items(), i)) {
-      auto [id, inserted] = insert_state_ielr(kernel);
+      auto [id, inserted] = insert_state_lscelr(kernel);
       _states[i].transitions()[symbol] = id;
       // new inserted state
       if (inserted) {
-        expand_state_ielr(id);
+        expand_state_lscelr(id);
       }
     }
   }
 
-  MergeResult merge_ielr(const std::vector<size_t>& isocores, const State& newState) {
-    auto it = _contributions.find(isocores[0]);
-    if (it == _contributions.end()) {
+  MergeResult merge_lscelr(const std::vector<size_t>& isocores, const State& newState) {
+    auto& contribution = _contributions[isocores[0]];
+    if (!contribution) {
       // not a conflicted state, always merge
       auto& state = _states[isocores[0]];
       for (size_t i = 0; i < state.items().size(); ++i) {
@@ -257,11 +258,11 @@ class StateMachine : public ctf::lr1::StateMachine {
       return {isocores[0], true};
     }
     // a conflicted state:
-    auto newLookaheads = lookaheads_ielr(newState, it->second);
+    auto newLookaheads = lookaheads_lscelr(newState, contribution.value());
 
     for (auto other : isocores) {
       auto& existing = _states[other];
-      auto lookahead = lookaheads_ielr(existing, it->second);
+      auto lookahead = lookaheads_lscelr(existing, contribution.value());
       // lookaheads match in the conflicting states
       if (lookahead == newLookaheads) {
         for (size_t i = 0; i < existing.items().size(); ++i) {
@@ -277,7 +278,7 @@ class StateMachine : public ctf::lr1::StateMachine {
     return {0, false};
   }
 
-  vector<LookaheadSet> lookaheads_ielr(const State& state, const vector<LookaheadSet>& mask) {
+  vector<LookaheadSet> lookaheads_lscelr(const State& state, const vector<LookaheadSet>& mask) {
     auto result = lookaheads(state);
     assert(mask.size() == result.size());
 
@@ -287,5 +288,5 @@ class StateMachine : public ctf::lr1::StateMachine {
     return result;
   }
 };
-}  // namespace ctf::ielr
+}  // namespace ctf::lscelr
 #endif

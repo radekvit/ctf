@@ -292,7 +292,7 @@ class StateMachine {
   };
 
   StateMachine(const TranslationGrammar& grammar)
-    :  _grammar(&grammar), _empty(create_empty(grammar)), _first(create_first(grammar, _empty)) {
+    : _grammar(&grammar), _empty(create_empty(grammar)), _first(create_first(grammar, _empty)) {
     // initial item S' -> .S$
     insert_state(
       {Item({grammar.starting_rule(), 0}, {}, LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
