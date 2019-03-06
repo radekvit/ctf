@@ -200,17 +200,18 @@ class StateMachine : public ctf::lr1::StateMachine {
     // regenerate transitions
     for (size_t i = 0; i < _statesToSplit.size(); ++i) {
       auto& sources = splitSources[i];
-      for (auto& [sourceState, sourceItem] : sources) {
-        auto& splitState = _states[sourceState];
-        auto& targetItem = splitState.items()[sourceItem];
-        auto& transitionSymbol = targetItem.rule().input()[targetItem.mark()];
+      for (auto& [sourceStateIndex, sourceItemIndex] : sources) {
+        auto& sourceState = _states[sourceStateIndex];
+        auto& sourceItem = sourceState.items()[sourceItemIndex];
+        auto& transitionSymbol = sourceItem.rule().input()[sourceItem.mark()];
 
         auto [state, inserted] = insert_state_lscelr(
-          symbol_skip_kernel(splitState.items(), transitionSymbol, splitState.id()));
-        // modify transition
-        splitState.transitions()[transitionSymbol] = state;
+          symbol_skip_kernel(sourceState.items(), transitionSymbol, sourceStateIndex));
         if (inserted) {
-          // inserted new state, generate successor states
+          // modify transition
+          // state reference may have been invalidated
+          _states[sourceStateIndex].transitions()[transitionSymbol] = state;
+          // generate successor states
           expand_state_lscelr(state);
         }
       }
@@ -244,6 +245,7 @@ class StateMachine : public ctf::lr1::StateMachine {
   }
 
   MergeResult merge_lscelr(const std::vector<size_t>& isocores, const State& newState) {
+    // there is always a state from LALR
     auto& contribution = _contributions[isocores[0]];
     if (!contribution) {
       // not a conflicted state, always merge
@@ -270,7 +272,6 @@ class StateMachine : public ctf::lr1::StateMachine {
           auto& item2 = newState.items()[i];
 
           item.lookahead_sources() = set_union(item.lookahead_sources(), item2.lookahead_sources());
-          // there are never any generated lookaheads
         }
         return {other, true};
       }
