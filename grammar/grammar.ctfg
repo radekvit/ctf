@@ -1,0 +1,110 @@
+# CTF Grammar Tool Grammar
+# translation from this grammar format to C++
+# author: Radek Vít
+
+grammar ctfgc
+
+# disambiguate empty lines before optional precedence declaration
+precedence:
+	none 'NEWLINE'
+
+S:
+	'NEWLINE' S | S
+	'grammar' 'nonterminal' 'NEWLINE' Precedence Rules |
+		'grammar' Precedence Rules
+		-
+		0
+
+Precedence:
+	-
+	'NEWLINE' Precedence | Precedence
+	'precedence' ':' 'NEWLINE' 'INDENT' PrecedenceLevels 'DEDENT' |
+		'precedence' PrecedenceLevels 'precedence end'
+		0
+
+PrecedenceLevels:
+	-
+	'NEWLINE' | -
+	Associativity TokenList 'NEWLINE' PrecedenceLevels |
+		Associativity TokenList 'level end' PrecedenceLevels
+
+Associativity:
+	'none'
+	'left'
+	'right'
+
+TokenList:
+	'terminal' TokenList'
+TokenList':
+	-
+	',' | -
+	',' 'terminal' TokenList' | 'terminal' TokenList'
+		-
+		0
+
+Rules:
+	-
+	'NEWLINE' Rules | Rules
+	'nonterminal' ':' 'NEWLINE' 'INDENT' RuleClauses 'DEDENT' Rules |
+		'nonterminal' RuleClauses 'rule block end' Rules
+		0
+		-
+		-
+		-
+		2
+
+RuleClauses:
+	-
+	# empty line or comment
+	'NEWLINE' RuleClauses | RuleClauses
+	SingleRule RuleClauses | SingleRule 'rule end' RuleClauses
+
+SingleRule:
+	String 'NEWLINE' | String
+	String 'NEWLINE' 'INDENT' Attributes 'DEDENT' | String Attributes
+	# includes Attributes
+	String '|' OutputString
+
+String:
+	'-' | 'string end'
+	'nonterminal' String'
+	'terminal' String'
+
+String':
+	- | 'string end'
+	'terminal' String'
+	'nonterminal' String'
+
+OutputString:
+	'NEWLINE' 'INDENT' String 'NEWLINE' 'DEDENT' | String
+	'NEWLINE' 'INDENT' String 'NEWLINE' Attributes 'DEDENT' | String Attributes
+	String 'NEWLINE' | String
+	String 'NEWLINE' 'INDENT' Attributes 'DEDENT' | String Attributes
+
+Attributes:
+	RulePrecedence | 'attributes' RulePrecedence 'attribute list end'
+	AttributeList | 'attributes' AttributeList 'attribute list end'
+	RulePrecedence AttributeList | 'attributes' RulePrecedence AttributeList 'attribute list end'
+
+RulePrecedence:
+	'precedence' 'terminal' 'NEWLINE' | 'precedence' 'terminal'
+		0
+		1
+
+AttributeList:
+	Attribute AttributeList'
+
+AttributeList':
+	-
+	Attribute AttributeList'
+
+Attribute:
+	'-' 'NEWLINE' | 'attribute end'
+	IntList 'NEWLINE' | IntList 'attribute end'
+
+IntList:
+	'integer' IntList'
+
+IntList':
+	-
+	'integer' IntList'

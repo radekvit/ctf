@@ -11,11 +11,12 @@ before including this header.
 
 #include "../src/ctf_translation.hpp"
 
+#endif
+
 #ifndef CTF_NO_USING_NAMESPACE
 // Translation class
 using namespace ctf;
 
-#endif  // endif CTF_KEEP_NAMESPACE
+#endif  // endif CTF_NO_USING_NAMESPACE
 
-#endif
 /*** End of file ctf.hpp ***/

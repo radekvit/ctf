@@ -196,7 +196,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   // TODO allow example-based error messages
   string error_message(size_t state, const Token& token) {
     string message = "Unexpected symbol '";
-    message += token.to_string();
+    message += token.symbol().to_string();
     message += "'\nexpected one of:";
     if (_lrTable.lr_action(state, Symbol::eof()).action != LRAction::ERROR) {
       message += " EOF";
