@@ -68,41 +68,43 @@ inline constexpr ctf::Symbol operator""_t(const char* s, size_t) {
   if (ctf::c_streq(s, "NEWLINE"))
     return ctf::Terminal(5);
   if (ctf::c_streq(s, "attribute end"))
-    return ctf::Terminal(15);
-  if (ctf::c_streq(s, "attribute list end"))
     return ctf::Terminal(16);
-  if (ctf::c_streq(s, "attributes"))
+  if (ctf::c_streq(s, "attribute list end"))
     return ctf::Terminal(17);
+  if (ctf::c_streq(s, "attributes"))
+    return ctf::Terminal(18);
   if (ctf::c_streq(s, "grammar"))
     return ctf::Terminal(6);
-  if (ctf::c_streq(s, "integer"))
+  if (ctf::c_streq(s, "grammar name"))
     return ctf::Terminal(7);
-  if (ctf::c_streq(s, "left"))
+  if (ctf::c_streq(s, "integer"))
     return ctf::Terminal(8);
-  if (ctf::c_streq(s, "level end"))
-    return ctf::Terminal(18);
-  if (ctf::c_streq(s, "none"))
+  if (ctf::c_streq(s, "left"))
     return ctf::Terminal(9);
-  if (ctf::c_streq(s, "nonterminal"))
-    return ctf::Terminal(10);
-  if (ctf::c_streq(s, "precedence"))
-    return ctf::Terminal(11);
-  if (ctf::c_streq(s, "precedence end"))
+  if (ctf::c_streq(s, "level end"))
     return ctf::Terminal(19);
-  if (ctf::c_streq(s, "right"))
+  if (ctf::c_streq(s, "none"))
+    return ctf::Terminal(10);
+  if (ctf::c_streq(s, "nonterminal"))
+    return ctf::Terminal(11);
+  if (ctf::c_streq(s, "precedence"))
     return ctf::Terminal(12);
-  if (ctf::c_streq(s, "rule block end"))
+  if (ctf::c_streq(s, "precedence end"))
     return ctf::Terminal(20);
-  if (ctf::c_streq(s, "rule end"))
-    return ctf::Terminal(21);
-  if (ctf::c_streq(s, "string end"))
-    return ctf::Terminal(22);
-  if (ctf::c_streq(s, "terminal"))
+  if (ctf::c_streq(s, "right"))
     return ctf::Terminal(13);
-  if (ctf::c_streq(s, "|"))
+  if (ctf::c_streq(s, "rule block end"))
+    return ctf::Terminal(21);
+  if (ctf::c_streq(s, "rule end"))
+    return ctf::Terminal(22);
+  if (ctf::c_streq(s, "string end"))
+    return ctf::Terminal(23);
+  if (ctf::c_streq(s, "terminal"))
     return ctf::Terminal(14);
+  if (ctf::c_streq(s, "|"))
+    return ctf::Terminal(15);
 
-  return ctf::Terminal(23);
+  return ctf::Terminal(24);
 }
 
 }
@@ -116,23 +118,24 @@ inline ctf::string to_string(ctf::Symbol s) {
     {ctf::Terminal(3), "'DEDENT'"},
     {ctf::Terminal(4), "'INDENT'"},
     {ctf::Terminal(5), "'NEWLINE'"},
-    {ctf::Terminal(15), "'attribute end'"},
-    {ctf::Terminal(16), "'attribute list end'"},
-    {ctf::Terminal(17), "'attributes'"},
+    {ctf::Terminal(16), "'attribute end'"},
+    {ctf::Terminal(17), "'attribute list end'"},
+    {ctf::Terminal(18), "'attributes'"},
     {ctf::Terminal(6), "'grammar'"},
-    {ctf::Terminal(7), "'integer'"},
-    {ctf::Terminal(8), "'left'"},
-    {ctf::Terminal(18), "'level end'"},
-    {ctf::Terminal(9), "'none'"},
-    {ctf::Terminal(10), "'nonterminal'"},
-    {ctf::Terminal(11), "'precedence'"},
-    {ctf::Terminal(19), "'precedence end'"},
-    {ctf::Terminal(12), "'right'"},
-    {ctf::Terminal(20), "'rule block end'"},
-    {ctf::Terminal(21), "'rule end'"},
-    {ctf::Terminal(22), "'string end'"},
-    {ctf::Terminal(13), "'terminal'"},
-    {ctf::Terminal(14), "'|'"},
+    {ctf::Terminal(7), "'grammar name'"},
+    {ctf::Terminal(8), "'integer'"},
+    {ctf::Terminal(9), "'left'"},
+    {ctf::Terminal(19), "'level end'"},
+    {ctf::Terminal(10), "'none'"},
+    {ctf::Terminal(11), "'nonterminal'"},
+    {ctf::Terminal(12), "'precedence'"},
+    {ctf::Terminal(20), "'precedence end'"},
+    {ctf::Terminal(13), "'right'"},
+    {ctf::Terminal(21), "'rule block end'"},
+    {ctf::Terminal(22), "'rule end'"},
+    {ctf::Terminal(23), "'string end'"},
+    {ctf::Terminal(14), "'terminal'"},
+    {ctf::Terminal(15), "'|'"},
     {ctf::Nonterminal(0), "Associativity"},
     {ctf::Nonterminal(1), "Attribute"},
     {ctf::Nonterminal(2), "AttributeList"},

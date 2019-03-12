@@ -202,7 +202,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   string error_message(size_t state, const Token& token, symbol_string_fn to_str = ctf::to_string) {
     string message = "Unexpected symbol ";
     message += to_str(token.symbol());
-    message += "\nexpected one of:";
+    message += "\nExpected:";
     for (auto terminal = Symbol::eof(); terminal.id() < translationGrammar_->terminals();
          terminal = Terminal(terminal.id())) {
       if (_lrTable.lr_action(state, terminal).action != LRAction::ERROR) {

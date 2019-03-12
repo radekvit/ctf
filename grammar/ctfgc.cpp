@@ -8,7 +8,7 @@ ctf::TranslationGrammar ctfgc::grammar({
       {"S"_nt, }
     ),
     ctf::Rule("S"_nt,
-      {"grammar"_t, "nonterminal"_t, "NEWLINE"_t, "Precedence"_nt, "Rules"_nt, },
+      {"grammar"_t, "grammar name"_t, "NEWLINE"_t, "Precedence"_nt, "Rules"_nt, },
       {"grammar"_t, "Precedence"_nt, "Rules"_nt, },
       ctf::vector<ctf::vector_set<size_t>>{{}, {0, }, {}, }
     ),

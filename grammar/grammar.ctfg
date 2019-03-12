@@ -10,7 +10,7 @@ precedence:
 
 S:
 	'NEWLINE' S | S
-	'grammar' 'nonterminal' 'NEWLINE' Precedence Rules |
+	'grammar' 'grammar name' 'NEWLINE' Precedence Rules |
 		'grammar' Precedence Rules
 		-
 		0
@@ -111,5 +111,5 @@ IntList':
 	-
 	',' | -
 	',' 'integer' IntList' | 'integer' IntList'
-		-
+		-,
 		0
