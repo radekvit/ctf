@@ -13,7 +13,7 @@ methods.
 #include <ostream>
 #include <stdexcept>
 #include <utility>
-#include <iostream>
+
 namespace ctf {
 enum class Associativity : unsigned char {
   NONE = 0x0,
@@ -59,7 +59,6 @@ class Rule {
     }
     // attribute actions were provided, checking validity
     if (_attributeActions.size() != count_input_terminals()) {
-      std::cout << to_string() << "\n";
       throw std::invalid_argument("Invalid attribute actions in Rule");
     }
     for (auto& target : _attributeActions) {
@@ -275,7 +274,6 @@ class Rule {
         outputNonterminals.push_back(s);
     }
     if (inputNonterminals != outputNonterminals) {
-      std::cout << to_string() << "\n";
       throw std::invalid_argument("Input and output nonterminals must match.");
     }
   }

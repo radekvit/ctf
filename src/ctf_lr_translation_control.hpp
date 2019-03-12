@@ -122,16 +122,13 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     Token token = next_token();
 
     while (true) {
-      std::cout << state << ' ' << token.to_string() << "\n";
       switch (auto&& item = _lrTable.lr_action(state, token.symbol()); item.action) {
         case LRAction::SHIFT:
           state = item.argument;
-          std::cout << "shift " << item.argument << "\n";
           pushdown.push_back(state);
           token = next_token();
           break;
         case LRAction::REDUCE: {
-          std::cout << "reduce " << translationGrammar_->rules()[item.argument].to_string() << "\n";
           auto&& rule = translationGrammar_->rules()[item.argument];
           for (size_t i = 0; i < rule.input().size(); ++i) {
             pushdown.pop_back();

@@ -437,7 +437,6 @@ class StateMachine {
         item.lookahead_sources().clear();
         item.lookahead_sources().shrink_to_fit();
       }
-      //std::cout << state.to_string();
     }
   }
 };

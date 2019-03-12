@@ -25,5 +25,5 @@ TEST_CASE("OutputGenerator default output", "[OutputGenerator]") {
 
   o.output({ctf::Token(0_t, ctf::Attribute('a')), 0_t, ctf::Symbol::eof()});
 
-  REQUIRE(s.str() == "0_t.a\n0_t\n");
+  REQUIRE(s.str() == "0_t.a\n0_t\nEOF\n");
 }
