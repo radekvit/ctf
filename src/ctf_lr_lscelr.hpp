@@ -1,5 +1,5 @@
-#ifndef CTF_LR_IELR_HPP
-#define CTF_LR_IELR_HPP
+#ifndef CTF_LR_LSCELR_HPP
+#define CTF_LR_LSCELR_HPP
 
 #include <optional>
 #include "ctf_lr_lr1.hpp"
@@ -189,11 +189,13 @@ class StateMachine : public ctf::lr1::StateMachine {
     for (auto& stateIndex : _statesToSplit) {
       auto& state = _states[stateIndex];
       // store sources from the first item
-      // storing the first item is OK, we only need the transition symbol
+      // the first item will always store the source states
+      // we only need the transition symbol
       splitSources.push_back(state.items()[0].lookahead_sources().split(1));
       // remove all but the first source from all items
       for (auto& item : state.items()) {
-        item.lookahead_sources().split(1);
+        if (!item.lookahead_sources().empty())
+          item.lookahead_sources().split(1);
       }
     }
 

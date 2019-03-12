@@ -231,13 +231,13 @@ class LR1StrictGenericTable : public LRGenericTable {
 
 inline char CanonicalLR1String[] = "Canonical LR(1)";
 inline char LALRString[] = "LALR";
-inline char IELRString[] = "IELR";
+inline char LSCELRString[] = "LSCELR";
 inline char StrictCanonicalLR1String[] = "Strict Canonical LR(1)";
 inline char StrictLALRString[] = "Strict LALR";
 
 using LR1Table = LR1GenericTable<lr1::StateMachine, CanonicalLR1String>;
 using LALRTable = LR1GenericTable<lalr::StateMachine, LALRString>;
-using IELRTable = LR1GenericTable<lscelr::StateMachine, IELRString>;
+using LSCELRTable = LR1GenericTable<lscelr::StateMachine, LSCELRString>;
 
 using LR1StrictTable = LR1StrictGenericTable<lr1::StateMachine, StrictCanonicalLR1String>;
 using LALRStrictTable = LR1StrictGenericTable<lalr::StateMachine, StrictLALRString>;

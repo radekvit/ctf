@@ -115,8 +115,7 @@ class LexicalAnalyzer {
       name += c;
       c = get();
     } while (!isspace(c) && c != std::char_traits<char>::eof());
-    if (c != std::char_traits<char>::eof())
-      unget();
+    unget();
 
     return token(std::stoull(name));
   }

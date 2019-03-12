@@ -40,11 +40,11 @@ inline string default_LL_error_message(const Token& top,
       errorString += "Unexpected token '" + token.to_string() + "' when deriving '" +
                      top.to_string() + "'; expected one of:\n";
       for (auto&& expected : first.symbols()) {
-        errorString += "'" + expected.to_string() + "', ";
+        errorString += expected.to_string() + ", ";
       }
       if (empty) {
         for (auto&& expected : follow.symbols()) {
-          errorString += "'" + expected.to_string() + "', ";
+          errorString += expected.to_string() + ", ";
         }
       }
       if (errorString.back() == ' ') {

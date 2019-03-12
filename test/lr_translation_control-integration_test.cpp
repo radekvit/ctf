@@ -10,7 +10,7 @@ using ctf::TranslationGrammar;
 using Rule = TranslationGrammar::Rule;
 using ctf::LALRTranslationControl;
 using ctf::LR1TranslationControl;
-using ctf::IELRTranslationControl;
+using ctf::LSCELRTranslationControl;
 using ctf::LALRStrictTranslationControl;
 using ctf::LR1StrictTranslationControl;
 
@@ -107,8 +107,7 @@ class TCTLA : public LexicalAnalyzer {
       name += c;
       c = get();
     } while (!isspace(c) && c != std::char_traits<char>::eof());
-    if (c != std::char_traits<char>::eof())
-      unget();
+    unget();
 
     return token(name_to_symbol(name));
   }
@@ -494,7 +493,7 @@ TEST_CASE("Simple infix to postfix calculator translation in LR1", "[LR1Translat
   REQUIRE(os == Symbol::eof());
 }
 
-TEST_CASE("Simple infix to postfix calculator translation in IELR", "[LR1TranslationControl]") {
+TEST_CASE("Simple infix to postfix calculator translation in LSCELR", "[LR1TranslationControl]") {
   // TODO state machine error, doesn't find isocores properly
   // https://www.gnu.org/software/bison/manual/html_node/Infix-Calc.html#Infix-Calc
   TranslationGrammar tg{
@@ -524,7 +523,7 @@ TEST_CASE("Simple infix to postfix calculator translation in IELR", "[LR1Transla
   in << "i ^ - i ^ ( i - i * - i / i ) + i";
   InputReader r{in};
   a.set_reader(r);
-  IELRTranslationControl lscelr(a, tg);
+  LSCELRTranslationControl lscelr(a, tg);
   lscelr.run();
   REQUIRE(lscelr.output().size() == 16);
   auto it = lscelr.output().begin();
@@ -562,7 +561,7 @@ TEST_CASE("Simple infix to postfix calculator translation in IELR", "[LR1Transla
   REQUIRE(os == Symbol::eof());
 }
 
-TEST_CASE("IELR manages to accept a sentence not accepted by LALR", "[LR1TranslationControl]") {
+TEST_CASE("LSCELR manages to accept a sentence not accepted by LALR", "[LR1TranslationControl]") {
   // Grammar from Fig. 1 of IELR
   TranslationGrammar tg{vector<Rule>({
                           {"S"_nt, {"o"_t, "E"_nt, "o"_t}},
@@ -579,7 +578,7 @@ TEST_CASE("IELR manages to accept a sentence not accepted by LALR", "[LR1Transla
   in << "i o o i";
   InputReader r{in};
   a.set_reader(r);
-  IELRTranslationControl lscelr(a, tg);
+  LSCELRTranslationControl lscelr(a, tg);
   lscelr.run();
   REQUIRE(lscelr.output().size() == 5);
 }

@@ -6,8 +6,8 @@
 
 # absolutely necessary
 1. implement and test LALR (SLR)
-2. implement and test IELR
-3. implement and test BLL and BIELR (backtracking)
+2. implement and test LSCELR
+3. implement and test BLL and BLSCELR (backtracking)
 4. implement text file parser saving/loading
 
 # nice to have

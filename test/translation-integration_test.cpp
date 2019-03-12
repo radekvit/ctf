@@ -120,8 +120,7 @@ class TestLexicalAnalyzer : public LexicalAnalyzer {
       name += c;
       c = get();
     } while (!isspace(c) && c != std::char_traits<char>::eof());
-    if (c != std::char_traits<char>::eof())
-      unget();
+    unget();
 
     return token(name_to_symbol(name), Attribute{attr++});
   }

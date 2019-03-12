@@ -155,7 +155,7 @@ class InputReader {
       _charBuffer.clear();
       _lineStartBuffer.clear();
       _lineStartBuffer.push_back(0);
-      eofLocation_ = std::numeric_limits<size_t>::max();
+      _eofLocation = std::numeric_limits<size_t>::max();
     }
     /**
     \brief Appends the character to the end of the buffer.
@@ -164,7 +164,7 @@ class InputReader {
     */
     void append(int c) {
       if (c == eof) {
-        eofLocation_ = _charBuffer.size();
+        _eofLocation = _charBuffer.size();
         return;
       }
       _charBuffer.push_back(c);
@@ -184,7 +184,7 @@ class InputReader {
     */
     bool get(int& c, Location& location) const noexcept {
       auto it = character(location);
-      if (it == _charBuffer.end() && _charBuffer.size() == eofLocation_) {
+      if (it == _charBuffer.end() && _charBuffer.size() >= _eofLocation) {
         c = eof;
         return true;
       } else if (it >= line_end(line(location))) {
@@ -254,9 +254,7 @@ class InputReader {
     \returns The next location after c has been read.
     */
     Location next_location(int c, const Location& location) const noexcept {
-      if (c == eof) {
-        return location;
-      } else if (c == '\n') {
+      if (c == '\n') {
         return {location.row + 1, 1, location.fileName};
       } else {
         return {location.row, location.col + 1, location.fileName};
@@ -282,7 +280,7 @@ class InputReader {
 
     This index is set to maximal size_t value until EOF was appended.
     */
-    size_t eofLocation_ = std::numeric_limits<size_t>::max();
+    size_t _eofLocation = std::numeric_limits<size_t>::max();
 
     /**
     \brief Returns an iterator to the character in location l.

@@ -122,13 +122,16 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     Token token = next_token();
 
     while (true) {
+      std::cout << state << ' ' << token.to_string() << "\n";
       switch (auto&& item = _lrTable.lr_action(state, token.symbol()); item.action) {
         case LRAction::SHIFT:
           state = item.argument;
+          std::cout << "shift " << item.argument << "\n";
           pushdown.push_back(state);
           token = next_token();
           break;
         case LRAction::REDUCE: {
+          std::cout << "reduce " << translationGrammar_->rules()[item.argument].to_string() << "\n";
           auto&& rule = translationGrammar_->rules()[item.argument];
           for (size_t i = 0; i < rule.input().size(); ++i) {
             pushdown.pop_back();
@@ -204,8 +207,8 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     for (auto terminal = Symbol::eof(); terminal.id() < translationGrammar_->terminals();
          terminal = Terminal(terminal.id())) {
       if (_lrTable.lr_action(state, terminal).action != LRAction::ERROR) {
-        message += " '";
-        message += terminal.to_string() + "'";
+        message += " ";
+        message += terminal.to_string();
       }
     }
     message += "\n";
@@ -241,7 +244,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
 
 using LALRTranslationControl = LRTranslationControlTemplate<LALRTable>;
 using LR1TranslationControl = LRTranslationControlTemplate<LR1Table>;
-using IELRTranslationControl = LRTranslationControlTemplate<IELRTable>;
+using LSCELRTranslationControl = LRTranslationControlTemplate<LSCELRTable>;
 
 using LALRStrictTranslationControl = LRTranslationControlTemplate<LALRStrictTable>;
 using LR1StrictTranslationControl = LRTranslationControlTemplate<LR1StrictTable>;

@@ -13,7 +13,7 @@ methods.
 #include <ostream>
 #include <stdexcept>
 #include <utility>
-
+#include <iostream>
 namespace ctf {
 enum class Associativity : unsigned char {
   NONE = 0x0,
@@ -58,8 +58,10 @@ class Rule {
       return;
     }
     // attribute actions were provided, checking validity
-    if (_attributeActions.size() != count__inputterminals())
-      throw std::invalid_argument("Invalid _attributeActions in Rule");
+    if (_attributeActions.size() != count_input_terminals()) {
+      std::cout << to_string() << "\n";
+      throw std::invalid_argument("Invalid attribute actions in Rule");
+    }
     for (auto& target : _attributeActions) {
       if (target.size() > _output.size())
         throw std::invalid_argument(
@@ -111,7 +113,7 @@ class Rule {
       return;
     }
     // attribute actions were provided, checking validity
-    if (_attributeActions.size() != count__inputterminals())
+    if (_attributeActions.size() != count_input_terminals())
       throw std::invalid_argument("Invalid attributeActions in Rule.");
     for (auto& target : _attributeActions) {
       if (target.size() > _output.size())
@@ -272,13 +274,15 @@ class Rule {
       if (s.nonterminal())
         outputNonterminals.push_back(s);
     }
-    if (inputNonterminals != outputNonterminals)
+    if (inputNonterminals != outputNonterminals) {
+      std::cout << to_string() << "\n";
       throw std::invalid_argument("Input and output nonterminals must match.");
+    }
   }
   /**
   \brief Counts input nonterminals.
   */
-  size_t count__inputterminals() const {
+  size_t count_input_terminals() const {
     size_t count = 0;
     for (auto& s : _input) {
       if (s.type() != Symbol::Type::NONTERMINAL)
@@ -290,7 +294,7 @@ class Rule {
   \brief Creates empty actions for terminal attributes.
   */
   void create_empty_actions() {
-    _attributeActions = vector<vector_set<size_t>>(count__inputterminals(), vector_set<size_t>());
+    _attributeActions = vector<vector_set<size_t>>(count_input_terminals(), vector_set<size_t>());
   }
 };
 

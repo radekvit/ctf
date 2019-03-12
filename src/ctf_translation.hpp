@@ -180,6 +180,10 @@ class Translation {
          []() -> std::unique_ptr<TranslationControl> {
            return std::make_unique<LALRTranslationControl>();
          }},
+        {"lscelr",
+         []() -> std::unique_ptr<TranslationControl> {
+           return std::make_unique<LSCELRTranslationControl>();
+         }},
       };
     auto it = controls.find(name);
     if (it == controls.end())
