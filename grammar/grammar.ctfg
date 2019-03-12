@@ -61,8 +61,7 @@ RuleClauses:
 
 SingleRule:
 	String 'NEWLINE' | String
-	String 'NEWLINE' 'INDENT' Attributes 'DEDENT' | String Attributes
-	# includes Attributes
+	String 'NEWLINE' 'INDENT' AttributesLight 'DEDENT' | String AttributesLight
 	String '|' OutputString
 
 String:
@@ -85,6 +84,9 @@ Attributes:
 	RulePrecedence | 'attributes' RulePrecedence 'attribute list end'
 	AttributeList | 'attributes' AttributeList 'attribute list end'
 	RulePrecedence AttributeList | 'attributes' RulePrecedence AttributeList 'attribute list end'
+
+AttributesLight:
+	RulePrecedence | 'attributes' RulePrecedence 'attribute list end'
 
 RulePrecedence:
 	'precedence' 'terminal' 'NEWLINE' | 'precedence' 'terminal'

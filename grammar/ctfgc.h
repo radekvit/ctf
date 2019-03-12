@@ -20,36 +20,38 @@ inline constexpr ctf::Symbol operator""_nt(const char* s, size_t) {
     return ctf::Nonterminal(3);
   if (ctf::c_streq(s, "Attributes"))
     return ctf::Nonterminal(4);
-  if (ctf::c_streq(s, "IntList"))
+  if (ctf::c_streq(s, "AttributesLight"))
     return ctf::Nonterminal(5);
-  if (ctf::c_streq(s, "IntList'"))
+  if (ctf::c_streq(s, "IntList"))
     return ctf::Nonterminal(6);
-  if (ctf::c_streq(s, "OutputString"))
+  if (ctf::c_streq(s, "IntList'"))
     return ctf::Nonterminal(7);
-  if (ctf::c_streq(s, "Precedence"))
+  if (ctf::c_streq(s, "OutputString"))
     return ctf::Nonterminal(8);
-  if (ctf::c_streq(s, "PrecedenceLevels"))
+  if (ctf::c_streq(s, "Precedence"))
     return ctf::Nonterminal(9);
-  if (ctf::c_streq(s, "RuleClauses"))
+  if (ctf::c_streq(s, "PrecedenceLevels"))
     return ctf::Nonterminal(10);
-  if (ctf::c_streq(s, "RulePrecedence"))
+  if (ctf::c_streq(s, "RuleClauses"))
     return ctf::Nonterminal(11);
-  if (ctf::c_streq(s, "Rules"))
+  if (ctf::c_streq(s, "RulePrecedence"))
     return ctf::Nonterminal(12);
-  if (ctf::c_streq(s, "S"))
+  if (ctf::c_streq(s, "Rules"))
     return ctf::Nonterminal(13);
-  if (ctf::c_streq(s, "SingleRule"))
+  if (ctf::c_streq(s, "S"))
     return ctf::Nonterminal(14);
-  if (ctf::c_streq(s, "String"))
+  if (ctf::c_streq(s, "SingleRule"))
     return ctf::Nonterminal(15);
-  if (ctf::c_streq(s, "String'"))
+  if (ctf::c_streq(s, "String"))
     return ctf::Nonterminal(16);
-  if (ctf::c_streq(s, "TokenList"))
+  if (ctf::c_streq(s, "String'"))
     return ctf::Nonterminal(17);
-  if (ctf::c_streq(s, "TokenList'"))
+  if (ctf::c_streq(s, "TokenList"))
     return ctf::Nonterminal(18);
+  if (ctf::c_streq(s, "TokenList'"))
+    return ctf::Nonterminal(19);
 
-  return ctf::Nonterminal(19);
+  return ctf::Nonterminal(20);
 }
 
 inline constexpr ctf::Symbol operator""_t(const char* s, size_t) {
@@ -136,20 +138,21 @@ inline ctf::string to_string(ctf::Symbol s) {
     {ctf::Nonterminal(2), "AttributeList"},
     {ctf::Nonterminal(3), "AttributeList'"},
     {ctf::Nonterminal(4), "Attributes"},
-    {ctf::Nonterminal(5), "IntList"},
-    {ctf::Nonterminal(6), "IntList'"},
-    {ctf::Nonterminal(7), "OutputString"},
-    {ctf::Nonterminal(8), "Precedence"},
-    {ctf::Nonterminal(9), "PrecedenceLevels"},
-    {ctf::Nonterminal(10), "RuleClauses"},
-    {ctf::Nonterminal(11), "RulePrecedence"},
-    {ctf::Nonterminal(12), "Rules"},
-    {ctf::Nonterminal(13), "S"},
-    {ctf::Nonterminal(14), "SingleRule"},
-    {ctf::Nonterminal(15), "String"},
-    {ctf::Nonterminal(16), "String'"},
-    {ctf::Nonterminal(17), "TokenList"},
-    {ctf::Nonterminal(18), "TokenList'"},
+    {ctf::Nonterminal(5), "AttributesLight"},
+    {ctf::Nonterminal(6), "IntList"},
+    {ctf::Nonterminal(7), "IntList'"},
+    {ctf::Nonterminal(8), "OutputString"},
+    {ctf::Nonterminal(9), "Precedence"},
+    {ctf::Nonterminal(10), "PrecedenceLevels"},
+    {ctf::Nonterminal(11), "RuleClauses"},
+    {ctf::Nonterminal(12), "RulePrecedence"},
+    {ctf::Nonterminal(13), "Rules"},
+    {ctf::Nonterminal(14), "S"},
+    {ctf::Nonterminal(15), "SingleRule"},
+    {ctf::Nonterminal(16), "String"},
+    {ctf::Nonterminal(17), "String'"},
+    {ctf::Nonterminal(18), "TokenList"},
+    {ctf::Nonterminal(19), "TokenList'"},
   };
   auto it = names.find(s);
   if (it != names.end()) {

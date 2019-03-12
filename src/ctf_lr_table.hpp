@@ -81,7 +81,7 @@ class LR1GenericTable : public LRGenericTable {
   // TODO: conflict resolution
  public:
   LR1GenericTable() {}
-  LR1GenericTable(const TranslationGrammar& grammar) {
+  LR1GenericTable(const TranslationGrammar& grammar, symbol_string_fn to_str = ctf::to_string) {
     StateMachine sm(grammar);
     _terminals = grammar.terminals();
     _nonterminals = grammar.nonterminals();
@@ -89,7 +89,7 @@ class LR1GenericTable : public LRGenericTable {
 
     for (auto&& state : sm.states()) {
       for (auto&& item : state.items()) {
-        lr1_insert(state, item, state.transitions(), grammar);
+        lr1_insert(state, item, state.transitions(), grammar, to_str);
       }
     }
   }
@@ -98,7 +98,8 @@ class LR1GenericTable : public LRGenericTable {
   void lr1_insert(const typename StateMachine::State& state,
                   const typename StateMachine::Item& item,
                   const unordered_map<Symbol, size_t>& transitionMap,
-                  const TranslationGrammar& grammar) {
+                  const TranslationGrammar& grammar,
+                  symbol_string_fn to_str = ctf::to_string) {
     using namespace std::literals;
 
     size_t id = state.id();
@@ -112,7 +113,7 @@ class LR1GenericTable : public LRGenericTable {
         auto& action = lr_action_item(id, terminal);
         if (action.action != LRAction::ERROR) {
           action = conflict_resolution(
-            terminal, {LRAction::REDUCE, rule.id}, action, rule, state, grammar);
+            terminal, {LRAction::REDUCE, rule.id}, action, rule, state, grammar, to_str);
         } else {
           // regular insert
           lr_action_item(id, terminal) = {LRAction::REDUCE, rule.id};
@@ -134,7 +135,8 @@ class LR1GenericTable : public LRGenericTable {
                                      {LRAction::SHIFT, nextState},
                                      grammar.rules()[action.argument],
                                      state,
-                                     grammar);
+                                     grammar,
+                                     to_str);
       } else {
         // regular insert
         lr_action_item(id, terminal) = {LRAction::SHIFT, nextState};
@@ -147,7 +149,8 @@ class LR1GenericTable : public LRGenericTable {
                                    const LRActionItem& item,
                                    const TranslationGrammar::Rule& reduceRule,
                                    const typename StateMachine::State& state,
-                                   const TranslationGrammar& grammar) {
+                                   const TranslationGrammar& grammar,
+                                   symbol_string_fn to_str = ctf::to_string) {
     using namespace std::literals;
     // R/R conflict: select rule defined first in the grammar
     if (item.action == LRAction::REDUCE) {
@@ -166,8 +169,8 @@ class LR1GenericTable : public LRGenericTable {
           return item;
         case Associativity::NONE:
           // not associative, same precedence :> error
-          throw std::invalid_argument("Unresolvable S/R conflict on "s + terminal.to_string() +
-                                      " in state " + state.to_string() + ".");
+          throw std::invalid_argument("Unresolvable S/R conflict on "s + to_str(terminal) +
+                                      " in state " + state.to_string(to_str) + ".");
       }
     } else if (precedence < precedence2) {
       // terminal higher precedence :> favor shift
@@ -182,7 +185,8 @@ template <typename StateMachine, const char* type>
 class LR1StrictGenericTable : public LRGenericTable {
  public:
   LR1StrictGenericTable() {}
-  LR1StrictGenericTable(const TranslationGrammar& grammar) {
+  LR1StrictGenericTable(const TranslationGrammar& grammar,
+                        symbol_string_fn to_str = ctf::to_string) {
     StateMachine sm(grammar);
     _terminals = grammar.terminals();
     _nonterminals = grammar.nonterminals();

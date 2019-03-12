@@ -57,7 +57,9 @@ class TranslationControl {
 
   \param[in] tg Translation grammar to be set.
   */
-  virtual void set_grammar(const TranslationGrammar& tg) { translationGrammar_ = &tg; }
+  virtual void set_grammar(const TranslationGrammar& tg, symbol_string_fn to_str = ctf::to_string) {
+    translationGrammar_ = &tg;
+  }
 
   /**
   \brief Set the error stream.
@@ -69,7 +71,7 @@ class TranslationControl {
   /**
   \brief Runs translation. Translation output is stored in _output.
   */
-  virtual void run() = 0;
+  virtual void run(symbol_string_fn to_str = ctf::to_string) = 0;
 
   /**
   \brief Returns a constant reference to output symbols.

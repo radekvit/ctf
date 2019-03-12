@@ -69,17 +69,17 @@ class Item {
     return lhs._mark == rhs._mark && lhs._rule == rhs._rule;
   }
 
-  string to_string() const {
-    string result = rule().nonterminal().to_string() + " -> (";
+  string to_string(symbol_string_fn to_str = ctf::to_string) const {
+    string result = to_str(rule().nonterminal()) + " -> (";
     size_t i = 0;
     for (; i < mark(); ++i) {
       result += ' ';
-      result += rule().input()[i].to_string();
+      result += to_str(rule().input()[i]);
     }
     result += " .";
     for (; i < rule().input().size(); ++i) {
       result += ' ';
-      result += rule().input()[i].to_string();
+      result += to_str(rule().input()[i]);
     }
     result += " )";
     return result;

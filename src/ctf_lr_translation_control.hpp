@@ -26,8 +26,10 @@ class LRTranslationControlGeneral : public TranslationControl {
   \param[in] la A reference to the lexical analyzer to be used to get tokens.
   \param[in] tg The translation grammar for this translation.
   */
-  LRTranslationControlGeneral(LexicalAnalyzer& la, TranslationGrammar& tg) {
-    set_grammar(tg);
+  LRTranslationControlGeneral(LexicalAnalyzer& la,
+                              TranslationGrammar& tg,
+                              symbol_string_fn to_str = ctf::to_string) {
+    set_grammar(tg, to_str);
     set_lexical_analyzer(la);
   }
 
@@ -96,15 +98,17 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   \param[in] la A reference to the lexical analyzer to be used to get tokens.
   \param[in] tg The translation grammar for this translation.
   */
-  LRTranslationControlTemplate(LexicalAnalyzer& la, TranslationGrammar& tg) {
-    set_grammar(tg);
+  LRTranslationControlTemplate(LexicalAnalyzer& la,
+                               TranslationGrammar& tg,
+                               symbol_string_fn to_str = ctf::to_string) {
+    set_grammar(tg, to_str);
     set_lexical_analyzer(la);
   }
 
   /**
   \brief Runs the translation. Output symbols are stored in _output.
   */
-  void run() override {
+  void run(symbol_string_fn to_str = ctf::to_string) override {
     if (!lexicalAnalyzer_)
       throw TranslationException("No lexical analyzer was attached.");
     else if (!translationGrammar_)
@@ -144,7 +148,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
           produce_output(appliedRules);
           return;
         case LRAction::ERROR:
-          add_error(token, error_message(state, token));
+          add_error(token, error_message(state, token, to_str));
           if (!error_recovery(state, token))
             return;
       }
@@ -188,24 +192,22 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
 
   \param[in] tg The translation grammar for this translation.
   */
-  void set_grammar(const TranslationGrammar& tg) override {
+  void set_grammar(const TranslationGrammar& tg,
+                   symbol_string_fn to_str = ctf::to_string) override {
     translationGrammar_ = &tg;
-    create_lr_table();
+    create_lr_table(to_str);
   }
 
   // TODO allow example-based error messages
-  string error_message(size_t state, const Token& token) {
-    string message = "Unexpected symbol '";
-    message += token.symbol().to_string();
-    message += "'\nexpected one of:";
-    if (_lrTable.lr_action(state, Symbol::eof()).action != LRAction::ERROR) {
-      message += " EOF";
-    }
+  string error_message(size_t state, const Token& token, symbol_string_fn to_str = ctf::to_string) {
+    string message = "Unexpected symbol ";
+    message += to_str(token.symbol());
+    message += "\nexpected one of:";
     for (auto terminal = Symbol::eof(); terminal.id() < translationGrammar_->terminals();
          terminal = Terminal(terminal.id())) {
       if (_lrTable.lr_action(state, terminal).action != LRAction::ERROR) {
         message += " ";
-        message += terminal.to_string();
+        message += to_str(terminal);
       }
     }
     message += "\n";
@@ -231,7 +233,9 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   /**
   Creates all predictive sets and creates a new LR table.
   */
-  void create_lr_table() { _lrTable = LRTableType(*translationGrammar_); }
+  void create_lr_table(symbol_string_fn to_str = ctf::to_string) {
+    _lrTable = LRTableType(*translationGrammar_, to_str);
+  }
 
   Token next_token() override {
     _tokens.push_back(TranslationControl::next_token());

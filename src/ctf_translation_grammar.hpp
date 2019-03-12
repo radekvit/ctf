@@ -213,16 +213,16 @@ class Rule {
   friend bool operator>=(const Rule& lhs, const Rule& rhs) { return rhs <= lhs; }
   ///@}
 
-  string to_string() const {
-    string result = nonterminal().to_string() + " -> (";
+  string to_string(symbol_string_fn to_str = ctf::to_string) const {
+    string result = to_str(nonterminal()) + " -> (";
     for (auto&& symbol : input()) {
       result += ' ';
-      result += symbol.to_string();
+      result += to_str(symbol);
     }
     result += " ), (";
     for (auto&& symbol : output()) {
       result += ' ';
-      result += symbol.to_string();
+      result += to_str(symbol);
     }
     result += " )";
     return result;

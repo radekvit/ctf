@@ -185,7 +185,7 @@ class LLTranslationControlTemplate : public LLTranslationControlGeneral {
   /**
   \brief Runs the translation. Output symbols are stored in _output.
   */
-  void run() override {
+  void run(symbol_string_fn to_str = ctf::to_string) override {
     using Type = Symbol::Type;
 
     if (!lexicalAnalyzer_)
@@ -372,7 +372,7 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
     return true;
   }
 
-  void run() override {
+  void run(symbol_string_fn to_str = ctf::to_string) override {
     using Type = Symbol::Type;
 
     if (!lexicalAnalyzer_)
@@ -465,7 +465,7 @@ class GeneralLLTranslationControl : public LLTranslationControlGeneral {
 
   \param[in] tg The translation grammar for this translation.
   */
-  void set_grammar(const TranslationGrammar& tg) override {
+  void set_grammar(const TranslationGrammar& tg, symbol_string_fn = ctf::to_string) override {
     translationGrammar_ = &tg;
     create_ll_table();
   }

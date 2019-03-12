@@ -52,16 +52,16 @@ class StateMachine {
     void set_expanded() noexcept { _expanded = true; }
     bool expanded() const noexcept { return _expanded; }
 
-    string to_string() const {
+    string to_string(symbol_string_fn to_str = ctf::to_string) const {
       string result = std::to_string(id()) + ": {\n";
       for (auto&& item : items()) {
         result += '\t';
-        result += item.to_string() + '\n';
+        result += item.to_string(to_str) + '\n';
       }
       result += "\t-----\n";
       for (auto&& [symbol, next] : transitions()) {
         result += '\t';
-        result += symbol.to_string() + ": " + std::to_string(next) + '\n';
+        result += to_str(symbol) + ": " + std::to_string(next) + '\n';
       }
       result += "}\n";
       return result;

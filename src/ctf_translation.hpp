@@ -92,7 +92,8 @@ class Translation {
   TranslationResult run(std::istream& inputStream,
                         std::ostream& outputStream,
                         std::ostream& errorStream,
-                        const std::string& inputName = "") {
+                        const std::string& inputName = "",
+                        symbol_string_fn to_str = ctf::to_string) {
     // extra output buffer
     std::stringstream ss;
     // error flags
@@ -114,7 +115,7 @@ class Translation {
 
     try {
       // lexical analysis, syntax analysis and translation
-      _translationControl.run();
+      _translationControl.run(to_str);
     } catch (LexicalException& le) {
       lexError = true;
     } catch (SyntaxException& se) {
