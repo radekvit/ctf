@@ -212,7 +212,13 @@ ctf::TranslationGrammar ctfgc::grammar({
       {}
     ),
     ctf::Rule("IntList'"_nt,
-      {"integer"_t, "IntList'"_nt, }
+      {","_t, },
+      {}
+    ),
+    ctf::Rule("IntList'"_nt,
+      {","_t, "integer"_t, "IntList'"_nt, },
+      {"integer"_t, "IntList'"_nt, },
+      ctf::vector<ctf::vector_set<size_t>>{{}, {0, }, }
     ),
 
   },
