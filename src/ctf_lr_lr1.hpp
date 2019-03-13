@@ -5,7 +5,6 @@
 #include "ctf_lr_lr0.hpp"
 #include "ctf_table_sets.hpp"
 #include "ctf_translation_grammar.hpp"
-#include "iostream"
 
 namespace ctf::lr1 {
 

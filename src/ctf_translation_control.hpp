@@ -79,6 +79,8 @@ class TranslationControl {
   */
   virtual const tstack<Token>& output() const noexcept { return _output; }
 
+  virtual void save(std::ostream&) const {}
+
  protected:
   /**
   \brief Alias for TranslationGrammar::Rule

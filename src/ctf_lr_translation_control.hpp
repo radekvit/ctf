@@ -6,6 +6,7 @@
 #ifndef CTF_LR_TRANSLATION_CONTROL_H
 #define CTF_LR_TRANSLATION_CONTROL_H
 
+#include <iostream>
 #include "ctf_lr_lalr.hpp"
 #include "ctf_lr_lr0.hpp"
 #include "ctf_lr_table.hpp"
@@ -220,6 +221,8 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     return false;
   }
 
+  virtual void save(std::ostream& os) const { _lrTable.save(os); }
+
  protected:
   /**
   \brief LR table used to control the translation.
@@ -235,11 +238,22 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   */
   void create_lr_table(symbol_string_fn to_str = ctf::to_string) {
     _lrTable = LRTableType(*translationGrammar_, to_str);
+    _lrTable.save(std::cout);
   }
 
   Token next_token() override {
     _tokens.push_back(TranslationControl::next_token());
     return _tokens.back();
+  }
+};
+
+class SavedLRTranslationControl : public LRTranslationControlTemplate<LRSavedTable> {
+ public:
+  SavedLRTranslationControl(std::istream& is) { _lrTable = LRSavedTable(is); }
+
+ protected:
+  void set_grammar(const TranslationGrammar& tg, symbol_string_fn = ctf::to_string) override {
+    translationGrammar_ = &tg;
   }
 };
 

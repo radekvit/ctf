@@ -58,6 +58,29 @@ class Translation {
   }
   /**
   \brief Constructs Translation with given lexical analyzer, translation grammar
+  and output generator. Translation control given by unique_ptr.
+   \param[in] la A callable to perform lexical analysis.
+   \param[in] tc A translation control to drive the translation.
+   \param[in] tg Translation grammar that defines the input and output
+  languages.
+   \param[in] og A callable to perform output generation.
+  */
+  Translation(std::unique_ptr<LexicalAnalyzer>&& la,
+              std::unique_ptr<TranslationControl>&& tc,
+              const TranslationGrammar& tg,
+              std::unique_ptr<OutputGenerator>&& og)
+    : _lexer(std::move(la))
+    , _lexicalAnalyzer(*_lexer)
+    , _control(std::move(tc))
+    , _translationControl(*_control)
+    , _translationGrammar(tg)
+    , _generator(std::move(og))
+    , _outputGenerator(*_generator) {
+    _translationControl.set_grammar(_translationGrammar);
+    _translationControl.set_lexical_analyzer(_lexicalAnalyzer);
+  }
+  /**
+  \brief Constructs Translation with given lexical analyzer, translation grammar
   and output generator. Translation control is constructed by name.
    \param[in] la A callable to perform lexical analysis.
    \param[in] tcName Name of a built-in translation control.
@@ -175,6 +198,12 @@ class Translation {
     else
       return (*it).second();
   }
+
+  static std::unique_ptr<TranslationControl> load(std::istream& is) {
+    return std::make_unique<SavedLRTranslationControl>(is);
+  }
+
+  void save(std::ostream& os) const { _translationControl.save(os); }
 
  protected:
   /**

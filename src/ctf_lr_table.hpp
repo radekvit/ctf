@@ -33,6 +33,7 @@ struct LRActionItem {
 
 class LRGenericTable {
  public:
+  LRGenericTable() { initialize_tables(_states); }
   const LRActionItem& lr_action(size_t state, const Symbol& terminal) const {
     return _actionTable[actionIndex(state, terminal.id())];
   }
@@ -41,15 +42,49 @@ class LRGenericTable {
     return _gotoTable[gotoIndex(state, nonterminal.id())];
   }
 
-  size_t total_states() const { return _states; }
+  size_t states() const { return _states; }
+
+  void save(std::ostream& os) const {
+    os << _states << ' ' << _nonterminals << ' ' << _terminals << "\n";
+    // save action table
+    for (size_t i = 0; i < _states; ++i) {
+      for (size_t j = 0; j < _terminals; ++j) {
+        auto& action = _actionTable[actionIndex(i, j)];
+        switch (action.action) {
+          case LRAction::ERROR:
+            break;
+          case LRAction::SUCCESS:
+            os << ' ' << j << ':' << "S";
+            break;
+          case LRAction::SHIFT:
+            os << ' ' << j << ':' << 's' << action.argument;
+            break;
+          case LRAction::REDUCE:
+            os << ' ' << j << ':' << 'r' << action.argument;
+            break;
+        }
+      }
+      os << "\n";
+    }
+    // save goto table
+    for (size_t i = 0; i < _states; ++i) {
+      for (size_t j = 0; j < _nonterminals; ++j) {
+        size_t k = _gotoTable[gotoIndex(i, j)];
+        if (k != _states) {
+          os << ' ' << j << ':' << k;
+        }
+      }
+      os << "\n";
+    }
+  }
 
  protected:
   vector<LRActionItem> _actionTable;
   vector<size_t> _gotoTable;
 
-  size_t _states;
-  size_t _terminals;
-  size_t _nonterminals;
+  size_t _states = 1;
+  size_t _terminals = 1;
+  size_t _nonterminals = 1;
 
   LRActionItem& lr_action_item(size_t state, const Symbol& terminal) {
     return _actionTable[actionIndex(state, terminal.id())];
@@ -70,7 +105,7 @@ class LRGenericTable {
 
   void initialize_tables(size_t size) {
     _actionTable = {size * _terminals, {LRAction::ERROR, 0}};
-    _gotoTable = vector<size_t>(size * _nonterminals, 0);
+    _gotoTable = vector<size_t>(size * _nonterminals, size);
 
     _states = size;
   }
@@ -249,6 +284,64 @@ class LR1StrictGenericTable : public LRGenericTable {
       err = "S/R conflict on ";
     err += to_str(conflicted) + " in state " + state.to_string(to_str);
     return err;
+  }
+};
+
+class LRSavedTable : public LRGenericTable {
+ public:
+  // ignore inicialization
+  LRSavedTable() {}
+  LRSavedTable(const TranslationGrammar&, symbol_string_fn = ctf::to_string) {}
+  LRSavedTable(std::istream& is) {
+    size_t states = 0;
+    is >> states >> _nonterminals >> _terminals;
+    if (_states < 1 || _terminals < 1 || _nonterminals < 1) {
+      throw std::invalid_argument("Invalid saved parsing table.");
+    }
+    initialize_tables(states);
+    // skip \n
+    is.get();
+    // initialize action table
+    for (size_t i = 0; i < states; ++i) {
+      while (true) {
+        char c = is.get();
+        if (c == '\n') {
+          break;
+        }
+        size_t terminal = 0;
+        is >> terminal;
+        // skip :
+        is.get();
+        char action = is.get();
+        if (action == 'S') {
+          _actionTable[actionIndex(i, terminal)] = {LRAction::SUCCESS, 0};
+        } else {
+          size_t argument = 0;
+          is >> argument;
+          if (action == 'r') {
+            _actionTable[actionIndex(i, terminal)] = {LRAction::REDUCE, argument};
+          } else if (action == 's') {
+            _actionTable[actionIndex(i, terminal)] = {LRAction::SHIFT, argument};
+          }
+        }
+      }
+    }
+    // initialize goto table
+    for (size_t i = 0; i < states; ++i) {
+      while (true) {
+        char c = is.get();
+        if (c == '\n') {
+          break;
+        }
+        size_t nonterminal = 0;
+        is >> nonterminal;
+        // skip :
+        is.get();
+        size_t argument = 0;
+        is >> argument;
+        _gotoTable[gotoIndex(i, nonterminal)] = argument;
+      }
+    }
   }
 };
 
