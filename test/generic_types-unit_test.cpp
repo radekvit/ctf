@@ -191,7 +191,6 @@ TEST_CASE("transform") {
 
 TEST_CASE("bit_set basic operations", "[bit_set]") {
   bit_set s(6);
-  const bit_set& sr = s;
 
   REQUIRE(s.empty());
   REQUIRE(s.none());

@@ -12,7 +12,6 @@
 #include <sstream>
 
 #include "ctf_lexical_analyzer.hpp"
-#include "ctf_ll_translation_control.hpp"
 #include "ctf_lr_translation_control.hpp"
 #include "ctf_output_generator.hpp"
 #include "ctf_translation_control.hpp"
@@ -157,22 +156,6 @@ class Translation {
   static std::unique_ptr<TranslationControl> control(const string& name) {
     const static unordered_map<string, std::function<std::unique_ptr<TranslationControl>()>>
       controls{
-        {"ll",
-         []() -> std::unique_ptr<TranslationControl> {
-           return std::make_unique<LLTranslationControl>();
-         }},
-        {"predictive",
-         []() -> std::unique_ptr<TranslationControl> {
-           return std::make_unique<LLTranslationControl>();
-         }},
-        {"priority ll",
-         []() -> std::unique_ptr<TranslationControl> {
-           return std::make_unique<PriorityLLTranslationControl>();
-         }},
-        {"general ll",
-         []() -> std::unique_ptr<TranslationControl> {
-           return std::make_unique<GeneralLLTranslationControl>();
-         }},
         {"canonical lr",
          []() -> std::unique_ptr<TranslationControl> {
            return std::make_unique<LR1TranslationControl>();

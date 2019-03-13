@@ -76,7 +76,7 @@ class LRGenericTable {
   }
 };
 
-template <typename StateMachine, const char* type>
+template <typename StateMachine>
 class LR1GenericTable : public LRGenericTable {
   // TODO: conflict resolution
  public:
@@ -169,8 +169,9 @@ class LR1GenericTable : public LRGenericTable {
           return item;
         case Associativity::NONE:
           // not associative, same precedence :> error
-          throw std::invalid_argument("Unresolvable S/R conflict on "s + to_str(terminal) +
-                                      " in state " + state.to_string(to_str) + ".");
+          throw std::invalid_argument("S/R conflict on "s + to_str(terminal) +
+                                      " with no associativity in state\n" +
+                                      state.to_string(to_str) + ".");
       }
     } else if (precedence < precedence2) {
       // terminal higher precedence :> favor shift
@@ -181,7 +182,7 @@ class LR1GenericTable : public LRGenericTable {
   }
 };
 
-template <typename StateMachine, const char* type>
+template <typename StateMachine>
 class LR1StrictGenericTable : public LRGenericTable {
  public:
   LR1StrictGenericTable() {}
@@ -194,57 +195,69 @@ class LR1StrictGenericTable : public LRGenericTable {
 
     for (auto&& state : sm.states()) {
       for (auto&& item : state.items()) {
-        lr1_insert(state.id(), item, state.transitions(), grammar);
+        lr1_insert(state, item, state.transitions(), grammar, to_str);
       }
     }
   }
 
  protected:
-  void lr1_insert(size_t state,
+  void lr1_insert(const typename StateMachine::State& state,
                   const typename StateMachine::Item& item,
                   const unordered_map<Symbol, size_t>& transitionMap,
-                  const TranslationGrammar& grammar) {
+                  const TranslationGrammar& grammar,
+                  symbol_string_fn to_str = ctf::to_string) {
     using namespace std::literals;
     auto&& rule = item.rule();
     auto&& mark = item.mark();
     // special S' -> S.EOF item
     if (rule == grammar.starting_rule() && mark == 1) {
-      lr_action_item(state, Symbol::eof()) = {LRAction::SUCCESS, 0};
+      lr_action_item(state.id(), Symbol::eof()) = {LRAction::SUCCESS, 0};
     } else if (mark == rule.input().size()) {
       for (auto&& terminal : item.lookaheads().symbols()) {
-        if (lr_action(state, terminal).action != LRAction::ERROR) {
-          throw std::invalid_argument("Translation grammar is not "s + type);
+        auto&& action = lr_action(state.id(), terminal);
+        if (action.action != LRAction::ERROR) {
+          throw std::invalid_argument(
+            conflict_error_message(state, action.action, LRAction::REDUCE, terminal, to_str));
         }
-        lr_action_item(state, terminal) = {LRAction::REDUCE, rule.id};
+        lr_action_item(state.id(), terminal) = {LRAction::REDUCE, rule.id};
       }
     } else if (rule.input()[mark].nonterminal()) {
       auto&& nonterminal = rule.input()[mark];
       size_t nextState = transitionMap.at(nonterminal);
-      lr_goto_item(state, nonterminal) = nextState;
+      lr_goto_item(state.id(), nonterminal) = nextState;
     } else {
       auto&& terminal = rule.input()[mark];
       size_t nextState = transitionMap.at(terminal);
-      auto&& action = lr_action(state, terminal);
+      auto&& action = lr_action(state.id(), terminal);
       if (action.action != LRAction::ERROR && action != LRActionItem{LRAction::SHIFT, nextState}) {
-        throw std::invalid_argument("Translation grammar is not "s + type);
+        throw std::invalid_argument(
+          conflict_error_message(state, action.action, LRAction::SHIFT, terminal, to_str));
       }
-      lr_action_item(state, terminal) = {LRAction::SHIFT, nextState};
+      lr_action_item(state.id(), terminal) = {LRAction::SHIFT, nextState};
     }
+  }
+
+  string conflict_error_message(const typename StateMachine::State& state,
+                                LRAction action1,
+                                LRAction action2,
+                                Symbol conflicted,
+                                symbol_string_fn to_str) {
+    string err;
+    if (action1 == action2)
+      err = "R/R conflict on ";
+    else
+      err = "S/R conflict on ";
+    err += to_str(conflicted) + " in state " + state.to_string(to_str);
+    return err;
   }
 };
 
-inline char CanonicalLR1String[] = "Canonical LR(1)";
-inline char LALRString[] = "LALR";
-inline char LSCELRString[] = "LSCELR";
-inline char StrictCanonicalLR1String[] = "Strict Canonical LR(1)";
-inline char StrictLALRString[] = "Strict LALR";
+using LR1Table = LR1GenericTable<lr1::StateMachine>;
+using LALRTable = LR1GenericTable<lalr::StateMachine>;
+using LSCELRTable = LR1GenericTable<lscelr::StateMachine>;
 
-using LR1Table = LR1GenericTable<lr1::StateMachine, CanonicalLR1String>;
-using LALRTable = LR1GenericTable<lalr::StateMachine, LALRString>;
-using LSCELRTable = LR1GenericTable<lscelr::StateMachine, LSCELRString>;
-
-using LR1StrictTable = LR1StrictGenericTable<lr1::StateMachine, StrictCanonicalLR1String>;
-using LALRStrictTable = LR1StrictGenericTable<lalr::StateMachine, StrictLALRString>;
+using LR1StrictTable = LR1StrictGenericTable<lr1::StateMachine>;
+using LALRStrictTable = LR1StrictGenericTable<lalr::StateMachine>;
 
 }  // namespace ctf
 #endif

@@ -128,24 +128,39 @@ class OutputGenerator {
     return *_error;
   }
 
-  void error_message(const string& message) { err() << message << "\n"; }
+  void warning(const string& message) { err() << "\033[33mwarning\033[39m:\n" << message << "\n"; }
   /**
   \brief Outputs an error message with the location automatically printed before
   it.
   */
-  void error_message(const tstack<Token>::const_iterator it, const string& message) {
-    err() << it->location().to_string() << ": " << message << "\n";
+  void warning(const tstack<Token>::const_iterator it, const string& message) {
+    err() << it->location().to_string() << ": "
+          << "\033[33mwarning\033[39m:\n"
+          << message << "\n";
+  }
+
+  void error(const string& message) {
+    err() << "\033[31mERROR\033[39m:\n" << message << "\n";
+    set_error();
+  }
+  /**
+  \brief Outputs an error message with the location automatically printed before
+  it.
+  */
+  void error(const tstack<Token>::const_iterator it, const string& message) {
+    err() << it->location().to_string() << ": "
+          << "\033[31mERROR\033[39m:\n"
+          << message << "\n";
+    set_error();
   }
 
   void fatal_error(const string& message) {
-    error_message(message);
-    set_error();
+    error(message);
     throw SemanticException("Semantic error encountered.");
   }
 
   void fatal_error(tstack<Token>::const_iterator it, const string& message) {
-    error_message(it, message);
-    set_error();
+    error(it, message);
     throw SemanticException("Semantic error encountered.");
   }
 

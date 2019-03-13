@@ -143,9 +143,9 @@ TEST_CASE("Constructing translation", "[Translation]") {
                         },
                         "E"_nt};
   REQUIRE_NOTHROW(
-    Translation(std::make_unique<LexicalAnalyzer>(), "ll", tg, std::make_unique<TITOG>()));
+    Translation(std::make_unique<LexicalAnalyzer>(), "lscelr", tg, std::make_unique<TITOG>()));
 
-  auto tcp = Translation::control("ll");
+  auto tcp = Translation::control("lscelr");
   REQUIRE_NOTHROW(
     Translation(std::make_unique<LexicalAnalyzer>(), *tcp, tg, std::make_unique<TITOG>()));
 
@@ -218,7 +218,7 @@ TEST_CASE("Running LL translation", "[Translation]") {
                               {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
                           },
                           "E"_nt};
-    Translation tr(std::make_unique<TestLexicalAnalyzer>(), "ll", tg, std::make_unique<TITOG>());
+    Translation tr(std::make_unique<TestLexicalAnalyzer>(), "lscelr", tg, std::make_unique<TITOG>());
     std::stringstream expected;
     std::stringstream out;
     std::stringstream error;
@@ -242,7 +242,7 @@ TEST_CASE("Running LL translation", "[Translation]") {
                               {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "T'"_nt}},
                           },
                           "E"_nt};
-    Translation tr(std::make_unique<TestLexicalAnalyzer>(), "ll", tg, std::make_unique<TITOG>());
+    Translation tr(std::make_unique<TestLexicalAnalyzer>(), "lscelr", tg, std::make_unique<TITOG>());
     std::stringstream out;
     std::stringstream error;
     std::ifstream in("media/in");

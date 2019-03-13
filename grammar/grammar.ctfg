@@ -111,5 +111,5 @@ IntList':
 	-
 	',' | -
 	',' 'integer' IntList' | 'integer' IntList'
-		-,
+		-
 		0

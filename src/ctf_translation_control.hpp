@@ -7,7 +7,6 @@
 #define CTF_TRANSLATION_CONTROL_H
 
 #include "ctf_lexical_analyzer.hpp"
-#include "ctf_ll_table.hpp"
 #include "ctf_translation_grammar.hpp"
 
 namespace ctf {
@@ -57,7 +56,7 @@ class TranslationControl {
 
   \param[in] tg Translation grammar to be set.
   */
-  virtual void set_grammar(const TranslationGrammar& tg, symbol_string_fn to_str = ctf::to_string) {
+  virtual void set_grammar(const TranslationGrammar& tg, symbol_string_fn = ctf::to_string) {
     translationGrammar_ = &tg;
   }
 

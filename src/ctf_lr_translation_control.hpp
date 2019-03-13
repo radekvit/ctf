@@ -72,7 +72,7 @@ class LRTranslationControlGeneral : public TranslationControl {
 
   void add_error(const Token& token, const string& message) {
     set_error();
-    err() << token.location().to_string() << ": " << message << "\n";
+    err() << token.location().to_string() << ": \033[31mERROR\033[39m:\n" << message << "\n";
   }
 
   /**
