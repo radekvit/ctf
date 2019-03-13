@@ -213,7 +213,9 @@ class LexicalAnalyzer {
   \brief Outputs an error message with the location automatically printed before
   it.
   */
-  void warning(const string& message) { err() << _location.to_string() << ": \033[33mwarning\033[39m:\n" << message << "\n"; }
+  void warning(const string& message) {
+    err() << _location.to_string() << ": \033[33mwarning\033[39m:\n" << message << "\n";
+  }
   void error(const string& message) {
     err() << _location.to_string() << ": \033[31mERROR\033[39m:\n" << message << "\n";
     set_error();
