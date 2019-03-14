@@ -7,48 +7,37 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
     exit 999
 fi
 
-OPTIONS=o:f:p:c:h
-LONGOPTS=output:,folder:,parser:,ctf:,help,cxx:
+OPTIONS=o:p:c:h
+LONGOPTS=output:,parser:,ctf:,help,cxx:
 
-# -use ! and PIPESTATUS to get exit code with errexit set
-# -temporarily store output to be able to check for errors
-# -activate quoting/enhanced mode (e.g. by writing out “--options”)
-# -pass arguments only via   -- "$@"   to separate them correctly
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
-    # e.g. return value is 1
-    #  then getopt has complained about wrong arguments to stdout
     exit 1
 fi
-# read getopt’s output this way to handle the quoting right:
 eval set -- "$PARSED"
 
 # default options
 input=""
 outFile="parser"
-outFolder="."
 ctfFolder="../include"
 parser="lscelr"
 cxx="c++"
 
-# now enjoy the options in order and nicely split until we see --
+# the options in order until --
 while true; do
     case "$1" in
+    # print help
         -h|--help)
             echo "
 USAGE:
 
-   ./parsergen [-o <filename>] [-f <folder>] [-c <folder>] [-p <lalr|canonical lr|lscelr>] [--cxx <compiler>] [--] <input>
+   ./parsergen [-o <filename>] [-p <lalr|canonical lr|lscelr>] [--cxx <compiler>] [--] <input>
 
 Where:
 
    -o <filename>, --output <filename>
      The name of the saved parser file.
      The default value is \"parser\".
-
-   -f <folder>, --folder <folder>
-     The output folder. Temporary files will be created in this folder.
-     The default value is \".\".
 
    -c <folder>, -ctf <folder>
      The location of the ctf.hpp header file.
@@ -70,22 +59,22 @@ Where:
 "
             exit 0
             ;;
+        # set output file
         -o|--output)
             outFile="$2"
             shift 2
             ;;
-        -f|--folder)
-            outFolder="$2"
-            shift 2
-            ;;
+        # set ctf include folder
         -c|--ctf)
             ctfFolder="$2"
             shift 2
             ;;
+        # set C++ compiler
         --cxx)
             cxx="$2"
             shift 2
             ;;
+        # set LR parser mode
         -p|--parser)
             parser="$2"
             case $parser in
@@ -98,6 +87,7 @@ Where:
             esac
             shift 2
             ;;
+        # input file
         --)
             shift
             break
@@ -115,9 +105,9 @@ if [[ $# -ne 1 ]]; then
     exit 1
 fi
 
-
 input=$1
 inputFile=`basename $input`
+outFolder=`dirname $outFile`
 
 tempFolder=`mktemp -d 2>/dev/null || mktemp -d -t 'parsergentmp'`
 echo "1/5: Copying source to \"$tempFolder\"."
@@ -144,7 +134,7 @@ int main() {
 echo "3/5: Compiling source."
 $cxx -std=c++17 -o $tempFolder/tmp.out -I $ctfFolder $tempCpp;
 echo "4/5: Creating saved parser."
-$tempFolder/tmp.out >| $outFolder/$outFile;
+$tempFolder/tmp.out >| $outFile;
 echo "5/5: Cleaning up."
 rm -r $tempFolder;
 

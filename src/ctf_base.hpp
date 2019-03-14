@@ -131,7 +131,7 @@ class Symbol {
 
   explicit operator std::string() const { return to_string(); }
 
-  explicit constexpr operator size_t() { return reinterpret_cast<const size_t&>(*this); }
+  explicit constexpr operator size_t() { return _storage; }
 
  protected:
   constexpr Symbol(Type type, size_t id = 0) noexcept

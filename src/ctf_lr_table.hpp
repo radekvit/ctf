@@ -24,12 +24,12 @@ enum class LRAction : unsigned char {
 
 class LRActionItem {
  public:
-  constexpr LRActionItem(LRAction action, size_t argument = 0) noexcept : _storage((argument & (std::numeric_limits<size_t>::max() >> 2)) |
-               (static_cast<size_t>(action) << (8 * sizeof(size_t) - 2))) {
-  }
+  constexpr LRActionItem(LRAction action, size_t argument = 0) noexcept
+    : _storage((argument & (std::numeric_limits<size_t>::max() >> 2)) |
+               (static_cast<size_t>(action) << (8 * sizeof(size_t) - 2))) {}
 
   LRAction action() const noexcept {
-    return static_cast<LRAction>(_storage >> (sizeof(size_t)*8 - 2));
+    return static_cast<LRAction>(_storage >> (sizeof(size_t) * 8 - 2));
   }
 
   size_t argument() const noexcept { return (_storage << 2) >> 2; }

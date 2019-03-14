@@ -79,7 +79,7 @@ class LRTranslationControlGeneral : public TranslationControl {
   /**
   \brief Placeholder error recovery.
   */
-  virtual bool error_recovery() { return false; }
+  virtual bool error_recovery(size_t, const Token&) { return false; }
 };  // namespace ctf
 
 /**
@@ -211,16 +211,16 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
         message += to_str(terminal);
       }
     }
-    return std::move(message);
+    return message;
   }
 
-  bool error_recovery(size_t state, const Token& token) {
+  bool error_recovery(size_t state, const Token& token) override {
     (void)state;
     (void)token;
     return false;
   }
 
-  virtual void save(std::ostream& os) const { _lrTable.save(os); }
+  void save(std::ostream& os) const override { _lrTable.save(os); }
 
  protected:
   /**
