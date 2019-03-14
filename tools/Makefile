@@ -1,4 +1,4 @@
-TOOLS = grammar parser
+TOOLS = grammar
 
 .PHONY: all format test pack doc clean $(TOOLS)
 TARGET = all
