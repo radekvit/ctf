@@ -13,7 +13,7 @@ class TGLex : public LexicalAnalyzer {
  public:
   using LexicalAnalyzer::LexicalAnalyzer;
 
-  virtual Token read_token() {
+  Token read_token() override {
     if (_buffered) {
       --_buffered;
       return _bufferedToken;
@@ -223,8 +223,6 @@ class TGOutput : public OutputGenerator {
   }
 
  private:
-  size_t terminals;
-  size_t nonterminals;
   string _grammarName;
   string _outFolder;
   std::set<string> _nonterminals;
@@ -574,7 +572,7 @@ class TGOutput : public OutputGenerator {
 // ./ctfgc [-i] [input/stdin] [-o] [output folder/.]
 int main(int argc, char** argv) try {
   TCLAP::CmdLine cmd("ctfgc: translate translation grammar .ctfg files to C++", ' ', "1.0");
-  TCLAP::ValueArg<std::string> inputArg("i", "input", "input file", false, "", "string");
+  TCLAP::UnlabeledValueArg<std::string> inputArg("input", "input file", true, "", "string");
   TCLAP::ValueArg<std::string> outputArg("o", "output", "output folder", false, ".", "string");
   cmd.add(inputArg);
   cmd.add(outputArg);
