@@ -211,7 +211,6 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
         message += to_str(terminal);
       }
     }
-    message += "\n";
     return std::move(message);
   }
 
@@ -238,7 +237,6 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   */
   void create_lr_table(symbol_string_fn to_str = ctf::to_string) {
     _lrTable = LRTableType(*translationGrammar_, to_str);
-    _lrTable.save(std::cout);
   }
 
   Token next_token() override {
