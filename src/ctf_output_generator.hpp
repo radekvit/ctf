@@ -128,19 +128,19 @@ class OutputGenerator {
     return *_error;
   }
 
-  void warning(const string& message) { err() << "\033[33mwarning\033[39m:\n" << message << "\n"; }
+  void warning(const string& message) { err() << "\033[33mwarning\033[0m:\n" << message << "\n"; }
   /**
   \brief Outputs an error message with the location automatically printed before
   it.
   */
   void warning(const tstack<Token>::const_iterator it, const string& message) {
     err() << it->location().to_string() << ": "
-          << "\033[33mwarning\033[39m:\n"
+          << "\033[33mwarning\033[0m:\n"
           << message << "\n";
   }
 
   void error(const string& message) {
-    err() << "\033[31mERROR\033[39m:\n" << message << "\n";
+    err() << "\033[31mERROR\033[0m:\n" << message << "\n";
     set_error();
   }
   /**
@@ -149,7 +149,7 @@ class OutputGenerator {
   */
   void error(const tstack<Token>::const_iterator it, const string& message) {
     err() << it->location().to_string() << ": "
-          << "\033[31mERROR\033[39m:\n"
+          << "\033[31mERROR\033[0m:\n"
           << message << "\n";
     set_error();
   }
