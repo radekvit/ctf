@@ -572,8 +572,8 @@ class TGOutput : public OutputGenerator {
 // ./ctfgc [-i] [input/stdin] [-o] [output folder/.]
 int main(int argc, char** argv) try {
   TCLAP::CmdLine cmd("ctfgc: translate translation grammar .ctfg files to C++", ' ', "1.0");
-  TCLAP::UnlabeledValueArg<std::string> inputArg("input", "input file", true, "", "string");
-  TCLAP::ValueArg<std::string> outputArg("o", "output", "output folder", false, ".", "string");
+  TCLAP::UnlabeledValueArg<std::string> inputArg("input", "input file", true, "", "input file");
+  TCLAP::ValueArg<std::string> outputArg("o", "output", "output folder", false, ".", "output file");
   cmd.add(inputArg);
   cmd.add(outputArg);
   cmd.parse(argc, argv);

@@ -13,6 +13,7 @@
 
 #include "ctf_base.hpp"
 #include "ctf_input_reader.hpp"
+#include "ctf_output_utilities.hpp"
 
 namespace ctf {
 /**
@@ -214,10 +215,14 @@ class LexicalAnalyzer {
   it.
   */
   void warning(const string& message) {
-    err() << _location.to_string() << ": \033[33mwarning\033[0m:\n" << message << "\n";
+    err() << _location.to_string() << ": " << output::color::yellow << "warning" << output::reset
+          << ":\n"
+          << message << "\n";
   }
   void error(const string& message) {
-    err() << _location.to_string() << ": \033[31mERROR\033[0m:\n" << message << "\n";
+    err() << _location.to_string() << ": " << output::color::red << "ERROR" << output::reset
+          << ":\n"
+          << message << "\n";
     set_error();
   }
 

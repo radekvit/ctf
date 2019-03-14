@@ -9,6 +9,7 @@ and outputs it into a stream.
 #include <ostream>
 
 #include "ctf_base.hpp"
+#include "ctf_output_utilities.hpp"
 
 namespace ctf {
 
@@ -128,19 +129,21 @@ class OutputGenerator {
     return *_error;
   }
 
-  void warning(const string& message) { err() << "\033[33mwarning\033[0m:\n" << message << "\n"; }
+  void warning(const string& message) {
+    err() << output::color::yellow << "warning" << output::reset << ":\n" << message << "\n";
+  }
   /**
   \brief Outputs an error message with the location automatically printed before
   it.
   */
   void warning(const tstack<Token>::const_iterator it, const string& message) {
-    err() << it->location().to_string() << ": "
-          << "\033[33mwarning\033[0m:\n"
+    err() << it->location().to_string() << ": " << output::color::yellow << "warning"
+          << output::reset << ":\n"
           << message << "\n";
   }
 
   void error(const string& message) {
-    err() << "\033[31mERROR\033[0m:\n" << message << "\n";
+    err() << output::color::red << "ERROR" << output::reset << ":\n" << message << "\n";
     set_error();
   }
   /**
@@ -148,8 +151,8 @@ class OutputGenerator {
   it.
   */
   void error(const tstack<Token>::const_iterator it, const string& message) {
-    err() << it->location().to_string() << ": "
-          << "\033[31mERROR\033[0m:\n"
+    err() << it->location().to_string() << ": " << output::color::red << "ERROR" << output::reset
+          << ":\n"
           << message << "\n";
     set_error();
   }

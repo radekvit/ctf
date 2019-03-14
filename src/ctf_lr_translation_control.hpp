@@ -10,10 +10,12 @@
 #include "ctf_lr_lalr.hpp"
 #include "ctf_lr_lr0.hpp"
 #include "ctf_lr_table.hpp"
+#include "ctf_output_utilities.hpp"
 #include "ctf_table_sets.hpp"
 #include "ctf_translation_control.hpp"
 
 namespace ctf {
+
 class LRTranslationControlGeneral : public TranslationControl {
  public:
   /**
@@ -73,13 +75,15 @@ class LRTranslationControlGeneral : public TranslationControl {
 
   void add_error(const Token& token, const string& message) {
     set_error();
-    err() << token.location().to_string() << ": \033[31mERROR\033[39m:\n" << message << "\n";
+    err() << token.location().to_string() << ": " << output::color::red << "ERROR" << output::reset
+          << ":\n"
+          << message << "\n";
   }
 
   /**
   \brief Placeholder error recovery.
   */
-  virtual bool error_recovery(size_t, const Token&) { return false; }
+  virtual bool error_recovery(vector<size_t>&, Token&) { return false; }
 };  // namespace ctf
 
 /**
@@ -110,9 +114,9 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   \brief Runs the translation. Output symbols are stored in _output.
   */
   void run(symbol_string_fn to_str = ctf::to_string) override {
-    if (!lexicalAnalyzer_)
+    if (!_lexicalAnalyzer)
       throw TranslationException("No lexical analyzer was attached.");
-    else if (!translationGrammar_)
+    else if (!_translationGrammar)
       throw TranslationException("No translation grammar was attached.");
 
     _input.clear();
@@ -134,7 +138,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
           token = next_token();
           break;
         case LRAction::REDUCE: {
-          auto&& rule = translationGrammar_->rules()[item.argument()];
+          auto&& rule = _translationGrammar->rules()[item.argument()];
           for (size_t i = 0; i < rule.input().size(); ++i) {
             pushdown.pop_back();
           }
@@ -145,13 +149,14 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
           break;
         }
         case LRAction::SUCCESS:
-          appliedRules.push_back(translationGrammar_->rules().size() - 1);
+          appliedRules.push_back(_translationGrammar->rules().size() - 1);
           produce_output(appliedRules);
           return;
         case LRAction::ERROR:
           add_error(token, error_message(state, token, to_str));
-          if (!error_recovery(state, token))
+          if (!error_recovery(pushdown, token))
             return;
+          state = pushdown.back();
       }
     }
   }
@@ -162,13 +167,13 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   void produce_output(const vector<size_t>& appliedRules) {
     tstack<vector<tstack<Token>::iterator>> attributeActions;
 
-    _input.push(translationGrammar_->starting_symbol());
-    _output.push(translationGrammar_->starting_symbol());
+    _input.push(_translationGrammar->starting_symbol());
+    _output.push(_translationGrammar->starting_symbol());
 
     auto obegin = _output.begin();
     auto tokenIt = _tokens.crbegin();
     for (auto&& ruleIndex : reverse(appliedRules)) {
-      auto& rule = translationGrammar_->rules()[ruleIndex];
+      auto& rule = _translationGrammar->rules()[ruleIndex];
       _input.replace_last(rule.nonterminal(), rule.input());
       obegin = _output.replace_last(rule.nonterminal(), rule.output(), obegin);
       create_attibute_actions(obegin, rule.actions(), rule.output().size(), attributeActions);
@@ -195,7 +200,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   */
   void set_grammar(const TranslationGrammar& tg,
                    symbol_string_fn to_str = ctf::to_string) override {
-    translationGrammar_ = &tg;
+    _translationGrammar = &tg;
     create_lr_table(to_str);
   }
 
@@ -204,7 +209,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     string message = "Unexpected symbol ";
     message += to_str(token.symbol());
     message += "\nExpected:";
-    for (auto terminal = Symbol::eof(); terminal.id() < translationGrammar_->terminals();
+    for (auto terminal = Symbol::eof(); terminal.id() < _translationGrammar->terminals();
          terminal = Terminal(terminal.id())) {
       if (_lrTable.lr_action(state, terminal).action() != LRAction::ERROR) {
         message += " ";
@@ -214,11 +219,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     return message;
   }
 
-  bool error_recovery(size_t state, const Token& token) override {
-    (void)state;
-    (void)token;
-    return false;
-  }
+  bool error_recovery(vector<size_t>&, Token&) override { return false; }
 
   void save(std::ostream& os) const override { _lrTable.save(os); }
 
@@ -236,7 +237,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   Creates all predictive sets and creates a new LR table.
   */
   void create_lr_table(symbol_string_fn to_str = ctf::to_string) {
-    _lrTable = LRTableType(*translationGrammar_, to_str);
+    _lrTable = LRTableType(*_translationGrammar, to_str);
   }
 
   Token next_token() override {
@@ -251,7 +252,7 @@ class SavedLRTranslationControl : public LRTranslationControlTemplate<LRSavedTab
 
  protected:
   void set_grammar(const TranslationGrammar& tg, symbol_string_fn = ctf::to_string) override {
-    translationGrammar_ = &tg;
+    _translationGrammar = &tg;
   }
 };
 

@@ -1,4 +1,4 @@
-APPNAME=../ctfgc
+APPNAME=../grammarc
 INCLUDE=.
 SRC=.
 CTF = ../../include

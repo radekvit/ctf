@@ -30,8 +30,8 @@ Precedence:
 
 PrecedenceLevels:
 	-
-	'NEWLINE' | -
-	Associativity TokenList 'NEWLINE' PrecedenceLevels |
+	'NEWLINE' | -,
+	Associativity TokenList 'NEWLINE' PrecedenceLevels |,
 		Associativity TokenList 'level end' PrecedenceLevels
 
 Associativity:

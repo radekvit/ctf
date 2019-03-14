@@ -49,7 +49,7 @@ class TranslationControl {
 
   \param[in] la LexicalAnalyzer to be set.
   */
-  virtual void set_lexical_analyzer(LexicalAnalyzer& la) { lexicalAnalyzer_ = &la; }
+  virtual void set_lexical_analyzer(LexicalAnalyzer& la) { _lexicalAnalyzer = &la; }
 
   /**
   \brief Sets translation grammar.
@@ -57,7 +57,7 @@ class TranslationControl {
   \param[in] tg Translation grammar to be set.
   */
   virtual void set_grammar(const TranslationGrammar& tg, symbol_string_fn = ctf::to_string) {
-    translationGrammar_ = &tg;
+    _translationGrammar = &tg;
   }
 
   /**
@@ -90,12 +90,12 @@ class TranslationControl {
   /**
   \brief Lexical analyzer for getting tokens from input.
   */
-  LexicalAnalyzer* lexicalAnalyzer_ = nullptr;
+  LexicalAnalyzer* _lexicalAnalyzer = nullptr;
 
   /**
   \brief Translation grammar defining the input and output languages.
   */
-  const TranslationGrammar* translationGrammar_ = nullptr;
+  const TranslationGrammar* _translationGrammar = nullptr;
 
   /**
   \brief Tstack of input symbols.
@@ -113,9 +113,9 @@ class TranslationControl {
   bool _errorFlag = false;
 
   /**
-  \brief Returns the next token obtained from lexicalAnalyzer_.
+  \brief Returns the next token obtained from _lexicalAnalyzer.
   */
-  virtual Token next_token() { return lexicalAnalyzer_->get_token(); }
+  virtual Token next_token() { return _lexicalAnalyzer->get_token(); }
 
   /**
   \brief Get the error stream.
