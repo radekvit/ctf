@@ -2,12 +2,16 @@
 # translation from this grammar format to C++
 # author: Radek Vít
 
+# keywords:
+# grammar, precedence, none, left, right
+
 grammar ctfgc
 
 # disambiguate empty lines before optional precedence declaration
 precedence:
 	none 'NEWLINE'
 
+# rules and precedence levels are always indented with the 'tab' character
 S:
 	'NEWLINE' S | S
 	'grammar' 'grammar name' 'NEWLINE' Precedence Rules |
@@ -15,6 +19,8 @@ S:
 		-
 		0
 
+# 'NEWLINE' has higher precedence than EOF, so the second rule
+# will be picked before the first rule if both are viable.
 Precedence:
 	-
 	'NEWLINE' Precedence | Precedence
