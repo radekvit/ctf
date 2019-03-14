@@ -11,24 +11,37 @@
 #include "ctf_lr_lr1.hpp"
 #include "ctf_lr_lscelr.hpp"
 
+#include <istream>
+
 namespace ctf {
 
-enum class LRAction {
-  SHIFT,
-  REDUCE,
-  SUCCESS,
-  ERROR,
+enum class LRAction : unsigned char {
+  ERROR = 0b00,
+  SHIFT = 0b01,
+  REDUCE = 0b10,
+  SUCCESS = 0b11,
 };
 
-struct LRActionItem {
-  LRAction action = LRAction::ERROR;
-  size_t argument = 0;
+class LRActionItem {
+ public:
+  constexpr LRActionItem(LRAction action, size_t argument = 0) noexcept : _storage((argument & (std::numeric_limits<size_t>::max() >> 2)) |
+               (static_cast<size_t>(action) << (8 * sizeof(size_t) - 2))) {
+  }
+
+  LRAction action() const noexcept {
+    return static_cast<LRAction>(_storage >> (sizeof(size_t)*8 - 2));
+  }
+
+  size_t argument() const noexcept { return (_storage << 2) >> 2; }
 
   friend bool operator==(const LRActionItem& lhs, const LRActionItem& rhs) {
-    return lhs.action == rhs.action && lhs.argument == rhs.argument;
+    return lhs._storage == rhs._storage;
   }
 
   friend bool operator!=(const LRActionItem& lhs, const LRActionItem& rhs) { return !(lhs == rhs); }
+
+ protected:
+  size_t _storage;
 };
 
 class LRGenericTable {
@@ -50,17 +63,17 @@ class LRGenericTable {
     for (size_t i = 0; i < _states; ++i) {
       for (size_t j = 0; j < _terminals; ++j) {
         auto& action = _actionTable[actionIndex(i, j)];
-        switch (action.action) {
+        switch (action.action()) {
           case LRAction::ERROR:
             break;
           case LRAction::SUCCESS:
             os << ' ' << j << ':' << "S";
             break;
           case LRAction::SHIFT:
-            os << ' ' << j << ':' << 's' << action.argument;
+            os << ' ' << j << ':' << 's' << action.argument();
             break;
           case LRAction::REDUCE:
-            os << ' ' << j << ':' << 'r' << action.argument;
+            os << ' ' << j << ':' << 'r' << action.argument();
             break;
         }
       }
@@ -104,8 +117,8 @@ class LRGenericTable {
   size_t gotoIndex(size_t y, size_t x) const { return _nonterminals * y + x; }
 
   void initialize_tables(size_t size) {
-    _actionTable = {size * _terminals, {LRAction::ERROR, 0}};
-    _gotoTable = vector<size_t>(size * _nonterminals, size);
+    _actionTable.assign(size * _terminals, {LRAction::ERROR});
+    _gotoTable.assign(size * _nonterminals, size);
 
     _states = size;
   }
@@ -146,7 +159,7 @@ class LR1GenericTable : public LRGenericTable {
     } else if (mark == rule.input().size()) {
       for (auto&& terminal : item.lookaheads().symbols()) {
         auto& action = lr_action_item(id, terminal);
-        if (action.action != LRAction::ERROR) {
+        if (action.action() != LRAction::ERROR) {
           action = conflict_resolution(
             terminal, {LRAction::REDUCE, rule.id}, action, rule, state, grammar, to_str);
         } else {
@@ -164,11 +177,11 @@ class LR1GenericTable : public LRGenericTable {
       auto&& terminal = rule.input()[mark];
       size_t nextState = transitionMap.at(terminal);
       auto& action = lr_action_item(id, terminal);
-      if (action.action == LRAction::REDUCE) {
+      if (action.action() == LRAction::REDUCE) {
         action = conflict_resolution(terminal,
                                      action,
                                      {LRAction::SHIFT, nextState},
-                                     grammar.rules()[action.argument],
+                                     grammar.rules()[action.argument()],
                                      state,
                                      grammar,
                                      to_str);
@@ -188,8 +201,8 @@ class LR1GenericTable : public LRGenericTable {
                                    symbol_string_fn to_str = ctf::to_string) {
     using namespace std::literals;
     // R/R conflict: select rule defined first in the grammar
-    if (item.action == LRAction::REDUCE) {
-      return (reduceItem.argument <= item.argument) ? reduceItem : item;
+    if (item.action() == LRAction::REDUCE) {
+      return (reduceItem.argument() <= item.argument()) ? reduceItem : item;
     }
     // S/R conflict:
     auto [associativity, precedence] = grammar.precedence(terminal);
@@ -250,9 +263,9 @@ class LR1StrictGenericTable : public LRGenericTable {
     } else if (mark == rule.input().size()) {
       for (auto&& terminal : item.lookaheads().symbols()) {
         auto&& action = lr_action(state.id(), terminal);
-        if (action.action != LRAction::ERROR) {
+        if (action.action() != LRAction::ERROR) {
           throw std::invalid_argument(
-            conflict_error_message(state, action.action, LRAction::REDUCE, terminal, to_str));
+            conflict_error_message(state, action.action(), LRAction::REDUCE, terminal, to_str));
         }
         lr_action_item(state.id(), terminal) = {LRAction::REDUCE, rule.id};
       }
@@ -264,9 +277,10 @@ class LR1StrictGenericTable : public LRGenericTable {
       auto&& terminal = rule.input()[mark];
       size_t nextState = transitionMap.at(terminal);
       auto&& action = lr_action(state.id(), terminal);
-      if (action.action != LRAction::ERROR && action != LRActionItem{LRAction::SHIFT, nextState}) {
+      if (action.action() != LRAction::ERROR &&
+          action != LRActionItem{LRAction::SHIFT, nextState}) {
         throw std::invalid_argument(
-          conflict_error_message(state, action.action, LRAction::SHIFT, terminal, to_str));
+          conflict_error_message(state, action.action(), LRAction::SHIFT, terminal, to_str));
       }
       lr_action_item(state.id(), terminal) = {LRAction::SHIFT, nextState};
     }

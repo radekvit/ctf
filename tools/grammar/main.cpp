@@ -595,7 +595,7 @@ int main(int argc, char** argv) try {
     }
     i = &file;
   }
-// run translation
+  // run translation
   Translation t(
     std::make_unique<TGLex>(), "lscelr", ctfgc::grammar, std::make_unique<TGOutput>(outputFolder));
   auto result = t.run(*i, std::cout, std::cerr, input, ctfgc::to_string);

@@ -127,21 +127,21 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     Token token = next_token();
 
     while (true) {
-      switch (auto&& item = _lrTable.lr_action(state, token.symbol()); item.action) {
+      switch (auto&& item = _lrTable.lr_action(state, token.symbol()); item.action()) {
         case LRAction::SHIFT:
-          state = item.argument;
+          state = item.argument();
           pushdown.push_back(state);
           token = next_token();
           break;
         case LRAction::REDUCE: {
-          auto&& rule = translationGrammar_->rules()[item.argument];
+          auto&& rule = translationGrammar_->rules()[item.argument()];
           for (size_t i = 0; i < rule.input().size(); ++i) {
             pushdown.pop_back();
           }
           const auto& stackState = pushdown.back();
           state = _lrTable.lr_goto(stackState, rule.nonterminal());
           pushdown.push_back(state);
-          appliedRules.push_back(item.argument);
+          appliedRules.push_back(item.argument());
           break;
         }
         case LRAction::SUCCESS:
@@ -206,7 +206,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     message += "\nExpected:";
     for (auto terminal = Symbol::eof(); terminal.id() < translationGrammar_->terminals();
          terminal = Terminal(terminal.id())) {
-      if (_lrTable.lr_action(state, terminal).action != LRAction::ERROR) {
+      if (_lrTable.lr_action(state, terminal).action() != LRAction::ERROR) {
         message += " ";
         message += to_str(terminal);
       }
