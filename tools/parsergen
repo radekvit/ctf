@@ -132,9 +132,9 @@ int main() {
 " >> $tempCpp;
 
 echo "3/5: Compiling source."
-$cxx -std=c++17 -o $tempFolder/tmp.out -I $ctfFolder $tempCpp;
+$cxx -std=c++17 -o $tempFolder/tmp.out -I $ctfFolder $tempCpp || (rm -r $tempFolder && false);
 echo "4/5: Creating saved parser."
-$tempFolder/tmp.out >| $outFile;
+$tempFolder/tmp.out >| $outFile || (rm -r $tempFolder && false);
 echo "5/5: Cleaning up."
 rm -r $tempFolder;
 
