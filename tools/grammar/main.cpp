@@ -43,7 +43,10 @@ class TGLex : public LexicalAnalyzer {
       default:
         break;
     }
-    if (std::isalpha(c)) {
+    if (std::islower(c)) {
+      return token_grammar_name(c);
+    }
+    if (std::isupper(c)) {
       return token_nonterminal(c);
     }
     if (std::isdigit(c)) {
@@ -92,20 +95,34 @@ class TGLex : public LexicalAnalyzer {
           break;
         case '\'':
           break;
+        case std::char_traits<char>::eof():
+          fatal_error("Read EOF while reading a terminal.");
+          break;
         default:
           s += (char)c;
       }
     }
+    if (s.empty()) {
+      fatal_error("Empty terminal identifier.");
+    }
     return token("terminal"_t, Attribute(s));
   }
 
-  Token token_nonterminal(int c) {
+  Token token_grammar_name(int c) {
     string s;
+    char prev = '\0';
     do {
       s += (char)c;
+      prev = c;
       c = get();
-    } while (std::isalnum(c) || c == '_' || c == '\'');
+      if (c == '_' && prev == '_') {
+        fatal_error("Consecutive '_' characters are forbidden in grammar name.");
+      }
+    } while (std::islower(c) || c == '_');
     unget();
+    if (std::isalpha(c)) {
+      fatal_error("Uppercase letters are forbidden in grammar name.");
+    }
 
     // check for keywords
     if (s == "grammar")
@@ -119,9 +136,17 @@ class TGLex : public LexicalAnalyzer {
     } else if (s == "right") {
       return token("right"_t);
     }
-    if (std::islower(s.front())) {
-      return token("grammar name"_t, Attribute(s));
-    }
+    return token("grammar name"_t, Attribute(s));
+  }
+
+  Token token_nonterminal(int c) {
+    string s;
+    do {
+      s += (char)c;
+      c = get();
+    } while (std::isalnum(c) || c == '\'');
+    unget();
+
     return token("nonterminal"_t, Attribute(s));
   }
 

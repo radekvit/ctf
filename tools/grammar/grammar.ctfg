@@ -5,6 +5,16 @@
 # keywords:
 # grammar, precedence, none, left, right
 
+# name format in Python Regex:
+# grammar name format:
+# [a-z](_[a-z]+)*_?
+
+# nonterminal name format:
+# [A-Z][a-zA-Z']*
+
+# terminal name format:
+# '([^\s\"\\]| |\\[bfnrt\"'\\])+?'
+
 grammar ctfgc
 
 # disambiguate empty lines before optional precedence declaration
