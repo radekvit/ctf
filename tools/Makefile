@@ -7,14 +7,11 @@ all: $(TOOLS)
 $(TOOLS):
 	$(MAKE) -C $@ $(TARGET)
 
-debug: TARGET=format
+debug: TARGET=debug
 debug: $(TOOLS)
 
 format: TARGET=format
 format: $(TOOLS)
-
-test: TARGET=test
-test: $(TOOLS)
 
 test: TARGET=test
 test: $(TOOLS)
