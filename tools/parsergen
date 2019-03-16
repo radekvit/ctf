@@ -20,7 +20,7 @@ eval set -- "$PARSED"
 input=""
 outFile="parser"
 ctfFolder="../include"
-parser="lscelr"
+parser="LSCELR"
 cxx="c++"
 
 # the options in order until --
@@ -31,7 +31,7 @@ while true; do
             echo "
 USAGE:
 
-   ./parsergen [-o <filename>] [-p <lalr|canonical lr|lscelr>] [--cxx <compiler>] [--] <input>
+   ./parsergen [-o <filename>] [-p <LSCELR|LALR|CanonicalLR1>] [--cxx <compiler>] [--] <input>
 
 Where:
 
@@ -43,7 +43,7 @@ Where:
      The location of the ctf.hpp header file.
      The default value is \"../include\" for use from ctf/tools.
 
-   -p <lalr|canonical lr|lscelr>, --parser <lalr|canonical lr|lscelr>
+   -p <LSCELR|LALR|CanonicalLR1>, --parser <LSCELR|LALR|CanonicalLR1>
      The used parser algorithm. The default value is \"lscelr\".
 
    -cxx <compiler>
@@ -78,10 +78,10 @@ Where:
         -p|--parser)
             parser="$2"
             case $parser in
-                lscelr|lalr|canonical\ lr)
+                LSCELR|LALR|CanonicalLR1)
                     ;;
                 *)
-                    echo "Parser must be one of: \"lalr\", \"canonical lr\", \"lscelr\"."
+                    echo "Parser must be one of: \"LSCELR\", \"LALR\", \"CanonicalLR1\"."
                     exit 1
                     ;;
             esac
@@ -125,7 +125,7 @@ echo "
 #include <iostream>
 
 int main() {
-  ctf::Translation t(std::make_unique<ctf::LexicalAnalyzer>(), \"$parser\", $inputFile::grammar, std::make_unique<ctf::OutputGenerator>());
+  ctf::Translation t(ctf::LexicalAnalyzer(), ctf::$parser(), $inputFile::grammar, ctf::OutputGenerator());
   t.save(std::cout);
   return 0;
 }

@@ -6,6 +6,7 @@
 #ifndef CTF_TRANSLATION_H
 #define CTF_TRANSLATION_H
 
+#include <fstream>
 #include <istream>
 #include <memory>
 #include <ostream>
@@ -28,10 +29,28 @@ enum class TranslationResult {
   SEMANTIC_ERROR,
   CODE_GENERATION_ERROR,
 };
+
+using CanonicalLR1 = LR1TranslationControl;
+using LALR = LALRTranslationControl;
+using LSCELR = LSCELRTranslationControl;
+
+inline SavedLRTranslationControl load(std::istream& is) { return SavedLRTranslationControl(is); }
+
+inline SavedLRTranslationControl load(const string& filename) {
+  std::ifstream is(filename);
+  if (is.fail()) {
+    throw std::invalid_argument(string("Could not open file") + filename + ".");
+  }
+  return load(is);
+}
+
 /**
 \brief Defines a translation. Can be used multiple times for different inputs
 and outputs.
 */
+template <typename TLexicalAnalyzer,
+          typename TOutputGenerator,
+          typename TTranslationControl = LSCELR>
 class Translation {
  public:
   /**
@@ -43,65 +62,36 @@ class Translation {
   A copy is made.
   \param[in] og A callable to perform output generation.
   */
-  Translation(std::unique_ptr<LexicalAnalyzer>&& la,
-              TranslationControl& tc,
-              const TranslationGrammar& tg,
-              std::unique_ptr<OutputGenerator>&& og)
-    : _lexer(std::move(la))
-    , _lexicalAnalyzer(*_lexer)
-    , _translationControl(tc)
+  Translation(TLexicalAnalyzer&& la, const TranslationGrammar& tg, TOutputGenerator&& og)
+    : _lexicalAnalyzer(std::move(la))
+    , _translationControl()
     , _translationGrammar(tg)
-    , _generator(std::move(og))
-    , _outputGenerator(*_generator) {
+    , _outputGenerator(std::move(og)) {
     _translationControl.set_lexical_analyzer(_lexicalAnalyzer);
     _translationControl.set_grammar(_translationGrammar);
   }
+
   /**
-  \brief Constructs Translation with given lexical analyzer, translation grammar
-  and output generator. Translation control given by unique_ptr.
-   \param[in] la A callable to perform lexical analysis.
-   \param[in] tc A translation control to drive the translation.
-   \param[in] tg Translation grammar that defines the input and output
-  languages.
-   \param[in] og A callable to perform output generation.
+  \brief Constructs Translation with given lexical analyzer, translation
+  control, translation grammar and output generator.
+  \param[in] la A callable to perform lexical analysis.
+  \param[in] tc A translation control to drive the translation.
+  \param[in] tg Translation grammar that defines the input and output languages.
+  A copy is made.
+  \param[in] og A callable to perform output generation.
   */
-  Translation(std::unique_ptr<LexicalAnalyzer>&& la,
-              std::unique_ptr<TranslationControl>&& tc,
+  Translation(TLexicalAnalyzer&& la,
+              TTranslationControl&& tc,
               const TranslationGrammar& tg,
-              std::unique_ptr<OutputGenerator>&& og)
-    : _lexer(std::move(la))
-    , _lexicalAnalyzer(*_lexer)
-    , _control(std::move(tc))
-    , _translationControl(*_control)
+              TOutputGenerator&& og)
+    : _lexicalAnalyzer(std::move(la))
+    , _translationControl(std::move(tc))
     , _translationGrammar(tg)
-    , _generator(std::move(og))
-    , _outputGenerator(*_generator) {
-    _translationControl.set_grammar(_translationGrammar);
+    , _outputGenerator(std::move(og)) {
     _translationControl.set_lexical_analyzer(_lexicalAnalyzer);
-  }
-  /**
-  \brief Constructs Translation with given lexical analyzer, translation grammar
-  and output generator. Translation control is constructed by name.
-   \param[in] la A callable to perform lexical analysis.
-   \param[in] tcName Name of a built-in translation control.
-   \param[in] tg Translation grammar that defines the input and output
-  languages.
-   \param[in] og A callable to perform output generation.
-  */
-  Translation(std::unique_ptr<LexicalAnalyzer>&& la,
-              const string& tcName,
-              const TranslationGrammar& tg,
-              std::unique_ptr<OutputGenerator>&& og)
-    : _lexer(std::move(la))
-    , _lexicalAnalyzer(*_lexer)
-    , _control(Translation::control(tcName))
-    , _translationControl(*_control)
-    , _translationGrammar(tg)
-    , _generator(std::move(og))
-    , _outputGenerator(*_generator) {
     _translationControl.set_grammar(_translationGrammar);
-    _translationControl.set_lexical_analyzer(_lexicalAnalyzer);
   }
+
   ~Translation() {}  //= default;
 
   /**
@@ -137,7 +127,7 @@ class Translation {
 
     try {
       // lexical analysis, syntax analysis and translation
-      _translationControl.run(to_str);
+      _translationControl.run(_reader, to_str);
     } catch (LexicalException& le) {
       lexError = true;
     } catch (SyntaxException& se) {
@@ -152,7 +142,7 @@ class Translation {
 
     // semantic analysis and code generation
     try {
-      auto&& outputTokens = _translationControl.output();
+      auto& outputTokens = _translationControl.output();
       _outputGenerator.output(outputTokens);
     } catch (SemanticException& se) {
       semError = true;
@@ -170,39 +160,6 @@ class Translation {
     return TranslationResult::SUCCESS;
   }
 
-  /**
-  \brief Factory method for creating TranslationControl variants.
-  \param[in] name Name of built-in translation control. Viable options are:
-  "ll".
-  \returns A std::unique_ptr containing a new translation control.
-  */
-  static std::unique_ptr<TranslationControl> control(const string& name) {
-    const static unordered_map<string, std::function<std::unique_ptr<TranslationControl>()>>
-      controls{
-        {"canonical lr",
-         []() -> std::unique_ptr<TranslationControl> {
-           return std::make_unique<LR1TranslationControl>();
-         }},
-        {"lalr",
-         []() -> std::unique_ptr<TranslationControl> {
-           return std::make_unique<LALRTranslationControl>();
-         }},
-        {"lscelr",
-         []() -> std::unique_ptr<TranslationControl> {
-           return std::make_unique<LSCELRTranslationControl>();
-         }},
-      };
-    auto it = controls.find(name);
-    if (it == controls.end())
-      throw std::invalid_argument("No translation control with name " + name + ".");
-    else
-      return (*it).second();
-  }
-
-  static std::unique_ptr<TranslationControl> load(std::istream& is) {
-    return std::make_unique<SavedLRTranslationControl>(is);
-  }
-
   void save(std::ostream& os) const { _translationControl.save(os); }
 
  protected:
@@ -211,34 +168,22 @@ class Translation {
   */
   InputReader _reader;
   /**
-  \brief Lexical Analyzer ownership.
-  */
-  std::unique_ptr<LexicalAnalyzer> _lexer;
-  /**
   \brief Provides input terminals from istream.
   */
-  LexicalAnalyzer& _lexicalAnalyzer;
+  TLexicalAnalyzer _lexicalAnalyzer;
   /**
-  \brief Holds standard control when generated with Translation::control().
+  \brief The control class performing the translation.
   */
-  std::unique_ptr<TranslationControl> _control = nullptr;
+  TTranslationControl _translationControl;
   /**
-  \brief Reference to TranslationControl to be used.
-  */
-  TranslationControl& _translationControl;
-  /**
-  \brief Translation grammar that defines accepted language and output
+  \brief A translation grammar that defines accepted language and output
   language.
   */
   TranslationGrammar _translationGrammar;
   /**
-  \brief Output generator ownership
+  \brief Outputs output terminals to ostream or elsewhere.
   */
-  std::unique_ptr<OutputGenerator> _generator;
-  /**
-  \brief Outputs output terminals to ostream.
-  */
-  OutputGenerator& _outputGenerator;
+  TOutputGenerator _outputGenerator;
 };
 }  // namespace ctf
 

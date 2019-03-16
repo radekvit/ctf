@@ -210,7 +210,7 @@ class vector_set {
   friend bool operator>(const vector_set& lhs, const vector_set& rhs) { return rhs < lhs; }
 
   friend bool subset(const vector_set& lhs, const vector_set& rhs) {
-    for (auto&& e : lhs._elements) {
+    for (auto& e : lhs._elements) {
       if (!rhs.contains(e)) {
         return false;
       }

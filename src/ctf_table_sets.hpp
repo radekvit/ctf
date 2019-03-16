@@ -207,7 +207,7 @@ inline TerminalSet string_first(const std::vector<Symbol>& symbols,
                                 const TranslationGrammar& tg) {
   using Type = Symbol::Type;
   TerminalSet result(tg.terminals());
-  for (auto&& symbol : symbols) {
+  for (auto& symbol : symbols) {
     switch (symbol.type()) {
       case Type::TERMINAL:
       case Type::EOI:

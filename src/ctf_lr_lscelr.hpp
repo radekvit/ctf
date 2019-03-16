@@ -236,7 +236,7 @@ class StateMachine : public ctf::lr1::StateMachine {
   }
 
   void expand_state_lscelr(size_t i) {
-    for (auto&& [symbol, kernel] : symbol_skip_kernels(_states[i].items(), i)) {
+    for (auto& [symbol, kernel] : symbol_skip_kernels(_states[i].items(), i)) {
       auto [id, inserted] = insert_state_lscelr(kernel);
       _states[i].transitions()[symbol] = id;
       // new inserted state

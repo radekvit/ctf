@@ -159,7 +159,7 @@ TEST_CASE("LALR empty translation", "[LALRStrictTranslationControl]") {
   a.set_reader(r);
   LALRStrictTranslationControl lalr(a, tg);
   lalr.set_error_stream(err);
-  lalr.run();
+  lalr.run(r);
   REQUIRE(lalr.output().size() == 1);
   REQUIRE(lalr.output().top() == Symbol::eof());
   REQUIRE(lalr.output().top().location() == Location(1, 1));
@@ -182,7 +182,7 @@ TEST_CASE("LALR full translation", "[LALRStrictTranslationControl]") {
   InputReader r{in};
   a.set_reader(r);
   LALRStrictTranslationControl lalr(a, tg);
-  lalr.run();
+  lalr.run(r);
   REQUIRE(lalr.output().size() == 11);
   auto it = lalr.output().begin();
   Token os = *it++;
@@ -235,7 +235,7 @@ TEST_CASE("LALR non-SLR translation", "[LALRStrictTranslationControl]") {
   InputReader r{in};
   a.set_reader(r);
   LALRStrictTranslationControl lalr(a, tg);
-  lalr.run();
+  lalr.run(r);
   REQUIRE(lalr.output().size() == 3);
 
   auto it = lalr.output().begin();
@@ -259,7 +259,7 @@ TEST_CASE("LR(1) empty translation", "[LR1StrictTranslationControl]") {
   a.set_reader(r);
   LR1StrictTranslationControl lr1(a, tg);
   lr1.set_error_stream(err);
-  lr1.run();
+  lr1.run(r);
   REQUIRE(lr1.output().size() == 1);
   REQUIRE(lr1.output().top() == Symbol::eof());
   REQUIRE(lr1.output().top().location() == Location(1, 1));
@@ -282,7 +282,7 @@ TEST_CASE("LR(1) full translation", "[LR1StrictTranslationControl]") {
   InputReader r{in};
   a.set_reader(r);
   LR1StrictTranslationControl lr1(a, tg);
-  lr1.run();
+  lr1.run(r);
   REQUIRE(lr1.output().size() == 11);
   auto it = lr1.output().begin();
   Token os = *it++;
@@ -340,7 +340,7 @@ TEST_CASE("LR(1) full non-LALR translation", "[LR1StrictTranslationControl]") {
   InputReader r{in};
   a.set_reader(r);
   LR1StrictTranslationControl lr1(a, tg);
-  lr1.run();
+  lr1.run(r);
   REQUIRE(lr1.output().size() == 4);
   auto it = lr1.output().begin();
   Token os = *it++;
@@ -388,7 +388,7 @@ TEST_CASE("Simple infix to postfix calculator translation", "[LALRTranslationCon
   InputReader r{in};
   a.set_reader(r);
   LALRTranslationControl lalr(a, tg);
-  lalr.run();
+  lalr.run(r);
   REQUIRE(lalr.output().size() == 16);
   auto it = lalr.output().begin();
   Token os = *it++;
@@ -456,7 +456,7 @@ TEST_CASE("Simple infix to postfix calculator translation in LR1", "[LR1Translat
   InputReader r{in};
   a.set_reader(r);
   LR1TranslationControl lr1(a, tg);
-  lr1.run();
+  lr1.run(r);
   REQUIRE(lr1.output().size() == 16);
   auto it = lr1.output().begin();
   Token os = *it++;
@@ -524,7 +524,7 @@ TEST_CASE("Simple infix to postfix calculator translation in LSCELR", "[LR1Trans
   InputReader r{in};
   a.set_reader(r);
   LSCELRTranslationControl lscelr(a, tg);
-  lscelr.run();
+  lscelr.run(r);
   REQUIRE(lscelr.output().size() == 16);
   auto it = lscelr.output().begin();
   Token os = *it++;
@@ -579,6 +579,6 @@ TEST_CASE("LSCELR manages to accept a sentence not accepted by LALR", "[LR1Trans
   InputReader r{in};
   a.set_reader(r);
   LSCELRTranslationControl lscelr(a, tg);
-  lscelr.run();
+  lscelr.run(r);
   REQUIRE(lscelr.output().size() == 5);
 }

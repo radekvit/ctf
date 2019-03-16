@@ -37,7 +37,7 @@ class TranslationControl {
 
   \returns The value of the error flag.
   */
-  virtual bool error() const { return _errorFlag; }
+  bool error() const { return _errorFlag; }
 
   /**
   \brief Clears the error flag.
@@ -49,7 +49,7 @@ class TranslationControl {
 
   \param[in] la LexicalAnalyzer to be set.
   */
-  virtual void set_lexical_analyzer(LexicalAnalyzer& la) { _lexicalAnalyzer = &la; }
+  void set_lexical_analyzer(LexicalAnalyzer& la) { _lexicalAnalyzer = &la; }
 
   /**
   \brief Sets translation grammar.
@@ -70,14 +70,14 @@ class TranslationControl {
   /**
   \brief Runs translation. Translation output is stored in _output.
   */
-  virtual void run(symbol_string_fn to_str = ctf::to_string) = 0;
+  virtual void run(const InputReader& reader, symbol_string_fn to_str = ctf::to_string) = 0;
 
   /**
   \brief Returns a constant reference to output symbols.
 
   \returns All output symbols.
   */
-  virtual const tstack<Token>& output() const noexcept { return _output; }
+  const tstack<Token>& output() const noexcept { return _output; }
 
   virtual void save(std::ostream&) const {}
 

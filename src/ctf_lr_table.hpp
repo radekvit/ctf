@@ -181,8 +181,8 @@ class LR1GenericTable : public LRGenericTable {
     StateMachine sm(grammar);
     _states = sm.states().size();
 
-    for (auto&& state : sm.states()) {
-      for (auto&& item : state.items()) {
+    for (auto& state : sm.states()) {
+      for (auto& item : state.items()) {
         lr1_insert(state, item, state.transitions(), grammar, to_str);
       }
     }
@@ -197,13 +197,13 @@ class LR1GenericTable : public LRGenericTable {
     using namespace std::literals;
 
     size_t id = state.id();
-    auto&& rule = item.rule();
-    auto&& mark = item.mark();
+    auto& rule = item.rule();
+    size_t mark = item.mark();
     // special S' -> S.EOF item
     if (rule == grammar.starting_rule() && mark == 1) {
       insert_action(id, Symbol::eof()) = {LRAction::SUCCESS};
     } else if (mark == rule.input().size()) {
-      for (auto&& terminal : item.lookaheads().symbols()) {
+      for (auto& terminal : item.lookaheads().symbols()) {
         auto& action = insert_action(id, terminal);
         if (action.action() != LRAction::ERROR) {
           action = conflict_resolution(
@@ -215,12 +215,12 @@ class LR1GenericTable : public LRGenericTable {
       }
     } else if (rule.input()[mark].nonterminal()) {
       // marked nonterminal
-      auto&& nonterminal = rule.input()[mark];
+      auto& nonterminal = rule.input()[mark];
       size_t nextState = transitionMap.at(nonterminal);
       insert_goto(id, nonterminal, nextState);
     } else {
       // marked terminal
-      auto&& terminal = rule.input()[mark];
+      auto& terminal = rule.input()[mark];
       size_t nextState = transitionMap.at(terminal);
       auto& action = insert_action(id, terminal);
       if (action.action() == LRAction::REDUCE) {
@@ -285,8 +285,8 @@ class LR1StrictGenericTable : public LRGenericTable {
     StateMachine sm(grammar);
     _states = sm.states().size();
 
-    for (auto&& state : sm.states()) {
-      for (auto&& item : state.items()) {
+    for (auto& state : sm.states()) {
+      for (auto& item : state.items()) {
         lr1_insert(state, item, state.transitions(), grammar, to_str);
       }
     }
@@ -299,13 +299,13 @@ class LR1StrictGenericTable : public LRGenericTable {
                   const TranslationGrammar& grammar,
                   symbol_string_fn to_str = ctf::to_string) {
     using namespace std::literals;
-    auto&& rule = item.rule();
-    auto&& mark = item.mark();
+    auto& rule = item.rule();
+    size_t mark = item.mark();
     // special S' -> S.EOF item
     if (rule == grammar.starting_rule() && mark == 1) {
       insert_action(state.id(), Symbol::eof()) = {LRAction::SUCCESS};
     } else if (mark == rule.input().size()) {
-      for (auto&& terminal : item.lookaheads().symbols()) {
+      for (auto& terminal : item.lookaheads().symbols()) {
         auto& action = insert_action(state.id(), terminal);
         if (action.action() != LRAction::ERROR) {
           throw std::invalid_argument(
@@ -314,11 +314,11 @@ class LR1StrictGenericTable : public LRGenericTable {
         action = {LRAction::REDUCE, rule.id};
       }
     } else if (rule.input()[mark].nonterminal()) {
-      auto&& nonterminal = rule.input()[mark];
+      auto& nonterminal = rule.input()[mark];
       size_t nextState = transitionMap.at(nonterminal);
       insert_goto(state.id(), nonterminal, nextState);
     } else {
-      auto&& terminal = rule.input()[mark];
+      auto& terminal = rule.input()[mark];
       size_t nextState = transitionMap.at(terminal);
       auto& action = insert_action(state.id(), terminal);
       if (action.action() != LRAction::ERROR &&

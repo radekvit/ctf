@@ -107,13 +107,13 @@ class Item {
   string to_string(symbol_string_fn to_str = ctf::to_string) const {
     using namespace std::literals;
     string result = "["s + _item.to_string(to_str) + ", {";
-    for (auto&& symbol : lookaheads().symbols()) {
+    for (auto& symbol : lookaheads().symbols()) {
       result += ' ';
       result += to_str(symbol);
     }
     if (!lookahead_sources().empty()) {
       result += " }, {";
-      for (auto&& source : lookahead_sources()) {
+      for (auto& source : lookahead_sources()) {
         result += ' ';
         result += source.to_string();
       }
@@ -141,7 +141,7 @@ inline FirstResult first(const vector<Symbol>& symbols,
                          const TranslationGrammar& tg) {
   using Type = Symbol::Type;
   LookaheadSet result(tg.terminals());
-  for (auto&& symbol : symbols) {
+  for (auto& symbol : symbols) {
     switch (symbol.type()) {
       case Type::TERMINAL:
       case Type::EOI:
@@ -169,7 +169,7 @@ inline vector_set<Item> closure(vector_set<Item> items,
   vector_set<Item> newItems;
   while (!items.empty()) {
     // expand all new items
-    for (auto&& item : items) {
+    for (auto& item : items) {
       const auto& input = item.rule().input();
       if (!item.reduce() && input[item.mark()].nonterminal()) {
         const auto& nonterminal = input[item.mark()];
@@ -185,7 +185,7 @@ inline vector_set<Item> closure(vector_set<Item> items,
           generatedLookaheads |= item.lookaheads();
         }
         // TODO optimization point
-        for (auto&& rule : grammar.rules()) {
+        for (auto& rule : grammar.rules()) {
           if (rule.nonterminal() == nonterminal) {
             Item newItem({rule, 0}, propagatedLookaheads, generatedLookaheads);
             auto it = closure.find(newItem);
@@ -245,7 +245,7 @@ class StateMachine {
           const first_t& first)
       : _id(id), _items(closure(kernel, grammar, empty, first)) {
       // we can only merge states when the kernel contains a rule in the form A -> x.Y
-      for (auto&& item : _items) {
+      for (auto& item : _items) {
         if (item.reduce()) {
           _reduce = true;
           break;
@@ -264,12 +264,12 @@ class StateMachine {
 
     string to_string(symbol_string_fn to_str = ctf::to_string) const {
       string result = std::to_string(id()) + ": {\n";
-      for (auto&& item : items()) {
+      for (auto& item : items()) {
         result += '\t';
         result += item.to_string(to_str) + '\n';
       }
       result += "\t-----\n";
-      for (auto&& [symbol, next] : transitions()) {
+      for (auto& [symbol, next] : transitions()) {
         result += '\t';
         result += to_str(symbol) + ": " + std::to_string(next) + '\n';
       }
@@ -370,9 +370,9 @@ class StateMachine {
     vector<LookaheadSet> result;
 
     // get all sources
-    for (auto&& item : state.items()) {
+    for (auto& item : state.items()) {
       result.push_back(TerminalSet(grammar().terminals()));
-      for (auto&& source : item.lookahead_sources()) {
+      for (auto& source : item.lookahead_sources()) {
         auto it = lookaheadMap.find(source);
         if (it == lookaheadMap.end()) {
           // lookahead source not resolved
@@ -391,9 +391,9 @@ class StateMachine {
     // stop infinite loops
     lookaheadMap.insert_or_assign(source, LookaheadSet(grammar().terminals()));
     // get all sources
-    auto&& item = state.items()[source.item];
+    auto& item = state.items()[source.item];
     LookaheadSet symbols(item.lookaheads());
-    for (auto&& nextSource : item.lookahead_sources()) {
+    for (auto& nextSource : item.lookahead_sources()) {
       auto it = lookaheadMap.find(nextSource);
       if (it == lookaheadMap.end()) {
         // recursive source not resolved yet
@@ -406,7 +406,7 @@ class StateMachine {
   }
 
   void expand_state(size_t i) {
-    for (auto&& [symbol, kernel] : symbol_skip_kernels(_states[i].items(), i)) {
+    for (auto& [symbol, kernel] : symbol_skip_kernels(_states[i].items(), i)) {
       auto [id, inserted] = insert_state(kernel);
       _states[i].transitions()[symbol] = id;
       // new inserted state
@@ -422,7 +422,7 @@ class StateMachine {
     for (auto& state : _states) {
       unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
       for (auto& item : state.items()) {
-        for (auto&& source : item.lookahead_sources()) {
+        for (auto& source : item.lookahead_sources()) {
           auto it = lookaheadMap.find(source);
           if (it == lookaheadMap.end()) {
             // lookahead source not resolved

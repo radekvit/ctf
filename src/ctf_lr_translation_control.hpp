@@ -113,7 +113,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   /**
   \brief Runs the translation. Output symbols are stored in _output.
   */
-  void run(symbol_string_fn to_str = ctf::to_string) override {
+  void run(const InputReader& reader, symbol_string_fn to_str = ctf::to_string) final {
     if (!_lexicalAnalyzer)
       throw TranslationException("No lexical analyzer was attached.");
     else if (!_translationGrammar)
@@ -131,14 +131,14 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     Token token = next_token();
 
     while (true) {
-      switch (auto&& item = _lrTable.lr_action(state, token.symbol()); item.action()) {
+      switch (auto& item = _lrTable.lr_action(state, token.symbol()); item.action()) {
         case LRAction::SHIFT:
           state = item.argument();
           pushdown.push_back(state);
           token = next_token();
           break;
         case LRAction::REDUCE: {
-          auto&& rule = _translationGrammar->rules()[item.argument()];
+          auto& rule = _translationGrammar->rules()[item.argument()];
           for (size_t i = 0; i < rule.input().size(); ++i) {
             pushdown.pop_back();
           }
@@ -153,7 +153,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
           produce_output(appliedRules);
           return;
         case LRAction::ERROR:
-          add_error(token, error_message(state, token, to_str));
+          add_error(token, error_message(state, token, reader, to_str));
           if (!error_recovery(pushdown, token))
             return;
           state = pushdown.back();
@@ -172,7 +172,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
 
     auto obegin = _output.begin();
     auto tokenIt = _tokens.crbegin();
-    for (auto&& ruleIndex : reverse(appliedRules)) {
+    for (auto& ruleIndex : reverse(appliedRules)) {
       auto& rule = _translationGrammar->rules()[ruleIndex];
       _input.replace_last(rule.nonterminal(), rule.input());
       obegin = _output.replace_last(rule.nonterminal(), rule.output(), obegin);
@@ -205,7 +205,10 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   }
 
   // TODO allow example-based error messages
-  string error_message(size_t state, const Token& token, symbol_string_fn to_str = ctf::to_string) {
+  string error_message(size_t state,
+                       const Token& token,
+                       const InputReader&,
+                       symbol_string_fn to_str = ctf::to_string) {
     string message = "Unexpected symbol ";
     message += to_str(token.symbol());
     message += "\nExpected:";

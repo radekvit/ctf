@@ -215,12 +215,12 @@ class Rule {
 
   string to_string(symbol_string_fn to_str = ctf::to_string) const {
     string result = to_str(nonterminal()) + " -> (";
-    for (auto&& symbol : input()) {
+    for (auto& symbol : input()) {
       result += ' ';
       result += to_str(symbol);
     }
     result += " ), (";
-    for (auto&& symbol : output()) {
+    for (auto& symbol : output()) {
       result += ' ';
       result += to_str(symbol);
     }

@@ -142,16 +142,7 @@ TEST_CASE("Constructing translation", "[Translation]") {
                           {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
                         },
                         "E"_nt};
-  REQUIRE_NOTHROW(
-    Translation(std::make_unique<LexicalAnalyzer>(), "lscelr", tg, std::make_unique<TITOG>()));
-
-  auto tcp = Translation::control("lscelr");
-  REQUIRE_NOTHROW(
-    Translation(std::make_unique<LexicalAnalyzer>(), *tcp, tg, std::make_unique<TITOG>()));
-
-  REQUIRE_THROWS_AS(
-    Translation(std::make_unique<LexicalAnalyzer>(), "fail, please", tg, std::make_unique<TITOG>()),
-    std::invalid_argument);
+  REQUIRE_NOTHROW(Translation(LexicalAnalyzer(), ctf::LSCELR(), tg, TITOG()));
 }
 
 TEST_CASE("Running LR translation", "[Translation]") {
@@ -167,8 +158,7 @@ TEST_CASE("Running LR translation", "[Translation]") {
                             {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
                           },
                           "E"_nt};
-    Translation tr(
-      std::make_unique<TestLexicalAnalyzer>(), "canonical lr", tg, std::make_unique<TITOG>());
+    Translation tr(TestLexicalAnalyzer(), ctf::CanonicalLR1(), tg, TITOG());
     std::stringstream expected;
     std::stringstream out;
     std::stringstream error;
@@ -192,8 +182,7 @@ TEST_CASE("Running LR translation", "[Translation]") {
                             {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "T'"_nt}},
                           },
                           "E"_nt};
-    Translation tr(
-      std::make_unique<TestLexicalAnalyzer>(), "canonical lr", tg, std::make_unique<TITOG>());
+    Translation tr(TestLexicalAnalyzer(), tg, TITOG());
     std::stringstream out;
     std::stringstream error;
     std::ifstream in("media/in");
@@ -203,53 +192,3 @@ TEST_CASE("Running LR translation", "[Translation]") {
     REQUIRE(out.str() == "");
   }
 }
-// TODO fix LL predict
-#if 0
-TEST_CASE("Running LL translation", "[Translation]") {
-  SECTION("full translation") {
-    TranslationGrammar tg{{
-                              {"E"_nt, {"T"_nt, "E'"_nt}},
-                              {"E'"_nt, {}},
-                              {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "+"_t, "E'"_nt}},
-                              {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
-                              {"F"_nt, {"i"_t}},
-                              {"T"_nt, {"F"_nt, "T'"_nt}},
-                              {"T'"_nt, {}},
-                              {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "*"_t, "T'"_nt}},
-                          },
-                          "E"_nt};
-    Translation tr(std::make_unique<TestLexicalAnalyzer>(), "lscelr", tg, std::make_unique<TITOG>());
-    std::stringstream expected;
-    std::stringstream out;
-    std::stringstream error;
-    std::ifstream in("media/in");
-    std::ifstream ex("media/expected");
-    if (in.fail() || ex.fail())
-      throw std::runtime_error("Files not present");
-    expected << ex.rdbuf();
-    REQUIRE(tr.run(in, out, error) == TranslationResult::SUCCESS);
-    REQUIRE(out.str() == expected.str());
-  }
-  SECTION("translation with empty output") {
-    TranslationGrammar tg{{
-                              {"E"_nt, {"T"_nt, "E'"_nt}},
-                              {"E'"_nt, {}},
-                              {"E'"_nt, {"+"_t, "T"_nt, "E'"_nt}, {"T"_nt, "E'"_nt}},
-                              {"F"_nt, {"("_t, "E"_nt, ")"_t}, {"E"_nt}},
-                              {"F"_nt, {"i"_t}, {}},
-                              {"T"_nt, {"F"_nt, "T'"_nt}},
-                              {"T'"_nt, {}},
-                              {"T'"_nt, {"*"_t, "F"_nt, "T'"_nt}, {"F"_nt, "T'"_nt}},
-                          },
-                          "E"_nt};
-    Translation tr(std::make_unique<TestLexicalAnalyzer>(), "lscelr", tg, std::make_unique<TITOG>());
-    std::stringstream out;
-    std::stringstream error;
-    std::ifstream in("media/in");
-    if (in.fail())
-      throw std::runtime_error("Files not present");
-    REQUIRE(tr.run(in, out, error) == TranslationResult::SUCCESS);
-    REQUIRE(out.str() == "");
-  }
-}
-#endif

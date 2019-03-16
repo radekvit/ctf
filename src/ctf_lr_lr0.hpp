@@ -31,14 +31,14 @@ class Item {
     vector_set<Item> newItems;
     while (!items.empty()) {
       // expand all new items for nonterminals we haven't expanded yet
-      for (auto&& item : items) {
+      for (auto& item : items) {
         const auto& input = item.rule().input();
         if (item.mark() != input.size() && input[item.mark()].nonterminal() &&
             !expandedNonterminals.contains(input[item.mark()])) {
           const auto& nonterminal = input[item.mark()];
           expandedNonterminals.insert(nonterminal);
 
-          for (auto&& rule : grammar.rules()) {
+          for (auto& rule : grammar.rules()) {
             if (rule.nonterminal() == nonterminal) {
               newItems.insert({rule, 0});
               closure.insert({rule, 0});

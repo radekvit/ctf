@@ -24,7 +24,7 @@ class StateMachine {
           const first_t& first)
       : _id(id), _items(closure(kernel, grammar, empty, first)), _reduceTargets() {
       // we can only merge states when the kernel only contains rules in the form A -> x.Y
-      for (auto&& item : _items) {
+      for (auto& item : _items) {
         if (item.reduce()) {
           _reduce = true;
           break;
@@ -54,12 +54,12 @@ class StateMachine {
 
     string to_string(symbol_string_fn to_str = ctf::to_string) const {
       string result = std::to_string(id()) + ": {\n";
-      for (auto&& item : items()) {
+      for (auto& item : items()) {
         result += '\t';
         result += item.to_string(to_str) + '\n';
       }
       result += "\t-----\n";
-      for (auto&& [symbol, next] : transitions()) {
+      for (auto& [symbol, next] : transitions()) {
         result += '\t';
         result += to_str(symbol) + ": " + std::to_string(next) + '\n';
       }
@@ -229,9 +229,9 @@ class StateMachine {
     vector<LookaheadSet> result;
 
     // get all sources
-    for (auto&& item : state.items()) {
+    for (auto& item : state.items()) {
       result.push_back(item.lookaheads());
-      for (auto&& source : item.lookahead_sources()) {
+      for (auto& source : item.lookahead_sources()) {
         auto it = lookaheadMap.find(source);
         if (it == lookaheadMap.end()) {
           // lookahead source not resolved
@@ -259,7 +259,7 @@ class StateMachine {
         continue;
       }
       result.push_back(item.lookaheads());
-      for (auto&& source : item.lookahead_sources()) {
+      for (auto& source : item.lookahead_sources()) {
         auto it = lookaheadMap.find(source);
         if (it == lookaheadMap.end()) {
           // lookahead source not resolved
@@ -278,9 +278,9 @@ class StateMachine {
     // stop infinite loops
     lookaheadMap.insert_or_assign(source, LookaheadSet(grammar().terminals()));
     // get all sources
-    auto&& item = state.items()[source.item];
+    auto& item = state.items()[source.item];
     LookaheadSet symbols(item.lookaheads());
-    for (auto&& nextSource : item.lookahead_sources()) {
+    for (auto& nextSource : item.lookahead_sources()) {
       auto it = lookaheadMap.find(nextSource);
       if (it == lookaheadMap.end()) {
         // recursive source not resolved yet
@@ -495,7 +495,7 @@ class StateMachine {
       // reset for each state in case of lookahead loops
       lookaheadMap.clear();
       for (auto& item : state.items()) {
-        for (auto&& source : item.lookahead_sources()) {
+        for (auto& source : item.lookahead_sources()) {
           auto it = lookaheadMap.find(source);
           if (it == lookaheadMap.end()) {
             // lookahead source not resolved
