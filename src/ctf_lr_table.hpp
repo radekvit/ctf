@@ -46,81 +46,129 @@ class LRActionItem {
 
 class LRGenericTable {
  public:
-  LRGenericTable() { initialize_tables(_states); }
+  LRGenericTable() { initialize_tables(); }
+  /*
+  \brief Finds the record in the sorted subarray.
+  */
   const LRActionItem& lr_action(size_t state, const Symbol& terminal) const {
-    return _actionTable[actionIndex(state, terminal.id())];
+    auto begin = _actionTable.begin() + _actionDelimiters[state];
+    auto end = _actionTable.begin() + _actionDelimiters[state + 1];
+    auto it = std::lower_bound(begin, end, Record<LRActionItem>{terminal.id(), {LRAction::ERROR}});
+    if (it->key != terminal.id()) {
+      return _errorItem;
+    }
+    return it->value;
   }
 
-  const size_t& lr_goto(size_t state, const Symbol& nonterminal) const {
-    return _gotoTable[gotoIndex(state, nonterminal.id())];
+  size_t lr_goto(size_t state, const Symbol& nonterminal) const {
+    auto begin = _gotoTable.begin() + _gotoDelimiters[state];
+    auto end = _gotoTable.begin() + _gotoDelimiters[state + 1];
+    auto it = std::lower_bound(begin, end, Record<size_t>{nonterminal.id(), 0});
+    // this should always find the correct key
+    assert(it->key == nonterminal.id());
+    return it->value;
   }
 
   size_t states() const { return _states; }
 
   void save(std::ostream& os) const {
-    os << _states << ' ' << _nonterminals << ' ' << _terminals << "\n";
+    os << _states << "\n";
     // save action table
+    size_t j = 0;
     for (size_t i = 0; i < _states; ++i) {
-      for (size_t j = 0; j < _terminals; ++j) {
-        auto& action = _actionTable[actionIndex(i, j)];
-        switch (action.action()) {
+      for (; j < _actionDelimiters[i + 1]; ++j) {
+        auto& record = _actionTable[j];
+        os << ' ' << record.key << ':';
+        switch (record.value.action()) {
           case LRAction::ERROR:
+            // this should never happen
+            assert(false);
             break;
           case LRAction::SUCCESS:
-            os << ' ' << j << ':' << "S";
+            os << "S";
             break;
           case LRAction::SHIFT:
-            os << ' ' << j << ':' << 's' << action.argument();
+            os << 's' << record.value.argument();
             break;
           case LRAction::REDUCE:
-            os << ' ' << j << ':' << 'r' << action.argument();
+            os << 'r' << record.value.argument();
             break;
         }
       }
       os << "\n";
     }
     // save goto table
+    j = 0;
     for (size_t i = 0; i < _states; ++i) {
-      for (size_t j = 0; j < _nonterminals; ++j) {
-        size_t k = _gotoTable[gotoIndex(i, j)];
-        if (k != _states) {
-          os << ' ' << j << ':' << k;
-        }
+      for (; _gotoDelimiters.size() > i + 1 && j < _gotoDelimiters[i + 1]; ++j) {
+        auto& record = _gotoTable[j];
+        os << ' ' << record.key << ':' << record.value;
       }
       os << "\n";
     }
   }
 
  protected:
-  vector<LRActionItem> _actionTable;
-  vector<size_t> _gotoTable;
+  template <typename T>
+  struct Record {
+    size_t key;
+    T value;
+    friend bool operator<(const Record& lhs, const Record& rhs) { return lhs.key < rhs.key; }
+  };
+  vector<Record<LRActionItem>> _actionTable;
+  vector<size_t> _actionDelimiters;
+  vector<Record<size_t>> _gotoTable;
+  vector<size_t> _gotoDelimiters;
 
   size_t _states = 1;
-  size_t _terminals = 1;
-  size_t _nonterminals = 1;
 
-  LRActionItem& lr_action_item(size_t state, const Symbol& terminal) {
-    return _actionTable[actionIndex(state, terminal.id())];
+  LRActionItem _errorItem = LRActionItem(LRAction::ERROR);
+
+  LRActionItem& insert_action(size_t state, const Symbol& terminal) {
+    // there will always be at least one action per state
+    while (_actionDelimiters.size() < state + 2) {
+      _actionDelimiters.push_back(_actionDelimiters.back());
+    }
+    assert(_actionDelimiters.size() == state + 2);
+    auto begin = _actionTable.begin() + _actionDelimiters[state];
+    auto end = _actionTable.begin() + _actionDelimiters[state + 1];
+    auto it = std::lower_bound(begin, end, Record<LRActionItem>{terminal.id(), {LRAction::ERROR}});
+    // found record
+    if (it != _actionTable.end() && it->key == terminal.id()) {
+      return it->value;
+    }
+    // insert new record
+    ++_actionDelimiters[state + 1];
+    return _actionTable.insert(it, {terminal.id(), LRActionItem(LRAction::ERROR)})->value;
   }
 
-  size_t& lr_goto_item(size_t state, const Symbol& nonterminal) {
-    return _gotoTable[gotoIndex(state, nonterminal.id())];
+  void insert_goto(size_t state, const Symbol& nonterminal, size_t value) {
+    while (_gotoDelimiters.size() < state + 2) {
+      _gotoDelimiters.push_back(_gotoDelimiters.back());
+    }
+    assert(_gotoDelimiters.size() == state + 2);
+    auto begin = _gotoTable.begin() + _gotoDelimiters[state];
+    auto end = _gotoTable.begin() + _gotoDelimiters[state + 1];
+    auto it = std::lower_bound(begin, end, Record<size_t>{nonterminal.id(), 0});
+    // found record
+    if (it != _gotoTable.end() && it->key == nonterminal.id()) {
+      it->value = value;
+      return;
+    }
+    // insert new record
+    ++_gotoDelimiters[state + 1];
+    _gotoTable.insert(it, {nonterminal.id(), value});
   }
 
-  /**
-  \brief Maps 2D indices to 1D indices.
-  */
-  size_t actionIndex(size_t y, size_t x) const { return _terminals * y + x; }
-  /**
-  \brief Maps 2D indices to 1D indices.
-  */
-  size_t gotoIndex(size_t y, size_t x) const { return _nonterminals * y + x; }
-
-  void initialize_tables(size_t size) {
-    _actionTable.assign(size * _terminals, {LRAction::ERROR});
-    _gotoTable.assign(size * _nonterminals, size);
-
-    _states = size;
+  void initialize_tables() {
+    _actionTable.clear();
+    _actionDelimiters.clear();
+    _gotoTable.clear();
+    _gotoDelimiters.clear();
+    _actionDelimiters.push_back(0);
+    _actionDelimiters.push_back(0);
+    _gotoDelimiters.push_back(0);
+    _gotoDelimiters.push_back(0);
   }
 };
 
@@ -131,9 +179,7 @@ class LR1GenericTable : public LRGenericTable {
   LR1GenericTable() {}
   LR1GenericTable(const TranslationGrammar& grammar, symbol_string_fn to_str = ctf::to_string) {
     StateMachine sm(grammar);
-    _terminals = grammar.terminals();
-    _nonterminals = grammar.nonterminals();
-    initialize_tables(sm.states().size());
+    _states = sm.states().size();
 
     for (auto&& state : sm.states()) {
       for (auto&& item : state.items()) {
@@ -155,28 +201,28 @@ class LR1GenericTable : public LRGenericTable {
     auto&& mark = item.mark();
     // special S' -> S.EOF item
     if (rule == grammar.starting_rule() && mark == 1) {
-      lr_action_item(id, Symbol::eof()) = {LRAction::SUCCESS, 0};
+      insert_action(id, Symbol::eof()) = {LRAction::SUCCESS};
     } else if (mark == rule.input().size()) {
       for (auto&& terminal : item.lookaheads().symbols()) {
-        auto& action = lr_action_item(id, terminal);
+        auto& action = insert_action(id, terminal);
         if (action.action() != LRAction::ERROR) {
           action = conflict_resolution(
             terminal, {LRAction::REDUCE, rule.id}, action, rule, state, grammar, to_str);
         } else {
           // regular insert
-          lr_action_item(id, terminal) = {LRAction::REDUCE, rule.id};
+          insert_action(id, terminal) = {LRAction::REDUCE, rule.id};
         }
       }
     } else if (rule.input()[mark].nonterminal()) {
       // marked nonterminal
       auto&& nonterminal = rule.input()[mark];
       size_t nextState = transitionMap.at(nonterminal);
-      lr_goto_item(id, nonterminal) = nextState;
+      insert_goto(id, nonterminal, nextState);
     } else {
       // marked terminal
       auto&& terminal = rule.input()[mark];
       size_t nextState = transitionMap.at(terminal);
-      auto& action = lr_action_item(id, terminal);
+      auto& action = insert_action(id, terminal);
       if (action.action() == LRAction::REDUCE) {
         action = conflict_resolution(terminal,
                                      action,
@@ -187,7 +233,7 @@ class LR1GenericTable : public LRGenericTable {
                                      to_str);
       } else {
         // regular insert
-        lr_action_item(id, terminal) = {LRAction::SHIFT, nextState};
+        insert_action(id, terminal) = {LRAction::SHIFT, nextState};
       }
     }
   }
@@ -237,9 +283,7 @@ class LR1StrictGenericTable : public LRGenericTable {
   LR1StrictGenericTable(const TranslationGrammar& grammar,
                         symbol_string_fn to_str = ctf::to_string) {
     StateMachine sm(grammar);
-    _terminals = grammar.terminals();
-    _nonterminals = grammar.nonterminals();
-    initialize_tables(sm.states().size());
+    _states = sm.states().size();
 
     for (auto&& state : sm.states()) {
       for (auto&& item : state.items()) {
@@ -259,30 +303,30 @@ class LR1StrictGenericTable : public LRGenericTable {
     auto&& mark = item.mark();
     // special S' -> S.EOF item
     if (rule == grammar.starting_rule() && mark == 1) {
-      lr_action_item(state.id(), Symbol::eof()) = {LRAction::SUCCESS, 0};
+      insert_action(state.id(), Symbol::eof()) = {LRAction::SUCCESS};
     } else if (mark == rule.input().size()) {
       for (auto&& terminal : item.lookaheads().symbols()) {
-        auto&& action = lr_action(state.id(), terminal);
+        auto& action = insert_action(state.id(), terminal);
         if (action.action() != LRAction::ERROR) {
           throw std::invalid_argument(
             conflict_error_message(state, action.action(), LRAction::REDUCE, terminal, to_str));
         }
-        lr_action_item(state.id(), terminal) = {LRAction::REDUCE, rule.id};
+        action = {LRAction::REDUCE, rule.id};
       }
     } else if (rule.input()[mark].nonterminal()) {
       auto&& nonterminal = rule.input()[mark];
       size_t nextState = transitionMap.at(nonterminal);
-      lr_goto_item(state.id(), nonterminal) = nextState;
+      insert_goto(state.id(), nonterminal, nextState);
     } else {
       auto&& terminal = rule.input()[mark];
       size_t nextState = transitionMap.at(terminal);
-      auto&& action = lr_action(state.id(), terminal);
+      auto& action = insert_action(state.id(), terminal);
       if (action.action() != LRAction::ERROR &&
           action != LRActionItem{LRAction::SHIFT, nextState}) {
         throw std::invalid_argument(
           conflict_error_message(state, action.action(), LRAction::SHIFT, terminal, to_str));
       }
-      lr_action_item(state.id(), terminal) = {LRAction::SHIFT, nextState};
+      action = {LRAction::SHIFT, nextState};
     }
   }
 
@@ -307,41 +351,44 @@ class LRSavedTable : public LRGenericTable {
   LRSavedTable() {}
   LRSavedTable(const TranslationGrammar&, symbol_string_fn = ctf::to_string) {}
   LRSavedTable(std::istream& is) {
-    size_t states = 0;
-    is >> states >> _nonterminals >> _terminals;
-    if (_states < 1 || _terminals < 1 || _nonterminals < 1) {
+    is >> _states;
+    if (_states < 1) {
       throw std::invalid_argument("Invalid saved parsing table.");
     }
-    initialize_tables(states);
     // skip \n
     is.get();
+    _actionDelimiters.pop_back();
     // initialize action table
-    for (size_t i = 0; i < states; ++i) {
+    for (size_t i = 0; i < _states; ++i) {
+      _actionDelimiters.push_back(_actionTable.size());
       while (true) {
         char c = is.get();
         if (c == '\n') {
           break;
         }
+
         size_t terminal = 0;
         is >> terminal;
         // skip :
         is.get();
         char action = is.get();
         if (action == 'S') {
-          _actionTable[actionIndex(i, terminal)] = {LRAction::SUCCESS, 0};
+          _actionTable.push_back({terminal, {LRAction::SUCCESS}});
         } else {
           size_t argument = 0;
           is >> argument;
           if (action == 'r') {
-            _actionTable[actionIndex(i, terminal)] = {LRAction::REDUCE, argument};
+            _actionTable.push_back({terminal, {LRAction::REDUCE, argument}});
           } else if (action == 's') {
-            _actionTable[actionIndex(i, terminal)] = {LRAction::SHIFT, argument};
+            _actionTable.push_back({terminal, {LRAction::SHIFT, argument}});
           }
         }
       }
     }
     // initialize goto table
-    for (size_t i = 0; i < states; ++i) {
+    _gotoDelimiters.pop_back();
+    for (size_t i = 0; i < _states; ++i) {
+      _gotoDelimiters.push_back(_gotoTable.size());
       while (true) {
         char c = is.get();
         if (c == '\n') {
@@ -353,7 +400,7 @@ class LRSavedTable : public LRGenericTable {
         is.get();
         size_t argument = 0;
         is >> argument;
-        _gotoTable[gotoIndex(i, nonterminal)] = argument;
+        _gotoTable.push_back({nonterminal, argument});
       }
     }
   }
