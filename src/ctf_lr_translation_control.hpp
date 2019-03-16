@@ -6,7 +6,9 @@
 #ifndef CTF_LR_TRANSLATION_CONTROL_H
 #define CTF_LR_TRANSLATION_CONTROL_H
 
+#include <functional>
 #include <iostream>
+
 #include "ctf_lr_lalr.hpp"
 #include "ctf_lr_lr0.hpp"
 #include "ctf_lr_table.hpp"
@@ -111,12 +113,12 @@ class LRTranslationControlGeneral : public TranslationControl {
 template <typename LRTableType>
 class LRTranslationControlTemplate : public LRTranslationControlGeneral {
  public:
-  using error_function = string (*)(size_t state,
-                                    const Token& token,
-                                    const TranslationGrammar& tg,
-                                    const LRGenericTable& lrTable,
-                                    const InputReader&,
-                                    symbol_string_fn to_str);
+  using error_function = std::function<string(size_t state,
+                                              const Token& token,
+                                              const TranslationGrammar& tg,
+                                              const LRGenericTable& lrTable,
+                                              const InputReader&,
+                                              symbol_string_fn to_str)>;
   /**
   \brief Constructs a LRTranslationControlGeneral.
   */

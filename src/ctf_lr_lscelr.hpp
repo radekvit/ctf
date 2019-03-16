@@ -2,6 +2,7 @@
 #define CTF_LR_LSCELR_HPP
 
 #include <optional>
+
 #include "ctf_lr_lr1.hpp"
 
 namespace ctf::lscelr {

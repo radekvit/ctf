@@ -7,12 +7,12 @@ methods.
 #ifndef CTF_TRANSLATION_GRAMMAR_H
 #define CTF_TRANSLATION_GRAMMAR_H
 
-#include "ctf_base.hpp"
-
 #include <functional>
 #include <ostream>
 #include <stdexcept>
 #include <utility>
+
+#include "ctf_base.hpp"
 
 namespace ctf {
 enum class Associativity : unsigned char {

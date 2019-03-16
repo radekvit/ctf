@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <istream>
 #include <limits>
+
 #include "ctf_base.hpp"
 
 namespace ctf {

@@ -6,12 +6,12 @@
 #ifndef CRF_LR_TABLE_HPP
 #define CRF_LR_TABLE_HPP
 
+#include <istream>
+
 #include "ctf_base.hpp"
 #include "ctf_lr_lalr.hpp"
 #include "ctf_lr_lr1.hpp"
 #include "ctf_lr_lscelr.hpp"
-
-#include <istream>
 
 namespace ctf {
 
