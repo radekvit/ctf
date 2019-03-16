@@ -16,6 +16,25 @@
 
 namespace ctf {
 
+inline string default_lr_error_message(size_t state,
+                                       const Token& token,
+                                       const TranslationGrammar& tg,
+                                       const LRGenericTable& lrTable,
+                                       const InputReader&,
+                                       symbol_string_fn to_str) {
+  string message = "Unexpected symbol ";
+  message += to_str(token.symbol());
+  message += "\nExpected:";
+  for (auto terminal = Symbol::eof(); terminal.id() < tg.terminals();
+       terminal = Terminal(terminal.id())) {
+    if (lrTable.lr_action(state, terminal).action() != LRAction::ERROR) {
+      message += " ";
+      message += to_str(terminal);
+    }
+  }
+  return message;
+}
+
 class LRTranslationControlGeneral : public TranslationControl {
  public:
   /**
@@ -92,10 +111,17 @@ class LRTranslationControlGeneral : public TranslationControl {
 template <typename LRTableType>
 class LRTranslationControlTemplate : public LRTranslationControlGeneral {
  public:
+  using error_function = string (*)(size_t state,
+                                    const Token& token,
+                                    const TranslationGrammar& tg,
+                                    const LRGenericTable& lrTable,
+                                    const InputReader&,
+                                    symbol_string_fn to_str);
   /**
   \brief Constructs a LRTranslationControlGeneral.
   */
-  explicit LRTranslationControlTemplate() {}
+  explicit LRTranslationControlTemplate(error_function errorMessage = default_lr_error_message)
+    : _errorMessage(errorMessage) {}
   /**
   \brief Constructs LRTranslationControlGeneral with a LexicalAnalyzer and
   TranslationGrammar.
@@ -153,7 +179,8 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
           produce_output(appliedRules);
           return;
         case LRAction::ERROR:
-          add_error(token, error_message(state, token, reader, to_str));
+          add_error(token,
+                    _errorMessage(state, token, *_translationGrammar, _lrTable, reader, to_str));
           if (!error_recovery(pushdown, token))
             return;
           state = pushdown.back();
@@ -204,24 +231,6 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     create_lr_table(to_str);
   }
 
-  // TODO allow example-based error messages
-  string error_message(size_t state,
-                       const Token& token,
-                       const InputReader&,
-                       symbol_string_fn to_str = ctf::to_string) {
-    string message = "Unexpected symbol ";
-    message += to_str(token.symbol());
-    message += "\nExpected:";
-    for (auto terminal = Symbol::eof(); terminal.id() < _translationGrammar->terminals();
-         terminal = Terminal(terminal.id())) {
-      if (_lrTable.lr_action(state, terminal).action() != LRAction::ERROR) {
-        message += " ";
-        message += to_str(terminal);
-      }
-    }
-    return message;
-  }
-
   bool error_recovery(vector<size_t>&, Token&) override { return false; }
 
   void save(std::ostream& os) const override { _lrTable.save(os); }
@@ -235,6 +244,8 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   \brief All read tokens
   */
   vector<Token> _tokens;
+
+  error_function _errorMessage;
 
   /**
   Creates all predictive sets and creates a new LR table.
@@ -251,7 +262,10 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
 
 class SavedLRTranslationControl : public LRTranslationControlTemplate<LRSavedTable> {
  public:
-  SavedLRTranslationControl(std::istream& is) { _lrTable = LRSavedTable(is); }
+  SavedLRTranslationControl(std::istream& is, error_function errFn = default_lr_error_message)
+    : LRTranslationControlTemplate<LRSavedTable>(errFn) {
+    _lrTable = LRSavedTable(is);
+  }
 
  protected:
   void set_grammar(const TranslationGrammar& tg, symbol_string_fn = ctf::to_string) override {
