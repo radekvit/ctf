@@ -272,18 +272,31 @@ class vector_set {
     : _elements(vec), _compare(compare), _equals(equals) {}
 };
 
+/**
+\brief A runtime-sized alternative to std::bitset.
+*/
 class bit_set {
  protected:
+  /**
+  \brief The underlying unsigned storage type.
+  */
   using storage_type = size_t;
   static_assert(std::is_unsigned<storage_type>::value, "storage_type must be unsigned");
+
   friend struct ::std::hash<bit_set>;
 
  public:
+  /**
+  \brief A proxy class to the elements of bit_set.
+  */
   class reference {
     friend class bit_set;
     using storage_type = bit_set::storage_type;
 
    public:
+    /**
+    \brief Set the value of the referenced element.
+    */
     reference& operator=(bool t) noexcept {
       storage_type e = *_element;
       // reset bit
@@ -292,37 +305,82 @@ class bit_set {
       *_element = e | static_cast<storage_type>(t) << _offset;
       return *this;
     }
+    /**
+    \brief Change the target of this reference object.
+    */
     reference& operator=(const reference& r) noexcept {
       *this = static_cast<bool>(r);
       return *this;
     }
 
+    /**
+    \brief Returns true if the referenced element is stored in the referenced bit_set.
+    */
     operator bool() const noexcept { return (*_element >> _offset) & 0x1; }
-
+    /**
+    \brief Returns false if the referenced element is stored in the referenced bit_set.
+    */
     bool operator~() const noexcept { return !((*_element >> _offset) & 0x1); }
-
+    /**
+    \brief If the referenced element is a member of the referenced set, remove it.
+    If it isn't an element, insert it.
+    */
     reference& flip() noexcept { return *this = ~*this; }
 
    private:
+    /**
+    \brief Constructs the reference object from a pointer to storage with the element and the
+    element's bit offset.
+    */
     reference(storage_type* p, size_t offset) noexcept : _element(p), _offset(offset) {}
 
+    /**
+    \brief A storage_type cell containing the status of the referenced element.
+    */
     storage_type* _element;
+    /**
+    \brief The bit offset of the referenced element.
+    */
     size_t _offset;
   };
 
+  /**
+  \brief Constructs the bit_set with the appropriate storage size.
+
+  \param[in] bits The maximum number of elements in this set.
+  */
   explicit bit_set(size_t bits)
     : _storage(bits != 0 ? (bits - 1) / bitsPerStorage + 1 : 0, 0), _capacity(bits) {}
 
+  /**
+  \brief Compares two sets for identity.
+
+  \pre lhs.capacity() == rhs.capacity()
+  \param[in] lhs The left-hand side set.
+  \param[in] rhs The reft-hand side set.
+
+  \returns True if the sets contain the same elements.
+  */
   friend bool operator==(const bit_set& lhs, const bit_set& rhs) {
-    assert(lhs._storage.capacity() == rhs._storage.capacity());
+    assert(lhs.capacity() == rhs.capacity());
     for (size_t i = 0; i < lhs._storage.size(); ++i) {
       if (lhs._storage[i] != rhs._storage[i])
         return false;
     }
     return true;
   }
+  /**
+  \brief Compares two sets for difference.
+
+  \pre lhs.capacity() == rhs.capacity()
+  \param[in] lhs The left-hand side set.
+  \param[in] rhs The reft-hand side set.
+
+  \returns True if the sets don't contain the same elements.
+  */
   friend bool operator!=(const bit_set& lhs, const bit_set& rhs) {
-    assert(lhs._storage.capacity() == rhs._storage.capacity());
+    assert(lhs.capacity() == rhs.capacity());
+
     for (size_t i = 0; i < lhs._storage.size(); ++i) {
       if (lhs._storage[i] == rhs._storage[i])
         return false;
@@ -330,16 +388,38 @@ class bit_set {
     return true;
   }
 
+  /**
+  \brief Get the membership of the i-th element.
+  \pre capacity() < i
+
+  \returns True if element i is a member of the set.
+  */
   bool operator[](size_t i) const noexcept { return get_value(i); }
+  /**
+  \brief Get the reference object to the i-th element.
+  \pre capacity() < i
+
+  \returns The reference object to the i-th element.
+  */
   reference operator[](size_t i) noexcept { return get_reference(i); }
 
+  /**
+  \brief Get the membership of the i-th element with bounds checking.
+
+  \throws std::out_of_range If i >= capacity().
+  \returns The reference object to the i-th element.
+  */
   bool test(size_t i) const {
     if (i >= capacity()) {
       throw std::out_of_range("bit_set::test(): out of range.");
     }
     return get_value(i);
   }
+  /**
+  \brief Check if the set contains all possible elements.
 
+  \returns True if the set contains all possible elements.
+  */
   bool all() const noexcept {
     for (auto& cell : _storage) {
       if (cell != std::numeric_limits<storage_type>::max()) {
@@ -348,9 +428,17 @@ class bit_set {
     }
     return true;
   }
+  /**
+  \brief Check if the set is not empty.
 
+  \returns True if the set is not empty.
+  */
   bool any() const noexcept { return !none(); }
+  /**
+  \brief Check if the set is empty.
 
+  \returns True if the set is empty.
+  */
   bool none() const noexcept {
     for (auto& cell : _storage) {
       if (cell != 0) {
@@ -359,9 +447,17 @@ class bit_set {
     }
     return true;
   }
+  /**
+  \brief Check if the set is empty.
 
+  \returns True if the set is empty.
+  */
   bool empty() const noexcept { return none(); }
+  /**
+  \brief Get the cardinality of the set.
 
+  \returns The number of elements contained in the set.
+  */
   size_t count() const noexcept {
     size_t result = 0;
     size_t j = 0;
@@ -379,29 +475,73 @@ class bit_set {
     }
     return result;
   }
+  /**
+  \brief Get the cardinality of the set.
 
+  \returns The number of elements contained in the set.
+  */
   size_t size() const noexcept { return count(); }
+  /**
+  \brief Get the size of the set's universe.
+
+  \returns The maximum size of the set.
+  */
   size_t capacity() const noexcept { return _capacity; }
 
+  /**
+  \brief Perform set intersection and set the result to this set.
+
+  \pre capacity() == rhs.capacity()
+  \param[in] rhs The right-hand set.
+
+  \returns A reference to this set.
+  */
   bit_set& operator&=(const bit_set& rhs) noexcept {
+    assert(capacity() == rhs.capacity());
+
     for (size_t i = 0; i < _storage.size(); ++i) {
       _storage[i] &= rhs._storage[i];
     }
     return *this;
   }
+  /**
+  \brief Perform set union and set the result to this set.
+
+  \pre capacity() == rhs.capacity()
+  \param[in] rhs The right-hand set.
+
+  \returns A reference to this set.
+  */
   bit_set& operator|=(const bit_set& rhs) noexcept {
+    assert(capacity() == rhs.capacity());
+
     for (size_t i = 0; i < _storage.size(); ++i) {
       _storage[i] |= rhs._storage[i];
     }
     return *this;
   }
+  /**
+  \brief Perform membership xor and set the result to this set.
+
+  \pre capacity() == rhs.capacity()
+  \param[in] rhs The right-hand set.
+
+  \returns A reference to this set.
+  */
   bit_set& operator^=(const bit_set& rhs) noexcept {
+    assert(capacity() == rhs.capacity());
+
     for (size_t i = 0; i < _storage.size(); ++i) {
       _storage[i] ^= rhs._storage[i];
     }
     correct_trailing();
     return *this;
   }
+  /**
+  \brief Get the complement set to this set.
+
+  \returns The complement set to this set.
+  */
   bit_set operator~() {
     bit_set result(*this);
     for (size_t i = 0; i < _storage.size(); ++i) {
@@ -410,7 +550,14 @@ class bit_set {
     result.correct_trailing();
     return result;
   }
+  /**
+  \brief Get the string representation of this set.
 
+  \param[in] string_fn A function returning the string representations of individual elements in
+  this set.
+
+  \returns The string representation of this set.
+  */
   string to_string(string (*string_fn)(size_t) = std::to_string) const {
     bool any = false;
     string result = "{ ";
@@ -428,7 +575,14 @@ class bit_set {
     result += " }";
     return result;
   }
+  /**
+  \brief Perform set union and set the result to this set.
 
+  \pre capacity() == rhs.capacity()
+  \param[in] rhs The right-hand set.
+
+  \returns True if any elements were added to this set.
+  */
   bool set_union(const bit_set& rhs) noexcept {
     assert(capacity() == rhs.capacity());
     bool changed = false;
@@ -439,7 +593,14 @@ class bit_set {
     }
     return changed;
   }
+  /**
+  \brief Perform set intersection and set the result to this set.
 
+  \pre capacity() == rhs.capacity()
+  \param[in] rhs The right-hand set.
+
+  \returns True if any elements were removed from this set.
+  */
   bool set_intersection(const bit_set& rhs) noexcept {
     assert(capacity() == rhs.capacity());
     bool changed = false;
@@ -450,17 +611,46 @@ class bit_set {
     return changed;
   }
 
-  // precondition: both sets are the same size
+  /**
+  \brief Perform set union.
+
+  \pre lhs.capacity() == rhs.capacity()
+  \post The result set has the same capacity as lhs and rhs.
+  \param[in] lhs The right-hand set.
+  \param[in] rhs The right-hand set.
+
+  \returns The set union of lhs and rhs.
+  */
   friend bit_set operator|(const bit_set& lhs, const bit_set& rhs) {
     bit_set result(lhs);
     result |= rhs;
     return result;
   }
+  /**
+  \brief Perform set intersection.
+
+  \pre lhs.capacity() == rhs.capacity()
+  \post The result set has the same capacity as lhs and rhs.
+  \param[in] lhs The right-hand set.
+  \param[in] rhs The right-hand set.
+
+  \returns The set intersection of lhs and rhs.
+  */
   friend bit_set operator&(const bit_set& lhs, const bit_set& rhs) {
     bit_set result(lhs);
     result &= rhs;
     return result;
   }
+  /**
+  \brief Perform membership XOR.
+
+  \pre lhs.capacity() == rhs.capacity()
+  \post The result set has the same capacity as lhs and rhs.
+  \param[in] lhs The right-hand set.
+  \param[in] rhs The right-hand set.
+
+  \returns The exclusive intersection of lhs and rhs.
+  */
   friend bit_set operator^(const bit_set& lhs, const bit_set& rhs) {
     bit_set result(lhs);
     result ^= rhs;
@@ -468,19 +658,45 @@ class bit_set {
   }
 
  protected:
+  /**
+  \brief The number of elements per unit of storage.
+  */
   static constexpr size_t bitsPerStorage = sizeof(storage_type) * 8;
 
+  /**
+  \brief The vector containing the element membership values.
+  */
   std::vector<storage_type> _storage;
+  /**
+  \brief The size of the set's universe.
+  */
   size_t _capacity;
 
+  /**
+  \brief Get the reference to the i-th element's membership.
+
+  \pre i < capacity()
+  \param[in] i The wanted element.
+
+  \returns A reference to the i-th element's membership.
+  */
   reference get_reference(size_t i) {
     return reference(&(_storage[i / bitsPerStorage]), bitsPerStorage - (i % bitsPerStorage + 1));
   }
+  /**
+  \brief Get the membership of the i-th element.
 
+  \pre i < capacity()
+  \param[in] i The wanted element.
+
+  \returns True if i is a member of this set.
+  */
   bool get_value(size_t i) const noexcept {
     return ((_storage[i / bitsPerStorage]) >> (bitsPerStorage - (i % bitsPerStorage + 1))) & 0x1;
   }
-
+  /**
+  \brief Set all elements' membership above capacity to zero.
+  */
   void correct_trailing() noexcept {
     if (capacity() == 0)
       return;
@@ -489,7 +705,11 @@ class bit_set {
                         << (_storage.size() * bitsPerStorage - capacity());
     _storage.back() &= mask;
   }
+  /**
+  \brief Get the hash of this set.
 
+  \returns The hash value of this set.
+  */
   size_t hash() const noexcept {
     size_t seed = capacity();
     for (auto& i : _storage) {
