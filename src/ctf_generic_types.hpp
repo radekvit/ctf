@@ -363,11 +363,8 @@ class bit_set {
   */
   friend bool operator==(const bit_set& lhs, const bit_set& rhs) {
     assert(lhs.capacity() == rhs.capacity());
-    for (size_t i = 0; i < lhs._storage.size(); ++i) {
-      if (lhs._storage[i] != rhs._storage[i])
-        return false;
-    }
-    return true;
+
+    return lhs._storage == rhs._storage;
   }
   /**
   \brief Compares two sets for difference.
@@ -381,11 +378,7 @@ class bit_set {
   friend bool operator!=(const bit_set& lhs, const bit_set& rhs) {
     assert(lhs.capacity() == rhs.capacity());
 
-    for (size_t i = 0; i < lhs._storage.size(); ++i) {
-      if (lhs._storage[i] == rhs._storage[i])
-        return false;
-    }
-    return true;
+    return lhs._storage != rhs._storage;
   }
 
   /**
@@ -535,6 +528,22 @@ class bit_set {
       _storage[i] ^= rhs._storage[i];
     }
     correct_trailing();
+    return *this;
+  }
+  /**
+  \brief Perform set subtraction and set the result to this set.
+
+  \pre capacity() == rhs.capacity()
+  \param[in] rhs The right-hand set.
+
+  \returns A reference to this set.
+  */
+  bit_set& operator-=(const bit_set& rhs) noexcept {
+    assert(capacity() == rhs.capacity());
+
+    for (size_t i = 0; i < _storage.size(); ++i) {
+      _storage[i] &= ~(rhs._storage[i]);
+    }
     return *this;
   }
   /**

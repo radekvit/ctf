@@ -20,7 +20,10 @@ class StateMachine : public ctf::lr1::StateMachine {
   }
 
  protected:
-  MergeResult merge(const std::vector<size_t>& existingStates, const State& newState) override {
+  MergeResult merge(const std::vector<size_t>& existingStates, State& newState) override {
+    if (existingStates.empty()) {
+      return {0, false};
+    }
     assert(existingStates.size() == 1);
     auto& state = _states[existingStates[0]];
     // always succeeds, merge lookahead sources
@@ -29,10 +32,11 @@ class StateMachine : public ctf::lr1::StateMachine {
       auto& item2 = newState.items()[i];
 
       item.lookahead_sources() = set_union(item.lookahead_sources(), item2.lookahead_sources());
-      // there are never any generated lookaheads
     }
     return {existingStates[0], true};
   }
+
+  StateMachine(const TranslationGrammar& tg, bool) : ctf::lr1::StateMachine(tg, true) {}
 };
 }  // namespace ctf::lalr
 #endif

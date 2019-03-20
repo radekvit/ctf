@@ -27,10 +27,10 @@ inline vector_set<Item> symbol_skip_kernel(const vector_set<Item>& state,
   return result;
 }
 
-class StateMachine : public ctf::lr1::StateMachine {
+class StateMachine : public ctf::lalr::StateMachine {
  public:
   // use the same constructors
-  StateMachine(const TranslationGrammar& grammar) : ctf::lr1::StateMachine(grammar, true) {
+  StateMachine(const TranslationGrammar& grammar) : ctf::lalr::StateMachine(grammar, true) {
     // initial item S' -> .S$
     insert_state({Item(
       {grammar.starting_rule(), 0}, {}, lr1::LookaheadSet(grammar.terminals(), {Symbol::eof()}))});
@@ -54,20 +54,7 @@ class StateMachine : public ctf::lr1::StateMachine {
  protected:
   vector<std::optional<vector<LookaheadSet>>> _contributions;
   vector_set<size_t> _statesToSplit;
-
-  MergeResult merge(const std::vector<size_t>& existingStates, const State& newState) override {
-    assert(existingStates.size() == 1);
-    auto& state = _states[existingStates[0]];
-    // always succeeds, merge lookahead sources
-    for (size_t i = 0; i < state.items().size(); ++i) {
-      auto& item = state.items()[i];
-      auto& item2 = newState.items()[i];
-
-      item.lookahead_sources() = set_union(item.lookahead_sources(), item2.lookahead_sources());
-      // there are never any generated lookaheads
-    }
-    return {existingStates[0], true};
-  }
+  vector<std::optional<vector<vector<LookaheadSet>>>> _contributionLookaheads;
 
   struct Conflict {
     size_t state;
@@ -161,7 +148,7 @@ class StateMachine : public ctf::lr1::StateMachine {
   void mark_conflict(size_t stateIndex, size_t itemIndex, LookaheadSet contributions) {
     auto& state = _states[stateIndex];
     auto& item = state.items()[itemIndex];
-    if (item.lookahead_sources().empty() || (contributions &= ~item.lookaheads()).none()) {
+    if (item.lookahead_sources().empty() || (contributions -= item.lookaheads()).none()) {
       // all generated, nothing to mark
       return;
     }
@@ -199,10 +186,20 @@ class StateMachine : public ctf::lr1::StateMachine {
           item.lookahead_sources().split(1);
       }
     }
+    // cache lookahead contributions to states
+    _contributionLookaheads.assign(_states.size(), {});
+    unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
+    for (size_t i = 0; i < _states.size(); ++i) {
+      auto& contribution = _contributions[i];
+      if (!contribution)
+        continue;
+
+      _contributionLookaheads[i] = {
+        lookaheads_lscelr(_states[i], contribution.value(), lookaheadMap)};
+    }
 
     // regenerate transitions
-    for (size_t i = 0; i < _statesToSplit.size(); ++i) {
-      auto& sources = splitSources[i];
+    for (auto& sources : splitSources) {
       for (auto& [sourceStateIndex, sourceItemIndex] : sources) {
         auto& sourceState = _states[sourceStateIndex];
         auto& sourceItem = sourceState.items()[sourceItemIndex];
@@ -263,11 +260,13 @@ class StateMachine : public ctf::lr1::StateMachine {
       return {isocores[0], true};
     }
     // a conflicted state:
+    auto& contributionLookaheads = _contributionLookaheads[isocores[0]].value();
     auto newLookaheads = lookaheads_lscelr(newState, contribution.value());
 
-    for (auto other : isocores) {
+    for (size_t i = 0; i < isocores.size(); ++i) {
+      size_t other = isocores[i];
       auto& existing = _states[other];
-      auto lookahead = lookaheads_lscelr(existing, contribution.value());
+      auto& lookahead = contributionLookaheads[i];
       // lookaheads match in the conflicting states
       if (lookahead == newLookaheads) {
         for (size_t i = 0; i < existing.items().size(); ++i) {
@@ -279,17 +278,80 @@ class StateMachine : public ctf::lr1::StateMachine {
         return {other, true};
       }
     }
+    contributionLookaheads.push_back(newLookaheads);
     return {0, false};
   }
 
-  vector<LookaheadSet> lookaheads_lscelr(const State& state, const vector<LookaheadSet>& mask) {
-    auto result = lookaheads(state);
-    assert(mask.size() == result.size());
+  vector<LookaheadSet> lookaheads_lscelr(const State& state, const vector<LookaheadSet>& masks) {
+    unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
+    return lookaheads_lscelr(state, masks, lookaheadMap);
+  }
 
-    for (size_t i = 0; i < result.size(); ++i) {
-      result[i] &= mask[i];
+  vector<LookaheadSet> lookaheads_lscelr(
+    const State& state,
+    const vector<LookaheadSet>& masks,
+    unordered_map<LookaheadSource, LookaheadSet>& lookaheadMap) {
+    vector<LookaheadSet> result;
+    LookaheadSet lookaheadMask(0);
+
+    for (size_t i = 0; i < state.items().size(); ++i) {
+      auto& item = state.items()[i];
+      auto& mask = masks[i];
+      if (mask.empty()) {
+        continue;
+      }
+      lookaheadMask = mask;
+      result.push_back(item.lookaheads());
+      for (auto& source : item.lookahead_sources()) {
+        unordered_map<LookaheadSource, LookaheadSet> tempMap(lookaheadMap);
+        auto it = lookaheadMap.find(source);
+        if (it == lookaheadMap.end()) {
+          // lookahead source not resolved
+          lookahead_lookup_lscelr(source, lookaheadMask, tempMap);
+          it = tempMap.find(source);
+          lookaheadMap.insert_or_assign(it->first, it->second);
+        }
+        result.back() |= it->second;
+        if (lookaheadMask.empty()) {
+          break;
+        }
+      }
+      result.back() &= mask;
     }
+
     return result;
+  }
+
+  void lookahead_lookup_lscelr(const LookaheadSource& source,
+                               LookaheadSet& lookaheadMask,
+                               unordered_map<LookaheadSource, LookaheadSet>& lookaheadMap) {
+    const auto& state = _states[source.state];
+    // get all sources
+    auto& item = state.items()[source.item];
+
+    // stop infinite loops
+    lookaheadMap.insert_or_assign(source, item.lookaheads());
+
+    lookaheadMask -= item.lookaheads();
+    if (lookaheadMask.empty()) {
+      return;
+    }
+
+    LookaheadSet symbols(item.lookaheads());
+    for (auto& nextSource : item.lookahead_sources()) {
+      auto it = lookaheadMap.find(nextSource);
+      if (it == lookaheadMap.end()) {
+        // recursive source not resolved yet
+        lookahead_lookup(nextSource, lookaheadMap);
+        it = lookaheadMap.find(nextSource);
+      }
+      symbols |= it->second;
+      if (lookaheadMask.empty()) {
+        lookaheadMap.insert_or_assign(source, std::move(symbols));
+        return;
+      }
+    }
+    lookaheadMap.insert_or_assign(source, std::move(symbols));
   }
 };
 }  // namespace ctf::lscelr

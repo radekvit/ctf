@@ -88,15 +88,8 @@ class Item {
   bool has_next() const noexcept { return _item.has_next(); }
   Item next(const LookaheadSource& las) const {
     vector_set<LookaheadSource> lookaheads;
-#if 0
-    if (mark() < 2) {
-      lookaheads.insert(las);
-    } else {
-      lookaheads = _lookaheads;
-    }
-#else
     lookaheads.insert(las);
-#endif
+
     return Item(_item.next(), lookaheads, LookaheadSet(_generatedLookaheads.capacity()));
   }
 
@@ -299,7 +292,6 @@ class StateMachine {
     // recursively expand all states: dfs
     expand_state(0);
     // push all lookaheads to their items
-    finalize_lookaheads();
   }
 
   virtual ~StateMachine() = default;
@@ -335,13 +327,10 @@ class StateMachine {
 
     // try to merge with another state
     auto& kernelStates = _kernelMap[kernel];
-    if (!kernelStates.empty()) {
-      // check existing states with this kernel
-      auto [other, merged] = merge(kernelStates, newState);
-      if (merged) {
-        return {other, false};
-      }
-      // no matching state found, insert as new
+    // check existing states with this kernel
+    auto [other, merged] = merge(kernelStates, newState);
+    if (merged) {
+      return {other, false};
     }
     // insert new state
     kernelStates.push_back(i);
@@ -349,13 +338,25 @@ class StateMachine {
     return {i, true};
   }
 
-  virtual MergeResult merge(const std::vector<size_t>& isocores, const State& newState) {
+  virtual MergeResult merge(const std::vector<size_t>& isocores, State& newState) {
     auto newLookaheads = lookaheads(newState);
+    for (size_t i = 0; i < newState.items().size(); ++i) {
+      auto& item = newState.items()[i];
+      item.lookaheads() |= newLookaheads[i];
+      item.lookahead_sources().clear();
+      item.lookahead_sources().shrink_to_fit();
+    }
     for (auto other : isocores) {
       auto& existing = _states[other];
-      auto lookahead = lookaheads(existing);
+      bool merge = true;
+      for (size_t i = 0; i < existing.items().size(); ++i) {
+        if (newState.items()[i].lookaheads() != existing.items()[i].lookaheads()) {
+          merge = false;
+          break;
+        }
+      }
       // we can insert the lookaheads to the existing
-      if (lookahead == newLookaheads) {
+      if (merge) {
         // we can keep the same lookahead relations in the existing state
         // no modification necessary
         return {other, true};
@@ -364,6 +365,9 @@ class StateMachine {
     return {0, false};
   }
 
+  /**
+  \brief The lookahead symbols obtained from sources.
+  */
   vector<LookaheadSet> lookaheads(const State& state) {
     // get all back references
     unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
@@ -371,13 +375,15 @@ class StateMachine {
 
     // get all sources
     for (auto& item : state.items()) {
-      result.push_back(TerminalSet(grammar().terminals()));
+      result.push_back(item.lookaheads());
       for (auto& source : item.lookahead_sources()) {
+        unordered_map<LookaheadSource, LookaheadSet> tempMap(lookaheadMap);
         auto it = lookaheadMap.find(source);
         if (it == lookaheadMap.end()) {
           // lookahead source not resolved
-          lookahead_lookup(source, lookaheadMap);
-          it = lookaheadMap.find(source);
+          lookahead_lookup(source, tempMap);
+          it = tempMap.find(source);
+          lookaheadMap.insert_or_assign(it->first, it->second);
         }
         result.back() |= it->second;
       }
