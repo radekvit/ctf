@@ -418,6 +418,7 @@ class TGOutput : public OutputGenerator {
 
   void generate_rule(string nt, tstack<Token>::const_iterator& it, std::ostream& os) {
     os << "    ctf::Rule(\"" << nt << "\"_nt,\n";
+    auto start = it;
     // TODO good error messages
     while (*it != "rule end"_t) {
       vector<string> inputNonterminals;
@@ -477,7 +478,7 @@ class TGOutput : public OutputGenerator {
             errorMessage += i;
           }
           errorMessage += " ]\n";
-          error(errorMessage);
+          error(start, errorMessage);
         }
       }
       // TODO: check that input and output nonterminals are the same
