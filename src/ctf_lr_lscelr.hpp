@@ -170,6 +170,19 @@ class StateMachine : public ctf::lalr::StateMachine {
     }
   }
 
+  size_t split_location(const Item& item) {
+    auto& sources = item.lookahead_sources();
+    size_t split = 1;
+    const size_t keptState = sources[0].state;
+    for (size_t i = 1; i < sources.size(); ++i) {
+      if (sources[i].state != keptState) {
+        break;
+      }
+      ++split;
+    }
+    return split;
+  }
+
   void split_states() {
     vector<vector_set<LookaheadSource>> splitSources;
     splitSources.reserve(_statesToSplit.size());
@@ -179,11 +192,14 @@ class StateMachine : public ctf::lalr::StateMachine {
       // store sources from the first item
       // the first item will always store the source states
       // we only need the transition symbol
-      splitSources.push_back(state.items()[0].lookahead_sources().split(1));
-      // remove all but the first source from all items
+      // remove all but the first source state from all items
+      auto& firstItem = state.items()[0];
+      splitSources.push_back(firstItem.lookahead_sources().split(split_location(firstItem)));
       for (auto& item : state.items()) {
-        if (!item.lookahead_sources().empty())
-          item.lookahead_sources().split(1);
+        if (item.lookahead_sources().empty()) {
+          continue;
+        }
+        item.lookahead_sources().split(split_location(item));
       }
     }
     // cache lookahead contributions to states
