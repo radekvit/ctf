@@ -18,7 +18,7 @@ inline constexpr ctf::Symbol operator""_nt(const char* s, size_t) {
     return ctf::Nonterminal(2);
   if (ctf::c_streq(s, "Attributes"))
     return ctf::Nonterminal(3);
-  if (ctf::c_streq(s, "AttributesLight"))
+  if (ctf::c_streq(s, "GrammarC"))
     return ctf::Nonterminal(4);
   if (ctf::c_streq(s, "IntList"))
     return ctf::Nonterminal(5);
@@ -26,19 +26,19 @@ inline constexpr ctf::Symbol operator""_nt(const char* s, size_t) {
     return ctf::Nonterminal(6);
   if (ctf::c_streq(s, "Precedence"))
     return ctf::Nonterminal(7);
-  if (ctf::c_streq(s, "PrecedenceLevels"))
+  if (ctf::c_streq(s, "PrecedenceAttribute"))
     return ctf::Nonterminal(8);
-  if (ctf::c_streq(s, "Rule"))
+  if (ctf::c_streq(s, "PrecedenceLevels"))
     return ctf::Nonterminal(9);
-  if (ctf::c_streq(s, "RuleClauses"))
+  if (ctf::c_streq(s, "Rule"))
     return ctf::Nonterminal(10);
-  if (ctf::c_streq(s, "RulePrecedence"))
+  if (ctf::c_streq(s, "RuleClause"))
     return ctf::Nonterminal(11);
-  if (ctf::c_streq(s, "Rules"))
+  if (ctf::c_streq(s, "RuleClauses"))
     return ctf::Nonterminal(12);
-  if (ctf::c_streq(s, "S"))
+  if (ctf::c_streq(s, "RulePrecedence"))
     return ctf::Nonterminal(13);
-  if (ctf::c_streq(s, "SingleRule"))
+  if (ctf::c_streq(s, "Rules"))
     return ctf::Nonterminal(14);
   if (ctf::c_streq(s, "String"))
     return ctf::Nonterminal(15);
@@ -134,17 +134,17 @@ inline ctf::string to_string(ctf::Symbol s) {
     {ctf::Nonterminal(1), "Attribute"},
     {ctf::Nonterminal(2), "AttributeList"},
     {ctf::Nonterminal(3), "Attributes"},
-    {ctf::Nonterminal(4), "AttributesLight"},
+    {ctf::Nonterminal(4), "GrammarC"},
     {ctf::Nonterminal(5), "IntList"},
     {ctf::Nonterminal(6), "OutputString"},
     {ctf::Nonterminal(7), "Precedence"},
-    {ctf::Nonterminal(8), "PrecedenceLevels"},
-    {ctf::Nonterminal(9), "Rule"},
-    {ctf::Nonterminal(10), "RuleClauses"},
-    {ctf::Nonterminal(11), "RulePrecedence"},
-    {ctf::Nonterminal(12), "Rules"},
-    {ctf::Nonterminal(13), "S"},
-    {ctf::Nonterminal(14), "SingleRule"},
+    {ctf::Nonterminal(8), "PrecedenceAttribute"},
+    {ctf::Nonterminal(9), "PrecedenceLevels"},
+    {ctf::Nonterminal(10), "Rule"},
+    {ctf::Nonterminal(11), "RuleClause"},
+    {ctf::Nonterminal(12), "RuleClauses"},
+    {ctf::Nonterminal(13), "RulePrecedence"},
+    {ctf::Nonterminal(14), "Rules"},
     {ctf::Nonterminal(15), "String"},
     {ctf::Nonterminal(16), "TokenList"},
   };

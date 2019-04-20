@@ -18,8 +18,8 @@ precedence:
 
 # rules and precedence levels are always indented with the 'tab' character
 
-S:
-	'NEWLINE' S | S
+GrammarC:
+	'NEWLINE' GrammarC | GrammarC
 	'grammar' 'grammar name' 'NEWLINE' Precedence Rules |
 		'grammar' Precedence Rules
 		-
@@ -70,11 +70,11 @@ RuleClauses:
 	-
 	# empty line or comment
 	'NEWLINE' RuleClauses | RuleClauses
-	SingleRule RuleClauses | SingleRule 'rule end' RuleClauses
+	RuleClause RuleClauses | RuleClause 'rule end' RuleClauses
 
-SingleRule:
+RuleClause:
 	String 'NEWLINE' | String
-	String 'NEWLINE' 'INDENT' AttributesLight 'DEDENT' | String AttributesLight
+	String 'NEWLINE' 'INDENT' PrecedenceAttribute 'DEDENT' | String PrecedenceAttribute
 	String '|' OutputString
 
 String:
@@ -98,7 +98,7 @@ Attributes:
 	AttributeList | 'attributes' AttributeList 'attribute list end'
 	RulePrecedence AttributeList | 'attributes' RulePrecedence AttributeList 'attribute list end'
 
-AttributesLight:
+PrecedenceAttribute:
 	RulePrecedence | 'attributes' RulePrecedence 'attribute list end'
 
 RulePrecedence:
@@ -112,7 +112,10 @@ AttributeList:
 
 Attribute:
 	'-' 'NEWLINE' | 'attribute end'
+		-
+		0
 	IntList 'NEWLINE' | IntList 'attribute end'
+		1
 
 IntList:
 	'integer'

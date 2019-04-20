@@ -2,12 +2,12 @@
 
 using namespace ctfgc;
 ctf::TranslationGrammar ctfgc::grammar({
-    // S
-    ctf::Rule("S"_nt,
-      {"NEWLINE"_t, "S"_nt, },
-      {"S"_nt, }
+    // GrammarC
+    ctf::Rule("GrammarC"_nt,
+      {"NEWLINE"_t, "GrammarC"_nt, },
+      {"GrammarC"_nt, }
     ),
-    ctf::Rule("S"_nt,
+    ctf::Rule("GrammarC"_nt,
       {"grammar"_t, "grammar name"_t, "NEWLINE"_t, "Precedence"_nt, "Rules"_nt, },
       {"grammar"_t, "Precedence"_nt, "Rules"_nt, },
       ctf::vector<ctf::vector_set<size_t>>{{}, {0, }, {}, }
@@ -94,20 +94,20 @@ ctf::TranslationGrammar ctfgc::grammar({
       {"RuleClauses"_nt, }
     ),
     ctf::Rule("RuleClauses"_nt,
-      {"SingleRule"_nt, "RuleClauses"_nt, },
-      {"SingleRule"_nt, "rule end"_t, "RuleClauses"_nt, }
+      {"RuleClause"_nt, "RuleClauses"_nt, },
+      {"RuleClause"_nt, "rule end"_t, "RuleClauses"_nt, }
     ),
 
-    // SingleRule
-    ctf::Rule("SingleRule"_nt,
+    // RuleClause
+    ctf::Rule("RuleClause"_nt,
       {"String"_nt, "NEWLINE"_t, },
       {"String"_nt, }
     ),
-    ctf::Rule("SingleRule"_nt,
-      {"String"_nt, "NEWLINE"_t, "INDENT"_t, "AttributesLight"_nt, "DEDENT"_t, },
-      {"String"_nt, "AttributesLight"_nt, }
+    ctf::Rule("RuleClause"_nt,
+      {"String"_nt, "NEWLINE"_t, "INDENT"_t, "PrecedenceAttribute"_nt, "DEDENT"_t, },
+      {"String"_nt, "PrecedenceAttribute"_nt, }
     ),
-    ctf::Rule("SingleRule"_nt,
+    ctf::Rule("RuleClause"_nt,
       {"String"_nt, "|"_t, "OutputString"_nt, }
     ),
 
@@ -166,8 +166,8 @@ ctf::TranslationGrammar ctfgc::grammar({
       {"attributes"_t, "RulePrecedence"_nt, "AttributeList"_nt, "attribute list end"_t, }
     ),
 
-    // AttributesLight
-    ctf::Rule("AttributesLight"_nt,
+    // PrecedenceAttribute
+    ctf::Rule("PrecedenceAttribute"_nt,
       {"RulePrecedence"_nt, },
       {"attributes"_t, "RulePrecedence"_nt, "attribute list end"_t, }
     ),
@@ -190,11 +190,13 @@ ctf::TranslationGrammar ctfgc::grammar({
     // Attribute
     ctf::Rule("Attribute"_nt,
       {"-"_t, "NEWLINE"_t, },
-      {"attribute end"_t, }
+      {"attribute end"_t, },
+      ctf::vector<ctf::vector_set<size_t>>{{}, {0, }, }
     ),
     ctf::Rule("Attribute"_nt,
       {"IntList"_nt, "NEWLINE"_t, },
-      {"IntList"_nt, "attribute end"_t, }
+      {"IntList"_nt, "attribute end"_t, },
+      ctf::vector<ctf::vector_set<size_t>>{{1, }, }
     ),
 
     // IntList
@@ -213,7 +215,7 @@ ctf::TranslationGrammar ctfgc::grammar({
     ),
 
   },
-  "S"_nt,
+  "GrammarC"_nt,
   {
     ctf::PrecedenceSet{ctf::Associativity::NONE, {"NEWLINE"_t, }},
   }
