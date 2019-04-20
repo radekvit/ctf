@@ -1,19 +1,14 @@
 # CTF Grammar Tool Grammar
 # translation from this grammar format to C++
 # author: Radek Vít
+# 2019
 
-# keywords:
-# grammar, precedence, none, left, right
-
-# name format in Python Regex:
-# grammar name format:
-# [a-z](_[a-z]+)*_?
-
-# nonterminal name format:
-# [A-Z][a-zA-Z']*
-
-# terminal name format:
-# '([^\s\"\\]| |\\[bfnrt\"'\\])+?'
+# Keywords
+## grammar, precedence, none, left, right
+# Tokens in Python Regex
+## 'grammar name': [a-z](_[a-z]+)*_?
+## 'nonterminal':  [A-Z][a-zA-Z']*
+## 'terminal':     '([^\s\"\\]| |\\[bfnrt\"'\\])+?'
 
 grammar ctfgc
 
@@ -22,6 +17,7 @@ precedence:
 	none 'NEWLINE'
 
 # rules and precedence levels are always indented with the 'tab' character
+
 S:
 	'NEWLINE' S | S
 	'grammar' 'grammar name' 'NEWLINE' Precedence Rules |
@@ -50,19 +46,20 @@ Associativity:
 	'right'
 
 TokenList:
-	'terminal' TokenList'
-TokenList':
-	-
-	',' | -
-	',' 'terminal' TokenList' | 'terminal' TokenList'
-		-
+	'terminal'
+	'terminal' ',' | 'terminal'
+		0
+	'terminal' ',' TokenList | 'terminal' TokenList
 		0
 
 Rules:
-	-
 	'NEWLINE' Rules | Rules
-	'nonterminal' ':' 'NEWLINE' 'INDENT' RuleClauses 'DEDENT' Rules |
-		'nonterminal' RuleClauses 'rule block end' Rules
+	Rule
+	Rule Rules
+
+Rule:
+	'nonterminal' ':' 'NEWLINE' 'INDENT' RuleClauses 'DEDENT' |
+		'nonterminal' RuleClauses 'rule block end'
 		0
 		-
 		-
@@ -82,13 +79,13 @@ SingleRule:
 
 String:
 	'-' | 'string end'
-	'nonterminal' String'
-	'terminal' String'
-
-String':
-	- | 'string end'
-	'terminal' String'
-	'nonterminal' String'
+		0
+	'terminal' | 'terminal' 'string end'
+		0, 1
+	'nonterminal' | 'nonterminal' 'string end'
+		0, 1
+	'nonterminal' String
+	'terminal' String
 
 OutputString:
 	'NEWLINE' 'INDENT' String 'NEWLINE' 'DEDENT' | String
@@ -110,22 +107,16 @@ RulePrecedence:
 		1
 
 AttributeList:
-	Attribute AttributeList'
-
-AttributeList':
-	-
-	Attribute AttributeList'
+	Attribute
+	Attribute AttributeList
 
 Attribute:
 	'-' 'NEWLINE' | 'attribute end'
 	IntList 'NEWLINE' | IntList 'attribute end'
 
 IntList:
-	'integer' IntList'
-
-IntList':
-	-
-	',' | -
-	',' 'integer' IntList' | 'integer' IntList'
-		-
+	'integer'
+	'integer' ',' | 'integer'
+		0
+	'integer' ',' IntList | 'integer' IntList
 		0
