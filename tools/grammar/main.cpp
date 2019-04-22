@@ -497,7 +497,7 @@ class TGOutput : public OutputGenerator {
           while (*it != "attribute list end"_t) {
             os << "{";
             while (*it != "attribute end"_t) {
-              size_t target = it->attribute().get<size_t>();
+              size_t target = it->attribute().get<size_t>() - 1;
               if (target >= outputTerminals.size() || !outputTerminals[target]) {
                 string errorMessage = "Attribute target is not a terminal in rule derived from ";
                 errorMessage += nt + ".";

@@ -1,7 +1,7 @@
 # CTF Grammar Tool Grammar
 # translation from this grammar format to C++
-# author: Radek Vít
-# 2019
+# author: Radek Vit
+grammar ctfgc
 
 # Keywords
 ## grammar, precedence, none, left, right
@@ -9,8 +9,6 @@
 ## 'grammar name': [a-z](_[a-z]+)*_?
 ## 'nonterminal':  [A-Z][a-zA-Z']*
 ## 'terminal':     '([^\s\"\\]| |\\[bfnrt\"'\\])+?'
-
-grammar ctfgc
 
 # disambiguate empty lines before optional precedence declaration
 precedence:
@@ -23,7 +21,7 @@ GrammarC:
 	'grammar' 'grammar name' 'NEWLINE' Precedence Rules |
 		'grammar' Precedence Rules
 		-
-		0
+		1
 
 # 'NEWLINE' has higher precedence than EOF, so the second rule
 # will be picked before the first rule if both are viable.
@@ -32,7 +30,7 @@ Precedence:
 	'NEWLINE' Precedence | Precedence
 	'precedence' ':' 'NEWLINE' 'INDENT' PrecedenceLevels 'DEDENT' |
 		'precedence' PrecedenceLevels 'precedence end'
-		0
+		1
 
 PrecedenceLevels:
 	-
@@ -48,9 +46,9 @@ Associativity:
 TokenList:
 	'terminal'
 	'terminal' ',' | 'terminal'
-		0
+		1
 	'terminal' ',' TokenList | 'terminal' TokenList
-		0
+		1
 
 Rules:
 	'NEWLINE' Rules | Rules
@@ -60,11 +58,11 @@ Rules:
 Rule:
 	'nonterminal' ':' 'NEWLINE' 'INDENT' RuleClauses 'DEDENT' |
 		'nonterminal' RuleClauses 'rule block end'
-		0
+		1
 		-
 		-
 		-
-		2
+		3
 
 RuleClauses:
 	-
@@ -79,11 +77,11 @@ RuleClause:
 
 String:
 	'-' | 'string end'
-		0
+		1
 	'terminal' | 'terminal' 'string end'
-		0, 1
+		1, 2
 	'nonterminal' | 'nonterminal' 'string end'
-		0, 1
+		1, 2
 	'nonterminal' String
 	'terminal' String
 
@@ -103,8 +101,8 @@ PrecedenceAttribute:
 
 RulePrecedence:
 	'precedence' 'terminal' 'NEWLINE' | 'precedence' 'terminal'
-		0
 		1
+		2
 
 AttributeList:
 	Attribute
@@ -113,13 +111,13 @@ AttributeList:
 Attribute:
 	'-' 'NEWLINE' | 'attribute end'
 		-
-		0
-	IntList 'NEWLINE' | IntList 'attribute end'
 		1
+	IntList 'NEWLINE' | IntList 'attribute end'
+		2
 
 IntList:
 	'integer'
 	'integer' ',' | 'integer'
-		0
+		1
 	'integer' ',' IntList | 'integer' IntList
-		0
+		1
