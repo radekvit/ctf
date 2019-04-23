@@ -620,8 +620,8 @@ int main(int argc, char** argv) try {
     i = &file;
   }
   // run translation
-  Translation t(TGLex(), ctfgc::grammar, TGOutput(outputFolder));
-  auto result = t.run(*i, std::cout, std::cerr, input, ctfgc::to_string);
+  Translation t(TGLex(), ctfgc::grammar, TGOutput(outputFolder), ctfgc::to_string);
+  auto result = t.run(*i, std::cout, std::cerr, input);
   switch (result) {
     case TranslationResult::SUCCESS:
       return 0;

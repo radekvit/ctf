@@ -43,6 +43,13 @@ inline SavedLRTranslationControl load(const string& filename) {
   return load(is);
 }
 
+inline SavedLRTranslationControl load(const char* input) {
+  std::stringstream ss;
+  ss << input;
+
+  return load(ss);
+}
+
 /**
 \brief Defines a translation. Can be used multiple times for different inputs
 and outputs.
@@ -61,13 +68,17 @@ class Translation {
   A copy is made.
   \param[in] og A callable to perform output generation.
   */
-  Translation(TLexicalAnalyzer&& la, const TranslationGrammar& tg, TOutputGenerator&& og)
+  Translation(TLexicalAnalyzer&& la,
+              const TranslationGrammar& tg,
+              TOutputGenerator&& og,
+              symbol_string_fn to_str = ctf::to_string)
     : _lexicalAnalyzer(std::move(la))
     , _translationControl()
     , _translationGrammar(tg)
-    , _outputGenerator(std::move(og)) {
+    , _outputGenerator(std::move(og))
+    , _toString(to_str) {
     _translationControl.set_lexical_analyzer(_lexicalAnalyzer);
-    _translationControl.set_grammar(_translationGrammar);
+    _translationControl.set_grammar(_translationGrammar, _toString);
   }
 
   /**
@@ -82,13 +93,15 @@ class Translation {
   Translation(TLexicalAnalyzer&& la,
               TTranslationControl&& tc,
               const TranslationGrammar& tg,
-              TOutputGenerator&& og)
+              TOutputGenerator&& og,
+              symbol_string_fn to_str = ctf::to_string)
     : _lexicalAnalyzer(std::move(la))
     , _translationControl(std::move(tc))
     , _translationGrammar(tg)
-    , _outputGenerator(std::move(og)) {
+    , _outputGenerator(std::move(og))
+    , _toString(to_str) {
     _translationControl.set_lexical_analyzer(_lexicalAnalyzer);
-    _translationControl.set_grammar(_translationGrammar);
+    _translationControl.set_grammar(_translationGrammar, _toString);
   }
 
   ~Translation() {}  //= default;
@@ -103,8 +116,7 @@ class Translation {
   TranslationResult run(std::istream& inputStream,
                         std::ostream& outputStream,
                         std::ostream& errorStream,
-                        const std::string& inputName = "",
-                        symbol_string_fn to_str = ctf::to_string) {
+                        const std::string& inputName = "") {
     // extra output buffer
     std::stringstream ss;
     // error flags
@@ -126,7 +138,7 @@ class Translation {
 
     try {
       // lexical analysis, syntax analysis and translation
-      _translationControl.run(_reader, to_str);
+      _translationControl.run(_reader, _toString);
     } catch (LexicalException& le) {
       lexError = true;
     } catch (SyntaxException& se) {
@@ -183,6 +195,8 @@ class Translation {
   \brief Outputs output terminals to ostream or elsewhere.
   */
   TOutputGenerator _outputGenerator;
+
+  symbol_string_fn _toString;
 };
 }  // namespace ctf
 
