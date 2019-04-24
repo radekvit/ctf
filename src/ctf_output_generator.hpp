@@ -1,7 +1,8 @@
 /**
-\file output_generator.hpp
+\file ctf_output_generator.hpp
 \brief Defines class OutputGenerator, which transforms output tokens to output
 and outputs it into a stream.
+\author Radek Vit
 */
 #ifndef CTF_OUTPUT_GENERATOR_H
 #define CTF_OUTPUT_GENERATOR_H
@@ -186,4 +187,5 @@ class OutputGenerator {
 }  // namespace ctf
 
 #endif
-/*** End of file output_generator.hpp ***/
+
+/*** End of file ctf_output_generator.hpp ***/

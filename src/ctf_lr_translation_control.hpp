@@ -1,5 +1,5 @@
 /**
-\file lr_translation_control.hpp
+\file ctf_lr_translation_control.hpp
 \brief Defines class LRTranslationControl and defines its methods.
 \author Radek Vít
 */
@@ -284,4 +284,5 @@ using LR1StrictTranslationControl = LRTranslationControlTemplate<LR1StrictTable>
 
 }  // namespace ctf
 #endif
-/*** End of file ll_translation_control.hpp ***/
+
+/*** End of file ctf_lr_translation_control.hpp ***/

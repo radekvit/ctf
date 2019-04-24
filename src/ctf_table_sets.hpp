@@ -1,3 +1,8 @@
+/**
+\file ctf_table_sets.hpp
+\brief Contains predictive set computation algorithms.
+\author Radek Vit
+*/
 #ifndef CTF_PREDICTIVE_SETS
 #define CTF_PREDICTIVE_SETS
 
@@ -231,3 +236,5 @@ inline TerminalSet string_first(const std::vector<Symbol>& symbols,
 }  // namespace ctf
 
 #endif
+
+/*** End of file ctf_table_sets.hpp ***/

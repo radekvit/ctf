@@ -1,5 +1,5 @@
 /**
-\file translation_grammar.hpp
+\file ctf_translation_grammar.hpp
 \brief Defines class TranslationGrammar and its subclasses and implements their
 methods.
 \author Radek Vít
@@ -526,4 +526,5 @@ class TranslationGrammar {
 };
 }  // namespace ctf
 #endif
-/*** End of file translation_grammar.hpp ***/
+
+/*** End of file ctf_translation_grammar.hpp ***/

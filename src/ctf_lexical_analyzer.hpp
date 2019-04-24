@@ -1,5 +1,5 @@
 /**
-\file lexical_analyzer.hpp
+\file ctf_lexical_analyzer.hpp
 \brief Defines class LexicalAnalyzer used to supply tokens from input stream.
 \author Radek Vít
 */
@@ -211,7 +211,7 @@ class LexicalAnalyzer {
   void set_error() noexcept { _errorFlag = true; }
 
   /**
-  \brief Outputs an error message with the location automatically printed before
+  \brief Outputs a warning message with the location automatically printed before
   it.
   */
   void warning(const string& message) {
@@ -219,13 +219,20 @@ class LexicalAnalyzer {
           << ":\n"
           << message << "\n";
   }
+  /**
+  \brief Outputs an error message with the location automatically printed before
+  it and sets the error flag.
+  */
   void error(const string& message) {
     err() << _location.to_string() << ": " << output::color::red << "ERROR" << output::reset
           << ":\n"
           << message << "\n";
     set_error();
   }
-
+  /**
+  \brief Outputs an error message with the location automatically printed before
+  it, sets the error flag and throws LexicalException.
+  */
   void fatal_error(const string& message) {
     error(message);
     throw LexicalException("Lexical error encountered.");
@@ -273,4 +280,5 @@ class LexicalAnalyzer {
 }  // namespace ctf
 
 #endif
-/*** End of file lexical_analyzer.hpp ***/
+
+/*** End of file ctf_lexical_analyzer.hpp ***/

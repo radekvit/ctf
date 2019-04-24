@@ -1,5 +1,5 @@
 /**
-\file input_reader.hpp
+\file ctf_input_reader.hpp
 \brief Contains the InputReader class.
 \author Radek Vit
 */
@@ -369,4 +369,4 @@ class InputReader {
 }  // namespace ctf
 
 #endif
-/*** End of file input_reader.cpp ***/
+/*** End of file ctf_input_reader.cpp ***/

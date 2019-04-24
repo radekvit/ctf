@@ -1,5 +1,5 @@
 /**
-\file lr_table.hpp
+\file ctf_lr_table.hpp
 \brief Defines class LRTable and its methods.
 \author Radek Vít
 */
@@ -415,4 +415,5 @@ using LALRStrictTable = LR1StrictGenericTable<lalr::StateMachine>;
 
 }  // namespace ctf
 #endif
-/*** End of file lr_table.hpp ***/
+
+/*** End of file ctf_lr_table.hpp ***/

@@ -1,5 +1,5 @@
 /**
-\file generic_types.hpp
+\file ctf_generic_types.hpp
 \brief Defines types, STL classes and generic STL adapters and functions used in
 this project.
 \author Radek Vít
@@ -1339,4 +1339,5 @@ struct hash<ctf::bit_set> {
 };
 }  // namespace std
 #endif
-/*** Enf of file generic_types.hpp ***/
+
+/*** Enf of file ctf_generic_types.hpp ***/

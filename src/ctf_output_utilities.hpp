@@ -1,3 +1,9 @@
+/**
+\file ctf_output_utilities.hpp
+\brief Contains the definition of output color constants.
+\author Radek Vit
+*/
+
 #ifndef CTF_OUTPUT_UTILITIES_HPP
 #define CTF_OUTPUT_UTILITIES_HPP
 
@@ -43,3 +49,5 @@ inline string reset = "\033[0m";
 }  // namespace ctf::output
 
 #endif
+
+/*** End of file ctf_output_utilities ***/

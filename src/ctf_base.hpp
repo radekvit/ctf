@@ -1,5 +1,5 @@
 /**
-\file base.hpp
+\file ctf_base.hpp
 \brief Defines base formal language types used throughout this project.
 \author Radek Vít
 */
@@ -22,8 +22,7 @@ class TranslationException : public std::runtime_error {
 };
 
 /**
-\brief A single symbol in the translation process. May represent a Terminal, Nonterminal or end of
-input.
+\brief A single symbol. May represent a Terminal, Nonterminal or end of input.
 */
 class Symbol {
  public:
@@ -121,6 +120,9 @@ class Symbol {
   friend constexpr bool operator>=(const Symbol& lhs, const Symbol& rhs) { return rhs <= lhs; }
   ///@}
 
+  /**
+  \brief Returns the basic string representation of the symbol.
+  */
   string to_string() const {
     if (type() == Type::EOI) {
       return "EOF";
@@ -128,9 +130,13 @@ class Symbol {
     return std::to_string(id() - (terminal() ? 1 : 0)) +
            (type() == Type::NONTERMINAL ? "_nt" : "_t");
   }
-
+  /**
+  \brief Returns the basic string representation of the symbol.
+  */
   explicit operator std::string() const { return to_string(); }
-
+  /**
+  \brief Returns the basic numeric representation of the symbol's id.
+  */
   explicit constexpr operator size_t() { return _storage; }
 
  protected:
@@ -446,8 +452,14 @@ class Attribute {
   std::any _storage;
 };
 
+/**
+\brief A single token. Contains a symbol, its location and its attribute.
+*/
 class Token {
  public:
+  /**
+  \brief Constructs Token from a symbol, its location, and its attribute.
+  */
   Token(const Symbol symbol,
         const Attribute& atr = Attribute{},
         const Location& loc = Location::invalid())
@@ -460,14 +472,34 @@ class Token {
     if (_location == Location::invalid())
       _location = other.location();
   }
+  /**
+  \brief Get the represented symbol.
 
+  \returns A reference to the represented symbol.
+  */
   Symbol& symbol() noexcept { return _symbol; }
+  /**
+  \brief Get the represented symbol.
+
+  \returns A const reference to the represented symbol.
+  */
   const Symbol& symbol() const noexcept { return _symbol; }
 
+  /**
+  \brief Get the represented symbol's id.
+  */
   size_t id() const noexcept { return _symbol.id(); }
+  /**
+  \brief Get the represented symbol's type.
+  */
   Symbol::Type type() const noexcept { return _symbol.type(); }
-
+  /**
+  \brief Returns true if the represented symbol is a terminal.
+  */
   bool terminal() const noexcept { return _symbol.terminal(); }
+  /**
+  \brief Returns true if the represented symbol is a nonterminal.
+  */
   bool nonterminal() const noexcept { return _symbol.nonterminal(); }
 
   /**
@@ -487,6 +519,15 @@ class Token {
   */
   const Location& location() const { return _location; }
 
+  /**
+  \name Comparison operators for the represented symbols.
+  \brief Numeric comparison of types and ids.
+  Types have higher priority.
+  \param[in] lhs Left Symbol of the comparison.
+  \param[out] rhs Right Symbol of the comparison.
+  \returns True when the numeric comparison is true.
+  */
+  ///@{
   friend bool operator<(const Token& lhs, const Token& rhs) { return lhs.symbol() < rhs.symbol(); }
 
   friend bool operator==(const Token& lhs, const Token& rhs) {
@@ -500,7 +541,14 @@ class Token {
   friend bool operator<=(const Token& lhs, const Token& rhs) { return !(lhs > rhs); }
 
   friend bool operator>=(const Token& lhs, const Token& rhs) { return rhs <= lhs; }
+  ///@}
 
+  /**
+  \brief Returns the string representation of the token.
+  Prepends the location to the string representation of the token.
+
+  \param[in] to_str The function for string representaton of symbols.
+  */
   string to_string(symbol_string_fn to_str = ctf::to_string) const {
     string result;
     if (location() != Location::invalid()) {
@@ -509,15 +557,23 @@ class Token {
     result += to_str(_symbol);
     return result;
   }
-
+  /**
+  \brief Returns the string representation of the token.
+  Prepends the location to the string representation of the token.
+  */
   explicit operator string() const { return to_string(); }
-
+  /**
+  \brief Converts the token to a symbol.
+  */
   explicit operator Symbol() const { return symbol(); }
 
  private:
+  /**
+  \brief The represented Symbol.
+  */
   Symbol _symbol;
   /**
-  \brief Attribute of this Symbol. Only valid for some types of symbols.
+  \brief Attribute of this Token. Only valid for some types of symbols.
   */
   Attribute _attribute;
   /**
@@ -543,9 +599,20 @@ inline constexpr Symbol operator""_nt(unsigned long long int id) { return Nonter
 }  // namespace literals
 #endif
 
+/**
+\brief A specialization of ctf::bit_set.
+Provides extra methods for interfacing with Symbols.
+*/
 class TerminalSet : public bit_set {
  public:
+  /**
+  \brief Constructs the terminal set with a set storage size.
+  */
   explicit TerminalSet(size_t bits) : bit_set(bits) {}
+  /**
+  \brief Constructs the terminal set with a set storage size and inserts the supplied terminals to
+  the set.
+  */
   TerminalSet(size_t bits, std::initializer_list<Symbol> il) : bit_set(bits) {
     for (auto& symbol : il) {
       insert(symbol);
@@ -558,22 +625,38 @@ class TerminalSet : public bit_set {
     reference p;
     bool inserted;
   };
-
+  /**
+  \brief Inserts a terminal symbol to the set.
+  */
   InsertResult insert(Symbol s) noexcept {
     reference p = (*this)[s];
     bool inserted = ~p;
     p = true;
     return {p, inserted};
   }
-
+  /**
+  \brief Index into the set and get a reference to the membership of an id.
+  */
+  reference operator[](size_t i) noexcept { return get_reference(i); }
+  /**
+  \brief Index into the const set and get the membership value of an id.
+  */
   bool operator[](size_t i) const noexcept {
     return ((_storage[i / bitsPerStorage]) >> (bitsPerStorage - (i % bitsPerStorage + 1))) & 0x1;
   }
-  reference operator[](size_t i) noexcept { return get_reference(i); }
 
+  /**
+  \brief Index into the set and get a reference to the membership of a terminal.
+  */
   reference operator[](Symbol s) noexcept { return (*this)[s.id()]; }
+  /**
+  \brief Index into the const set and get the membership value of a terminal.
+  */
   bool operator[](Symbol s) const noexcept { return (*this)[s.id()]; }
 
+  /**
+  \brief Get a vector of all symbols that are members of the set.
+  */
   vector<Symbol> symbols() const {
     vector<Symbol> result;
     if (capacity() == 0)
@@ -589,7 +672,11 @@ class TerminalSet : public bit_set {
     }
     return result;
   }
+  /**
+  \brief Get the string representation of this set of symbols.
 
+  \param[in] to_str The function for string representaton of symbols.
+  */
   string to_string(symbol_string_fn to_str = ctf::to_string) const {
     auto terminals = symbols();
     if (terminals.empty()) {
@@ -620,4 +707,4 @@ struct hash<ctf::Symbol> {
 }  // namespace std
 
 #endif
-/*** End of file base.hpp ***/
+/*** End of file ctf_base.hpp ***/

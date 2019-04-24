@@ -1,5 +1,5 @@
 /**
-\file translation.hpp
+\file ctf_translation.hpp
 \brief Defines class Translation and its methods.
 \author Radek Vít
 */
@@ -201,4 +201,5 @@ class Translation {
 }  // namespace ctf
 
 #endif
-/*** End of file translation.hpp ***/
+
+/*** End of file ctf_translation.hpp ***/

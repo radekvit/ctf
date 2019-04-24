@@ -1,5 +1,5 @@
 /**
-\file translation_control.hpp
+\file ctf_translation_control.hpp
 \brief Defines class TranslationControl and its methods.
 \author Radek Vít
 */
@@ -135,4 +135,5 @@ class TranslationControl {
 };
 }  // namespace ctf
 #endif
-/*** End of file translation_control.hpp ***/
+
+/*** End of file ctf_translation_control.hpp ***/

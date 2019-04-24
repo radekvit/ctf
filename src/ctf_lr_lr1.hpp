@@ -1,3 +1,9 @@
+/**
+\file ctf_lr_lr1.hpp
+\brief Defines LS items and the canonical LR(1) automaton.
+\author Radek Vít
+*/
+
 #ifndef CTF_LR_LR1_HPP
 #define CTF_LR_LR1_HPP
 
@@ -7,7 +13,9 @@
 #include "ctf_translation_grammar.hpp"
 
 namespace ctf::lr1 {
-
+/**
+\brief References an item in a state.
+*/
 struct LookaheadSource {
   size_t state = 0;
   size_t item = 0;
@@ -19,11 +27,16 @@ struct LookaheadSource {
   friend bool operator==(const LookaheadSource& lhs, const LookaheadSource& rhs) {
     return lhs.state == rhs.state && lhs.item == rhs.item;
   }
-
+  /**
+  \brief Returns the string representation of the lookahead source.
+  */
   string to_string() const {
     using namespace std::literals;
     return "("s + std::to_string(state) + ", " + std::to_string(item) + ")";
   }
+  /**
+  \brief Returns the string representation of the lookahead source.
+  */
   explicit operator string() const { return to_string(); }
 };
 
@@ -42,25 +55,37 @@ struct hash<ctf::lr1::LookaheadSource> {
 }  // namespace std
 
 namespace ctf::lr1 {
+/**
+\brief Represents an LS item.
+*/
 class Item {
  public:
   using Rule = TranslationGrammar::Rule;
   using LR0Item = ctf::lr0::Item;
-
+  /**
+  \brief Constructs the item with empty lookahead sets.
+  */
   Item(const LR0Item& item, const TranslationGrammar& tg)
     : _item(item), _generatedLookaheads(tg.terminals()) {}
+  /**
+  \brief Constructs the item with empty lookahead sets.
+  */
   Item(LR0Item&& item, const TranslationGrammar& tg)
-    : _item(item), _generatedLookaheads(tg.terminals()) {}
-
+    : _item(std::move(item)), _generatedLookaheads(tg.terminals()) {}
+  /**
+  \brief Constructs the item with a supplied lookahead source and generated lookahead sets.
+  */
   Item(const LR0Item& item,
        const vector_set<LookaheadSource>& lookaheads,
        const LookaheadSet& generatedLookaheads)
     : _item(item), _lookaheads(lookaheads), _generatedLookaheads(generatedLookaheads) {}
-
+  /**
+  \brief Constructs the item with a supplied lookahead source and generated lookahead sets.
+  */
   Item(const LR0Item& item,
        const vector_set<LookaheadSource>& lookaheads,
        LookaheadSet&& generatedLookaheads)
-    : _item(item), _lookaheads(lookaheads), _generatedLookaheads(generatedLookaheads) {}
+    : _item(item), _lookaheads(lookaheads), _generatedLookaheads(std::move(generatedLookaheads)) {}
 
   Item(const Item& item) = default;
   Item(Item&& item) = default;
@@ -448,3 +473,5 @@ class StateMachine {
 
 }  // namespace ctf::lr1
 #endif
+
+/*** End of file ctf_lr_lr1.hpp ***/
