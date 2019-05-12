@@ -56,14 +56,7 @@ ctf::TranslationGrammar ctfgc::grammar({
       {"terminal"_t, }
     ),
     ctf::Rule("TokenList"_nt,
-      {"terminal"_t, ","_t, },
-      {"terminal"_t, },
-      ctf::vector<ctf::vector_set<size_t>>{{0, }, {}, }
-    ),
-    ctf::Rule("TokenList"_nt,
-      {"terminal"_t, ","_t, "TokenList"_nt, },
-      {"terminal"_t, "TokenList"_nt, },
-      ctf::vector<ctf::vector_set<size_t>>{{0, }, {}, }
+      {"terminal"_t, "TokenList"_nt, }
     ),
 
     // Rules

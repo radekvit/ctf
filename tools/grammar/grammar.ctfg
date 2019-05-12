@@ -45,10 +45,7 @@ Associativity:
 
 TokenList:
 	'terminal'
-	'terminal' ',' | 'terminal'
-		1
-	'terminal' ',' TokenList | 'terminal' TokenList
-		1
+	'terminal' TokenList
 
 Rules:
 	'NEWLINE' Rules | Rules
