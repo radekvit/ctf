@@ -61,6 +61,9 @@ ctf::TranslationGrammar ctfgc::grammar({
 
     // Rules
     ctf::Rule("Rules"_nt,
+      {"NEWLINE"_t, }
+    ),
+    ctf::Rule("Rules"_nt,
       {"NEWLINE"_t, "Rules"_nt, },
       {"Rules"_nt, }
     ),

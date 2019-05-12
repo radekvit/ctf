@@ -48,6 +48,7 @@ TokenList:
 	'terminal' TokenList
 
 Rules:
+	'NEWLINE'
 	'NEWLINE' Rules | Rules
 	Rule
 	Rule Rules
