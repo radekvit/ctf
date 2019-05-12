@@ -61,9 +61,6 @@ ctf::TranslationGrammar ctfgc::grammar({
 
     // Rules
     ctf::Rule("Rules"_nt,
-      {"NEWLINE"_t, }
-    ),
-    ctf::Rule("Rules"_nt,
       {"NEWLINE"_t, "Rules"_nt, },
       {"Rules"_nt, }
     ),
@@ -71,7 +68,23 @@ ctf::TranslationGrammar ctfgc::grammar({
       {"Rule"_nt, }
     ),
     ctf::Rule("Rules"_nt,
-      {"Rule"_nt, "Rules"_nt, }
+      {"Rule"_nt, "Rules'"_nt, }
+    ),
+
+    // Rules'
+    ctf::Rule("Rules'"_nt,
+      {"NEWLINE"_t, },
+      {}
+    ),
+    ctf::Rule("Rules'"_nt,
+      {"NEWLINE"_t, "Rules'"_nt, },
+      {"Rules'"_nt, }
+    ),
+    ctf::Rule("Rules'"_nt,
+      {"Rule"_nt, }
+    ),
+    ctf::Rule("Rules'"_nt,
+      {"Rule"_nt, "Rules'"_nt, }
     ),
 
     // Rule

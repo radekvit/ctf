@@ -40,12 +40,14 @@ inline constexpr ctf::Symbol operator""_nt(const char* s, size_t) {
     return ctf::Nonterminal(13);
   if (ctf::c_streq(s, "Rules"))
     return ctf::Nonterminal(14);
-  if (ctf::c_streq(s, "String"))
+  if (ctf::c_streq(s, "Rules'"))
     return ctf::Nonterminal(15);
-  if (ctf::c_streq(s, "TokenList"))
+  if (ctf::c_streq(s, "String"))
     return ctf::Nonterminal(16);
+  if (ctf::c_streq(s, "TokenList"))
+    return ctf::Nonterminal(17);
 
-  return ctf::Nonterminal(17);
+  return ctf::Nonterminal(18);
 }
 
 inline constexpr ctf::Symbol operator""_t(const char* s, size_t) {
@@ -145,8 +147,9 @@ inline ctf::string to_string(ctf::Symbol s) {
     {ctf::Nonterminal(12), "RuleClauses"},
     {ctf::Nonterminal(13), "RulePrecedence"},
     {ctf::Nonterminal(14), "Rules"},
-    {ctf::Nonterminal(15), "String"},
-    {ctf::Nonterminal(16), "TokenList"},
+    {ctf::Nonterminal(15), "Rules'"},
+    {ctf::Nonterminal(16), "String"},
+    {ctf::Nonterminal(17), "TokenList"},
   };
   auto it = names.find(s);
   if (it != names.end()) {
