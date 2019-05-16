@@ -151,7 +151,7 @@ class TGLex : public LexicalAnalyzer {
   }
 
   Token token_integer(int c) {
-    size_t number = 0;
+    std::size_t number = 0;
     do {
       number = number * 10 + c - '0';
       c = get();
@@ -164,7 +164,7 @@ class TGLex : public LexicalAnalyzer {
   Token token_newline() {
     Token nl = token("NEWLINE"_t);
     reset_location();
-    size_t tabs = 0;
+    std::size_t tabs = 0;
     int c;
     while ((c = get()) == '\t') {
       ++tabs;
@@ -253,8 +253,8 @@ class TGOutput : public OutputGenerator {
   std::set<string> _nonterminals;
   std::set<string> _terminals;
   std::set<string> _outTerminals;
-  map<string, size_t> _terminalMap;
-  map<string, size_t> _nonterminalMap;
+  map<string, std::size_t> _terminalMap;
+  map<string, std::size_t> _nonterminalMap;
   vector<tuple<Associativity, vector<string>>> _precedences;
 
   virtual void reset_private() override {
@@ -353,15 +353,15 @@ class TGOutput : public OutputGenerator {
     }
     // associate identifiers to size_t
     for (auto& id : _nonterminals) {
-      size_t s = _nonterminalMap.size();
+      std::size_t s = _nonterminalMap.size();
       _nonterminalMap[id] = s;
     }
     for (auto& id : _terminals) {
-      size_t s = _terminalMap.size();
+      std::size_t s = _terminalMap.size();
       _terminalMap[id] = s;
     }
     for (auto& id : _outTerminals) {
-      size_t s = _terminalMap.size();
+      std::size_t s = _terminalMap.size();
       _terminalMap.emplace(id, s);
     }
   }
@@ -424,9 +424,9 @@ class TGOutput : public OutputGenerator {
       vector<string> inputNonterminals;
       vector<string> outputNonterminals;
       vector<bool> outputTerminals;
-      size_t inputTerminals = 0;
-      size_t outputSymbols = 0;
-      size_t printedAttributes = 0;
+      std::size_t inputTerminals = 0;
+      std::size_t outputSymbols = 0;
+      std::size_t printedAttributes = 0;
       bool customPrecedence = false;
       bool differentOut = false;
 
@@ -493,11 +493,11 @@ class TGOutput : public OutputGenerator {
           ++it;
         }
         if (differentOut) {
-          os << ",\n      ctf::vector<ctf::vector_set<size_t>>{";
+          os << ",\n      ctf::vector<ctf::vector_set<std::size_t>>{";
           while (*it != "attribute list end"_t) {
             os << "{";
             while (*it != "attribute end"_t) {
-              size_t target = it->attribute().get<size_t>() - 1;
+              std::size_t target = it->attribute().get<std::size_t>() - 1;
               if (target >= outputTerminals.size() || !outputTerminals[target]) {
                 string errorMessage = "Attribute target is not a terminal in rule derived from ";
                 errorMessage += nt + ".";
@@ -550,7 +550,7 @@ class TGOutput : public OutputGenerator {
        << " {\n\n"
           "inline namespace literals {\n\n";
     // generate ""_nt
-    os << "inline constexpr ctf::Symbol operator\"\"_nt(const char* s, size_t) {\n";
+    os << "inline constexpr ctf::Symbol operator\"\"_nt(const char* s, std::size_t) {\n";
     for (auto& [key, value] : _nonterminalMap) {
       os << "  if (ctf::c_streq(s, \"" << key
          << "\"))\n"
@@ -559,7 +559,7 @@ class TGOutput : public OutputGenerator {
     }
     os << "\n  return ctf::Nonterminal(" << _nonterminalMap.size() << ");\n}\n\n";
     // generate ""_t
-    os << "inline constexpr ctf::Symbol operator\"\"_t(const char* s, size_t) {\n";
+    os << "inline constexpr ctf::Symbol operator\"\"_t(const char* s, std::size_t) {\n";
     for (auto& [key, value] : _terminalMap) {
       os << "  if (ctf::c_streq(s, \"" << key
          << "\"))\n"

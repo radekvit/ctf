@@ -75,12 +75,12 @@ inline first_t create_first(const TranslationGrammar& tg, const empty_t& empty) 
   do {
     changed = false;
     for (auto& r : tg.rules()) {
-      size_t i = r.nonterminal().id();
+      std::size_t i = r.nonterminal().id();
       bool isEmpty = true;
       for (auto& symbol : r.input()) {
         if (!isEmpty)
           break;
-        size_t nonterm_i;
+        std::size_t nonterm_i;
         switch (symbol.type()) {
           case Symbol::Type::NONTERMINAL:
             nonterm_i = symbol.id();
@@ -119,7 +119,7 @@ inline follow_t create_follow(const TranslationGrammar& tg,
     changed = false;
     for (auto& r : tg.rules()) {
       // index of origin nonterminal
-      size_t i = r.nonterminal().id();
+      std::size_t i = r.nonterminal().id();
       /* empty set of all symbols to the right of the current one */
       bool compoundEmpty = true;
       /* first set of all symbols to the right of the current symbol */
@@ -128,7 +128,7 @@ inline follow_t create_follow(const TranslationGrammar& tg,
       for (auto& s : reverse(r.input())) {
         // index of nonterminal in input string, only valid with
         // nonterminal symbol
-        size_t ti = 0;
+        std::size_t ti = 0;
         switch (s.type()) {
           case Symbol::Type::NONTERMINAL:
             ti = s.id();
@@ -180,7 +180,7 @@ inline predict_t create_predict(const TranslationGrammar& tg,
     TerminalSet rfollow = follow[r.nonterminal().id()];
     bool compoundEmpty = true;
     for (auto& s : reverse(r.input())) {
-      size_t i;
+      std::size_t i;
       switch (s.type()) {
         case Symbol::Type::EOI:
         case Symbol::Type::TERMINAL:
@@ -219,7 +219,7 @@ inline TerminalSet string_first(const std::vector<Symbol>& symbols,
         result.insert(symbol);
         return result;
       case Type::NONTERMINAL: {
-        size_t i = symbol.id();
+        std::size_t i = symbol.id();
         result |= first[i];
         if (!empty[i]) {
           return result;

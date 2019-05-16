@@ -160,7 +160,7 @@ class LexicalAnalyzer {
 
   \returns The integer value of the character num positions back.
   */
-  void unget(size_t num = 1) { reader_->unget(num); }
+  void unget(std::size_t num = 1) { reader_->unget(num); }
 
   /**
   \brief Resets the current token's location.
@@ -193,7 +193,7 @@ class LexicalAnalyzer {
 
   \returns A terminal Symbol with the current stored _location.
   */
-  Token token(size_t i, const Attribute& attr = Attribute{}) {
+  Token token(std::size_t i, const Attribute& attr = Attribute{}) {
     return Token(Terminal(i), attr, _location);
   }
 

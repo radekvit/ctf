@@ -91,7 +91,7 @@ class InputReader {
 
   \param[in] rollback How many characters to roll back.
   */
-  void unget(size_t rollback = 1) noexcept {
+  void unget(std::size_t rollback = 1) noexcept {
     // rollback
     _currentLocation = _inputBuffer.unget(_currentLocation, rollback);
   }
@@ -102,7 +102,7 @@ class InputReader {
   \param[out] location The current location after rollback.
   \param[in] rollback How many characters to roll back.
   */
-  void unget(Location& location, size_t rollback = 1) noexcept {
+  void unget(Location& location, std::size_t rollback = 1) noexcept {
     // rollback
     _currentLocation = _inputBuffer.unget(_currentLocation, rollback);
     location = _currentLocation;
@@ -156,7 +156,7 @@ class InputReader {
       _charBuffer.clear();
       _lineStartBuffer.clear();
       _lineStartBuffer.push_back(0);
-      _eofLocation = std::numeric_limits<size_t>::max();
+      _eofLocation = std::numeric_limits<std::size_t>::max();
     }
     /**
     \brief Appends the character to the end of the buffer.
@@ -203,7 +203,7 @@ class InputReader {
 
     \returns A vector of all characters on that row.
     */
-    string get_line(size_t row) const { return {line_begin(row - 1), line_end(row - 1)}; }
+    string get_line(std::size_t row) const { return {line_begin(row - 1), line_end(row - 1)}; }
 
     /**
     \brief Returns a line of characters. The line is extracted from the location
@@ -232,12 +232,12 @@ class InputReader {
     If the rollback is more characters than has been read, the location of the
     first character in the buffer is returned.
     */
-    Location unget(const Location& location, size_t rollback = 1) const noexcept {
+    Location unget(const Location& location, std::size_t rollback = 1) const noexcept {
       const auto begin = _lineStartBuffer.begin();
       // index of rolled back character
-      size_t index = character(location) - rollback - _charBuffer.begin();
+      std::size_t index = character(location) - rollback - _charBuffer.begin();
       // underflow check, return first location
-      if (index > (size_t(character(location) - _charBuffer.begin()))) {
+      if (index > (std::size_t(character(location) - _charBuffer.begin()))) {
         return Location{location.fileName};
       }
       // find first line after the current
@@ -275,13 +275,13 @@ class InputReader {
 
     Is used to segment _charBuffer into lines.
     */
-    vector<size_t> _lineStartBuffer;
+    vector<std::size_t> _lineStartBuffer;
     /**
     \brief The index of EOF.
 
     This index is set to maximal size_t value until EOF was appended.
     */
-    size_t _eofLocation = std::numeric_limits<size_t>::max();
+    std::size_t _eofLocation = std::numeric_limits<std::size_t>::max();
 
     /**
     \brief Returns an iterator to the character in location l.
@@ -304,7 +304,7 @@ class InputReader {
 
     \returns The line number starting from 0.
     */
-    size_t line(const Location& l) const noexcept { return l.row - 1; }
+    std::size_t line(const Location& l) const noexcept { return l.row - 1; }
     /**
     \brief Transforms Location col to column index.
 
@@ -313,7 +313,7 @@ class InputReader {
 
     \returns The column number starting from 0.
     */
-    size_t col(const Location& l) const noexcept { return l.col - 1; }
+    std::size_t col(const Location& l) const noexcept { return l.col - 1; }
 
     /**
     \brief Get a constant iterator to the first character on a line.
@@ -322,7 +322,7 @@ class InputReader {
 
     \returns A const iterator to the first character on the line.
     */
-    vector<char>::const_iterator line_begin(size_t line) const noexcept {
+    vector<char>::const_iterator line_begin(std::size_t line) const noexcept {
       // line not read yet, begins at end
       if (line >= _lineStartBuffer.size()) {
         return _charBuffer.cend();
@@ -339,9 +339,9 @@ class InputReader {
 
     \returns A const iterator to the first character beyond the line.
     */
-    vector<char>::const_iterator line_end(size_t line) const noexcept {
+    vector<char>::const_iterator line_end(std::size_t line) const noexcept {
       // no next line info, ends at end of buffer
-      if (line == std::numeric_limits<size_t>::max() || line + 1 >= _lineStartBuffer.size()) {
+      if (line == std::numeric_limits<std::size_t>::max() || line + 1 >= _lineStartBuffer.size()) {
         return _charBuffer.cend();
       }
       // ends at beginning of next line

@@ -12,10 +12,10 @@ using LookaheadSource = ctf::lr1::LookaheadSource;
 
 inline vector_set<Item> symbol_skip_kernel(const vector_set<Item>& state,
                                            Symbol s,
-                                           const size_t id) {
+                                           const std::size_t id) {
   vector_set<Item> result;
 
-  for (size_t i = 0; i < state.size(); ++i) {
+  for (std::size_t i = 0; i < state.size(); ++i) {
     auto& item = state[i];
     auto& symbol = item.rule().input()[item.mark()];
     if (item.reduce() || symbol != s) {
@@ -53,12 +53,12 @@ class StateMachine : public ctf::lalr::StateMachine {
 
  protected:
   vector<std::optional<vector<LookaheadSet>>> _contributions;
-  vector_set<size_t> _statesToSplit;
+  vector_set<std::size_t> _statesToSplit;
   vector<std::optional<vector<vector<LookaheadSet>>>> _contributionLookaheads;
 
   struct Conflict {
-    size_t state;
-    unordered_map<size_t, LookaheadSet> contributions;
+    std::size_t state;
+    unordered_map<std::size_t, LookaheadSet> contributions;
   };
 
   vector<Conflict> detect_conflicts() {
@@ -83,11 +83,11 @@ class StateMachine : public ctf::lalr::StateMachine {
     CONFLICT,
   };
   // list all reduce contributions to R/R and S/R conflicts for individual items
-  unordered_map<size_t, LookaheadSet> conflicts(State& state,
-                                                const vector<LookaheadSet>& stateLookaheads) {
-    unordered_map<size_t, LookaheadSet> result;
-    vector<tuple<Action, size_t>> actions(grammar().terminals(), {Action::NONE, 0});
-    for (size_t i = 0; i < state.items().size(); ++i) {
+  unordered_map<std::size_t, LookaheadSet> conflicts(State& state,
+                                                     const vector<LookaheadSet>& stateLookaheads) {
+    unordered_map<std::size_t, LookaheadSet> result;
+    vector<tuple<Action, std::size_t>> actions(grammar().terminals(), {Action::NONE, 0});
+    for (std::size_t i = 0; i < state.items().size(); ++i) {
       auto& item = state.items()[i];
       auto& lookahead = stateLookaheads[i];
       if (item.reduce()) {
@@ -132,7 +132,9 @@ class StateMachine : public ctf::lalr::StateMachine {
     return result;
   }
 
-  void add_to_lookahead(size_t item, Symbol symbol, unordered_map<size_t, LookaheadSet>& map) {
+  void add_to_lookahead(std::size_t item,
+                        Symbol symbol,
+                        unordered_map<std::size_t, LookaheadSet>& map) {
     auto& contribution = map.try_emplace(item, grammar().terminals()).first->second;
     contribution[symbol] = true;
   }
@@ -145,7 +147,7 @@ class StateMachine : public ctf::lalr::StateMachine {
     }
   }
 
-  void mark_conflict(size_t stateIndex, size_t itemIndex, LookaheadSet contributions) {
+  void mark_conflict(std::size_t stateIndex, std::size_t itemIndex, LookaheadSet contributions) {
     auto& state = _states[stateIndex];
     auto& item = state.items()[itemIndex];
     if (item.lookahead_sources().empty() || (contributions -= item.lookaheads()).none()) {
@@ -170,11 +172,11 @@ class StateMachine : public ctf::lalr::StateMachine {
     }
   }
 
-  size_t split_location(const Item& item) {
+  std::size_t split_location(const Item& item) {
     auto& sources = item.lookahead_sources();
-    size_t split = 1;
-    const size_t keptState = sources[0].state;
-    for (size_t i = 1; i < sources.size(); ++i) {
+    std::size_t split = 1;
+    const std::size_t keptState = sources[0].state;
+    for (std::size_t i = 1; i < sources.size(); ++i) {
       if (sources[i].state != keptState) {
         break;
       }
@@ -205,7 +207,7 @@ class StateMachine : public ctf::lalr::StateMachine {
     // cache lookahead contributions to states
     _contributionLookaheads.assign(_states.size(), {});
     unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
-    for (size_t i = 0; i < _states.size(); ++i) {
+    for (std::size_t i = 0; i < _states.size(); ++i) {
       auto& contribution = _contributions[i];
       if (!contribution)
         continue;
@@ -235,7 +237,7 @@ class StateMachine : public ctf::lalr::StateMachine {
   }
 
   InsertResult insert_state_lscelr(const vector_set<Item>& kernel) {
-    size_t i = _states.size();
+    std::size_t i = _states.size();
     State newState(i, kernel, grammar(), _empty, _first);
 
     auto& kernelStates = _kernelMap[kernel];
@@ -249,7 +251,7 @@ class StateMachine : public ctf::lalr::StateMachine {
     return {i, true};
   }
 
-  void expand_state_lscelr(size_t i) {
+  void expand_state_lscelr(std::size_t i) {
     for (auto& [symbol, kernel] : symbol_skip_kernels(_states[i].items(), i)) {
       auto [id, inserted] = insert_state_lscelr(kernel);
       _states[i].transitions()[symbol] = id;
@@ -260,13 +262,13 @@ class StateMachine : public ctf::lalr::StateMachine {
     }
   }
 
-  MergeResult merge_lscelr(const std::vector<size_t>& isocores, const State& newState) {
+  MergeResult merge_lscelr(const std::vector<std::size_t>& isocores, const State& newState) {
     // there is always a state from LALR
     auto& contribution = _contributions[isocores[0]];
     if (!contribution) {
       // not a conflicted state, always merge
       auto& state = _states[isocores[0]];
-      for (size_t i = 0; i < state.items().size(); ++i) {
+      for (std::size_t i = 0; i < state.items().size(); ++i) {
         auto& item = state.items()[i];
         auto& item2 = newState.items()[i];
 
@@ -279,13 +281,13 @@ class StateMachine : public ctf::lalr::StateMachine {
     auto& contributionLookaheads = _contributionLookaheads[isocores[0]].value();
     auto newLookaheads = lookaheads_lscelr(newState, contribution.value());
 
-    for (size_t i = 0; i < isocores.size(); ++i) {
-      size_t other = isocores[i];
+    for (std::size_t i = 0; i < isocores.size(); ++i) {
+      std::size_t other = isocores[i];
       auto& existing = _states[other];
       auto& lookahead = contributionLookaheads[i];
       // lookaheads match in the conflicting states
       if (lookahead == newLookaheads) {
-        for (size_t i = 0; i < existing.items().size(); ++i) {
+        for (std::size_t i = 0; i < existing.items().size(); ++i) {
           auto& item = existing.items()[i];
           auto& item2 = newState.items()[i];
 
@@ -310,7 +312,7 @@ class StateMachine : public ctf::lalr::StateMachine {
     vector<LookaheadSet> result;
     LookaheadSet lookaheadMask(0);
 
-    for (size_t i = 0; i < state.items().size(); ++i) {
+    for (std::size_t i = 0; i < state.items().size(); ++i) {
       auto& item = state.items()[i];
       auto& mask = masks[i];
       if (mask.empty()) {

@@ -17,8 +17,8 @@ namespace ctf::lr1 {
 \brief References an item in a state.
 */
 struct LookaheadSource {
-  size_t state = 0;
-  size_t item = 0;
+  std::size_t state = 0;
+  std::size_t item = 0;
 
   friend bool operator<(const LookaheadSource& lhs, const LookaheadSource& rhs) {
     return lhs.state < rhs.state || (lhs.state == rhs.state && lhs.item < rhs.item);
@@ -47,9 +47,9 @@ namespace std {
 template <>
 struct hash<ctf::lr1::LookaheadSource> {
   using argument_type = ctf::lr1::LookaheadSource;
-  using result_type = size_t;
+  using result_type = std::size_t;
   result_type operator()(argument_type const& s) const noexcept {
-    return std::hash<size_t>{}((s.state << 2) * s.item);
+    return std::hash<std::size_t>{}((s.state << 2) * s.item);
   }
 };
 }  // namespace std
@@ -95,7 +95,7 @@ class Item {
 
   const Rule& rule() const noexcept { return _item.rule(); }
 
-  size_t mark() const noexcept { return _item.mark(); }
+  std::size_t mark() const noexcept { return _item.mark(); }
 
   const LR0Item& lr0_item() const& noexcept { return _item; }
 
@@ -166,7 +166,7 @@ inline FirstResult first(const vector<Symbol>& symbols,
         result.insert(symbol);
         return {result, false};
       case Type::NONTERMINAL: {
-        size_t i = symbol.id();
+        std::size_t i = symbol.id();
         result |= first[i];
         if (!empty[i]) {
           return {result, false};
@@ -208,10 +208,10 @@ inline vector_set<Item> closure(vector_set<Item> items,
             Item newItem({rule, 0}, propagatedLookaheads, generatedLookaheads);
             auto it = closure.find(newItem);
             if (it != closure.end()) {
-              size_t originalSize = it->lookahead_sources().size();
+              std::size_t originalSize = it->lookahead_sources().size();
               it->lookahead_sources() = set_union(it->lookahead_sources(), propagatedLookaheads);
               bool addedGenerated = it->lookaheads().set_union(generatedLookaheads);
-              size_t newSize = it->lookahead_sources().size();
+              std::size_t newSize = it->lookahead_sources().size();
               if (newSize > originalSize || addedGenerated) {
                 // TODO would it ultimately be faster to create in-state lookahead sources instead?
                 newItems.erase(*it);
@@ -232,10 +232,10 @@ inline vector_set<Item> closure(vector_set<Item> items,
 }
 
 inline unordered_map<Symbol, vector_set<Item>> symbol_skip_kernels(const vector_set<Item>& state,
-                                                                   const size_t id) {
+                                                                   const std::size_t id) {
   unordered_map<Symbol, vector_set<Item>> result;
 
-  for (size_t i = 0; i < state.size(); ++i) {
+  for (std::size_t i = 0; i < state.size(); ++i) {
     auto& item = state[i];
     if (item.reduce()) {
       continue;
@@ -256,7 +256,7 @@ class StateMachine {
   using Item = ctf::lr1::Item;
   class State {
    public:
-    State(size_t id,
+    State(std::size_t id,
           const vector_set<Item>& kernel,
           const TranslationGrammar& grammar,
           const empty_t& empty,
@@ -271,12 +271,12 @@ class StateMachine {
       }
     }
 
-    size_t id() const noexcept { return _id; }
+    std::size_t id() const noexcept { return _id; }
     vector_set<Item>& items() noexcept { return _items; }
     const vector_set<Item>& items() const noexcept { return _items; }
 
-    unordered_map<Symbol, size_t>& transitions() noexcept { return _transitions; }
-    const unordered_map<Symbol, size_t>& transitions() const noexcept { return _transitions; }
+    unordered_map<Symbol, std::size_t>& transitions() noexcept { return _transitions; }
+    const unordered_map<Symbol, std::size_t>& transitions() const noexcept { return _transitions; }
 
     bool has_reduce() const noexcept { return _reduce; }
 
@@ -299,12 +299,12 @@ class StateMachine {
 
    private:
     // state index
-    size_t _id;
+    std::size_t _id;
     // closure of kernel
     vector_set<Item> _items;
 
     // state transitions
-    unordered_map<Symbol, size_t> _transitions;
+    unordered_map<Symbol, std::size_t> _transitions;
 
     bool _reduce = false;
   };
@@ -329,15 +329,15 @@ class StateMachine {
   first_t _first;
   vector<State> _states;
 
-  map<vector_set<Item>, vector<size_t>> _kernelMap;
+  map<vector_set<Item>, vector<std::size_t>> _kernelMap;
 
   struct InsertResult {
-    size_t state;
+    std::size_t state;
     bool insertedNew;
   };
 
   struct MergeResult {
-    size_t state;
+    std::size_t state;
     bool merge;
   };
 
@@ -347,7 +347,7 @@ class StateMachine {
   const TranslationGrammar& grammar() const noexcept { return *_grammar; }
 
   InsertResult insert_state(const vector_set<Item>& kernel) {
-    size_t i = _states.size();
+    std::size_t i = _states.size();
     State newState(i, kernel, grammar(), _empty, _first);
 
     // try to merge with another state
@@ -363,9 +363,9 @@ class StateMachine {
     return {i, true};
   }
 
-  virtual MergeResult merge(const std::vector<size_t>& isocores, State& newState) {
+  virtual MergeResult merge(const std::vector<std::size_t>& isocores, State& newState) {
     auto newLookaheads = lookaheads(newState);
-    for (size_t i = 0; i < newState.items().size(); ++i) {
+    for (std::size_t i = 0; i < newState.items().size(); ++i) {
       auto& item = newState.items()[i];
       item.lookaheads() |= newLookaheads[i];
       item.lookahead_sources().clear();
@@ -374,7 +374,7 @@ class StateMachine {
     for (auto other : isocores) {
       auto& existing = _states[other];
       bool merge = true;
-      for (size_t i = 0; i < existing.items().size(); ++i) {
+      for (std::size_t i = 0; i < existing.items().size(); ++i) {
         if (newState.items()[i].lookaheads() != existing.items()[i].lookaheads()) {
           merge = false;
           break;
@@ -436,7 +436,7 @@ class StateMachine {
     lookaheadMap.insert_or_assign(source, std::move(symbols));
   }
 
-  void expand_state(size_t i) {
+  void expand_state(std::size_t i) {
     for (auto& [symbol, kernel] : symbol_skip_kernels(_states[i].items(), i)) {
       auto [id, inserted] = insert_state(kernel);
       _states[i].transitions()[symbol] = id;

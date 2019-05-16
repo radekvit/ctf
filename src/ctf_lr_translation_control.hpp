@@ -18,7 +18,7 @@
 
 namespace ctf {
 
-inline string default_lr_error_message(size_t state,
+inline string default_lr_error_message(std::size_t state,
                                        const Token& token,
                                        const TranslationGrammar& tg,
                                        const LRGenericTable& lrTable,
@@ -75,14 +75,14 @@ class LRTranslationControlGeneral : public TranslationControl {
   The added iterators point to input terminal attribute targets.
   */
   void create_attibute_actions(tstack<Token>::iterator obegin,
-                               const vector<vector_set<size_t>>& targets,
-                               size_t outputSize,
+                               const vector<vector_set<std::size_t>>& targets,
+                               std::size_t outputSize,
                                tstack<vector<tstack<Token>::iterator>>& attributeActions) {
     for (auto& target : targets) {
       vector<tstack<Token>::iterator> iterators;
       for (auto& i : target) {
         auto oit = obegin;
-        for (size_t x = 0; x < outputSize - i; ++x) {
+        for (std::size_t x = 0; x < outputSize - i; ++x) {
           --oit;
         }
         if (oit->type() == Symbol::Type::TERMINAL || oit->type() == Symbol::Type::EOI)
@@ -104,7 +104,7 @@ class LRTranslationControlGeneral : public TranslationControl {
   /**
   \brief Placeholder error recovery.
   */
-  virtual bool error_recovery(vector<size_t>&, Token&) { return false; }
+  virtual bool error_recovery(vector<std::size_t>&, Token&) { return false; }
 };  // namespace ctf
 
 /**
@@ -113,7 +113,7 @@ class LRTranslationControlGeneral : public TranslationControl {
 template <typename LRTableType>
 class LRTranslationControlTemplate : public LRTranslationControlGeneral {
  public:
-  using error_function = std::function<string(size_t state,
+  using error_function = std::function<string(std::size_t state,
                                               const Token& token,
                                               const TranslationGrammar& tg,
                                               const LRGenericTable& lrTable,
@@ -150,9 +150,9 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     _input.clear();
     _output.clear();
 
-    size_t state = 0;
-    vector<size_t> pushdown;
-    vector<size_t> appliedRules{};
+    std::size_t state = 0;
+    vector<std::size_t> pushdown;
+    vector<std::size_t> appliedRules{};
 
     pushdown.push_back(state);
 
@@ -167,7 +167,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
           break;
         case LRAction::REDUCE: {
           auto& rule = _translationGrammar->rules()[item.argument()];
-          for (size_t i = 0; i < rule.input().size(); ++i) {
+          for (std::size_t i = 0; i < rule.input().size(); ++i) {
             pushdown.pop_back();
           }
           const auto& stackState = pushdown.back();
@@ -193,7 +193,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   /**
    * Iterates over reversed rules and applies them in a top-down manner.
    */
-  void produce_output(const vector<size_t>& appliedRules) {
+  void produce_output(const vector<std::size_t>& appliedRules) {
     tstack<vector<tstack<Token>::iterator>> attributeActions;
 
     _input.push(_translationGrammar->starting_symbol());
@@ -233,7 +233,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     create_lr_table(to_str);
   }
 
-  bool error_recovery(vector<size_t>&, Token&) override { return false; }
+  bool error_recovery(vector<std::size_t>&, Token&) override { return false; }
 
   void save(std::ostream& os) const override { _lrTable.save(os); }
 

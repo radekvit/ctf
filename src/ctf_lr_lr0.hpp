@@ -20,7 +20,7 @@ class Item {
   /**
   \brief Construct an item from a rule and a marker location.
   */
-  Item(const Rule& rule, size_t mark) : _rule(&rule), _mark(mark) {}
+  Item(const Rule& rule, std::size_t mark) : _rule(&rule), _mark(mark) {}
   Item(const Item& item) = default;
   Item(Item&& item) = default;
 
@@ -73,7 +73,7 @@ class Item {
   /**
   \brief Returns the marked location in the rule's input.
   */
-  size_t mark() const noexcept { return _mark; }
+  std::size_t mark() const noexcept { return _mark; }
 
   /**
   \brief Returns true if this item has the mark at its last position.
@@ -107,7 +107,7 @@ class Item {
   */
   string to_string(symbol_string_fn to_str = ctf::to_string) const {
     string result = to_str(rule().nonterminal()) + " -> (";
-    size_t i = 0;
+    std::size_t i = 0;
     for (; i < mark(); ++i) {
       result += ' ';
       result += to_str(rule().input()[i]);
@@ -133,7 +133,7 @@ class Item {
   /**
   \brief The location of the mark. The mark is always before the symbol at that position.
   */
-  size_t _mark;
+  std::size_t _mark;
 };
 
 }  // namespace ctf::lr0

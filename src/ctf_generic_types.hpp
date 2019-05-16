@@ -52,7 +52,7 @@ template <typename T, class Compare = std::less<T>, class Equals = std::equal_to
 class vector_set {
  public:
   using value_type = T;
-  using size_type = size_t;
+  using size_type = std::size_t;
   using difference_type = ptrdiff_t;
 
   using reference = T&;
@@ -119,9 +119,9 @@ class vector_set {
 
   void shrink_to_fit() { _elements.shrink_to_fit(); }
 
-  T& operator[](size_t i) & noexcept { return _elements[i]; }
-  const T& operator[](size_t i) const& noexcept { return _elements[i]; }
-  T&& operator[](size_t i) && noexcept { return std::move(_elements[i]); }
+  T& operator[](std::size_t i) & noexcept { return _elements[i]; }
+  const T& operator[](std::size_t i) const& noexcept { return _elements[i]; }
+  T&& operator[](std::size_t i) && noexcept { return std::move(_elements[i]); }
 
   insert_return_type insert(const T& element) {
     auto it = lower_bound(element);
@@ -160,7 +160,7 @@ class vector_set {
     return it != _elements.end() && _equals(*it, element);
   }
 
-  size_t count(const T& element) noexcept { return find(element) ? 1 : 0; }
+  std::size_t count(const T& element) noexcept { return find(element) ? 1 : 0; }
 
   iterator find(const T& element) noexcept {
     auto it = lower_bound(element);
@@ -254,7 +254,7 @@ class vector_set {
     return oldSize != size();
   }
 
-  vector_set split(size_t i) {
+  vector_set split(std::size_t i) {
     vector<T> vec = {_elements.begin() + i, _elements.end()};
     _elements.erase(_elements.begin() + i, _elements.end());
     return vector_set(vec, _compare, _equals);
@@ -280,7 +280,7 @@ class bit_set {
   /**
   \brief The underlying unsigned storage type.
   */
-  using storage_type = size_t;
+  using storage_type = std::size_t;
   static_assert(std::is_unsigned<storage_type>::value, "storage_type must be unsigned");
 
   friend struct ::std::hash<bit_set>;
@@ -332,7 +332,7 @@ class bit_set {
     \brief Constructs the reference object from a pointer to storage with the element and the
     element's bit offset.
     */
-    reference(storage_type* p, size_t offset) noexcept : _element(p), _offset(offset) {}
+    reference(storage_type* p, std::size_t offset) noexcept : _element(p), _offset(offset) {}
 
     /**
     \brief A storage_type cell containing the status of the referenced element.
@@ -341,7 +341,7 @@ class bit_set {
     /**
     \brief The bit offset of the referenced element.
     */
-    size_t _offset;
+    std::size_t _offset;
   };
 
   /**
@@ -349,7 +349,7 @@ class bit_set {
 
   \param[in] bits The maximum number of elements in this set.
   */
-  explicit bit_set(size_t bits)
+  explicit bit_set(std::size_t bits)
     : _storage(bits != 0 ? (bits - 1) / bitsPerStorage + 1 : 0, 0), _capacity(bits) {}
 
   /**
@@ -387,14 +387,14 @@ class bit_set {
 
   \returns True if element i is a member of the set.
   */
-  bool operator[](size_t i) const noexcept { return get_value(i); }
+  bool operator[](std::size_t i) const noexcept { return get_value(i); }
   /**
   \brief Get the reference object to the i-th element.
   \pre capacity() < i
 
   \returns The reference object to the i-th element.
   */
-  reference operator[](size_t i) noexcept { return get_reference(i); }
+  reference operator[](std::size_t i) noexcept { return get_reference(i); }
 
   /**
   \brief Get the membership of the i-th element with bounds checking.
@@ -402,7 +402,7 @@ class bit_set {
   \throws std::out_of_range If i >= capacity().
   \returns The reference object to the i-th element.
   */
-  bool test(size_t i) const {
+  bool test(std::size_t i) const {
     if (i >= capacity()) {
       throw std::out_of_range("bit_set::test(): out of range.");
     }
@@ -451,12 +451,12 @@ class bit_set {
 
   \returns The number of elements contained in the set.
   */
-  size_t count() const noexcept {
-    size_t result = 0;
-    size_t j = 0;
+  std::size_t count() const noexcept {
+    std::size_t result = 0;
+    std::size_t j = 0;
     const storage_type* s = &(_storage[0]);
     storage_type test = *s;
-    for (size_t i = 0; i < capacity(); ++i) {
+    for (std::size_t i = 0; i < capacity(); ++i) {
       if (j == bitsPerStorage) {
         j = 0;
         ++s;
@@ -473,13 +473,13 @@ class bit_set {
 
   \returns The number of elements contained in the set.
   */
-  size_t size() const noexcept { return count(); }
+  std::size_t size() const noexcept { return count(); }
   /**
   \brief Get the size of the set's universe.
 
   \returns The maximum size of the set.
   */
-  size_t capacity() const noexcept { return _capacity; }
+  std::size_t capacity() const noexcept { return _capacity; }
 
   /**
   \brief Perform set intersection and set the result to this set.
@@ -492,7 +492,7 @@ class bit_set {
   bit_set& operator&=(const bit_set& rhs) noexcept {
     assert(capacity() == rhs.capacity());
 
-    for (size_t i = 0; i < _storage.size(); ++i) {
+    for (std::size_t i = 0; i < _storage.size(); ++i) {
       _storage[i] &= rhs._storage[i];
     }
     return *this;
@@ -508,7 +508,7 @@ class bit_set {
   bit_set& operator|=(const bit_set& rhs) noexcept {
     assert(capacity() == rhs.capacity());
 
-    for (size_t i = 0; i < _storage.size(); ++i) {
+    for (std::size_t i = 0; i < _storage.size(); ++i) {
       _storage[i] |= rhs._storage[i];
     }
     return *this;
@@ -524,7 +524,7 @@ class bit_set {
   bit_set& operator^=(const bit_set& rhs) noexcept {
     assert(capacity() == rhs.capacity());
 
-    for (size_t i = 0; i < _storage.size(); ++i) {
+    for (std::size_t i = 0; i < _storage.size(); ++i) {
       _storage[i] ^= rhs._storage[i];
     }
     correct_trailing();
@@ -541,7 +541,7 @@ class bit_set {
   bit_set& operator-=(const bit_set& rhs) noexcept {
     assert(capacity() == rhs.capacity());
 
-    for (size_t i = 0; i < _storage.size(); ++i) {
+    for (std::size_t i = 0; i < _storage.size(); ++i) {
       _storage[i] &= ~(rhs._storage[i]);
     }
     return *this;
@@ -553,7 +553,7 @@ class bit_set {
   */
   bit_set operator~() {
     bit_set result(*this);
-    for (size_t i = 0; i < _storage.size(); ++i) {
+    for (std::size_t i = 0; i < _storage.size(); ++i) {
       result._storage[i] = ~_storage[i];
     }
     result.correct_trailing();
@@ -567,10 +567,10 @@ class bit_set {
 
   \returns The string representation of this set.
   */
-  string to_string(string (*string_fn)(size_t) = std::to_string) const {
+  string to_string(string (*string_fn)(std::size_t) = std::to_string) const {
     bool any = false;
     string result = "{ ";
-    for (size_t i = 0; i < capacity(); ++i) {
+    for (std::size_t i = 0; i < capacity(); ++i) {
       if ((*this)[i]) {
         any = true;
         result += string_fn(i) + ", ";
@@ -595,7 +595,7 @@ class bit_set {
   bool set_union(const bit_set& rhs) noexcept {
     assert(capacity() == rhs.capacity());
     bool changed = false;
-    for (size_t i = 0; i < _storage.size(); ++i) {
+    for (std::size_t i = 0; i < _storage.size(); ++i) {
       storage_type old = _storage[i];
       _storage[i] |= rhs._storage[i];
       changed |= _storage[i] != old;
@@ -613,7 +613,7 @@ class bit_set {
   bool set_intersection(const bit_set& rhs) noexcept {
     assert(capacity() == rhs.capacity());
     bool changed = false;
-    for (size_t i = 0; i < _storage.size(); ++i) {
+    for (std::size_t i = 0; i < _storage.size(); ++i) {
       changed |= _storage[i] != rhs._storage[i];
       _storage[i] &= rhs._storage[i];
     }
@@ -670,7 +670,7 @@ class bit_set {
   /**
   \brief The number of elements per unit of storage.
   */
-  static constexpr size_t bitsPerStorage = sizeof(storage_type) * 8;
+  static constexpr std::size_t bitsPerStorage = sizeof(storage_type) * 8;
 
   /**
   \brief The vector containing the element membership values.
@@ -679,7 +679,7 @@ class bit_set {
   /**
   \brief The size of the set's universe.
   */
-  size_t _capacity;
+  std::size_t _capacity;
 
   /**
   \brief Get the reference to the i-th element's membership.
@@ -689,7 +689,7 @@ class bit_set {
 
   \returns A reference to the i-th element's membership.
   */
-  reference get_reference(size_t i) {
+  reference get_reference(std::size_t i) {
     return reference(&(_storage[i / bitsPerStorage]), bitsPerStorage - (i % bitsPerStorage + 1));
   }
   /**
@@ -700,7 +700,7 @@ class bit_set {
 
   \returns True if i is a member of this set.
   */
-  bool get_value(size_t i) const noexcept {
+  bool get_value(std::size_t i) const noexcept {
     return ((_storage[i / bitsPerStorage]) >> (bitsPerStorage - (i % bitsPerStorage + 1))) & 0x1;
   }
   /**
@@ -719,8 +719,8 @@ class bit_set {
 
   \returns The hash value of this set.
   */
-  size_t hash() const noexcept {
-    size_t seed = capacity();
+  std::size_t hash() const noexcept {
+    std::size_t seed = capacity();
     for (auto& i : _storage) {
       seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
@@ -1230,8 +1230,8 @@ ADAPTERS
 
 namespace impl {
 /**
- Adapter for non-const classes to reverse their regular iterator.
- */
+\brief Adapter for mutable instances to reverse their regular iterators.
+*/
 template <class T>
 class reverser {
  public:
@@ -1256,7 +1256,7 @@ class reverser {
   T& ref;
 };
 /**
-Adapter for const classes to reverse their iterator.
+\brief Adapter for const instances to reverse their regular iterators.
 */
 template <class T>
 class const_reverser {
@@ -1335,7 +1335,7 @@ inline constexpr int c_streq(const char* a, const char* b) {
 namespace std {
 template <>
 struct hash<ctf::bit_set> {
-  size_t operator()(const ctf::bit_set& s) const noexcept { return s.hash(); }
+  std::size_t operator()(const ctf::bit_set& s) const noexcept { return s.hash(); }
 };
 }  // namespace std
 #endif

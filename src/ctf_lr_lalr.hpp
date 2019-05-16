@@ -20,14 +20,14 @@ class StateMachine : public ctf::lr1::StateMachine {
   }
 
  protected:
-  MergeResult merge(const std::vector<size_t>& existingStates, State& newState) override {
+  MergeResult merge(const std::vector<std::size_t>& existingStates, State& newState) override {
     if (existingStates.empty()) {
       return {0, false};
     }
     assert(existingStates.size() == 1);
     auto& state = _states[existingStates[0]];
     // always succeeds, merge lookahead sources
-    for (size_t i = 0; i < state.items().size(); ++i) {
+    for (std::size_t i = 0; i < state.items().size(); ++i) {
       auto& item = state.items()[i];
       auto& item2 = newState.items()[i];
 

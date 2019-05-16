@@ -44,8 +44,6 @@ class Symbol {
     EOI = 3,
   };
 
-  using enum_type = size_t;
-
   /**
   \brief Default destructor.
   */
@@ -57,14 +55,14 @@ class Symbol {
   \param[in] attribute Attribute of returned Symbol. Defaults to "".
   \returns A Symbol with type Terminal, given name and given attribute.
   */
-  friend constexpr Symbol Terminal(size_t id) noexcept;
+  friend constexpr Symbol Terminal(std::size_t id) noexcept;
 
   /**
   \brief Returns a Symbol with Type::Nonterminal, given name and attribute.
   \param[in] name Name of returned symbol.
   \returns A Symbol with type Nonterminal and given name.
   */
-  friend constexpr Symbol Nonterminal(const size_t id) noexcept;
+  friend constexpr Symbol Nonterminal(const std::size_t id) noexcept;
 
   /**
   \brief Creates an EOF Symbol.
@@ -78,7 +76,11 @@ class Symbol {
   */
   constexpr Type type() const noexcept { return Type((_storage & type_mask()) >> type_shift()); }
 
-  constexpr size_t id() const noexcept { return _storage & id_mask(); }
+  /**
+  \brief Returns the id of the symbol.
+  \returns The symbol's id.
+  */
+  constexpr std::size_t id() const noexcept { return _storage & id_mask(); }
 
   /**
   \brief Returns true if the symbol is a terminal and false otherwise.
@@ -86,7 +88,7 @@ class Symbol {
   Symbol::eof() is a terminal symbol as well.
   */
   constexpr bool terminal() const noexcept {
-    return _storage & (static_cast<size_t>(0x1) << type_shift());
+    return _storage & (static_cast<std::size_t>(0x1) << type_shift());
   }
   /**
   \brief Returns true if the symbol is a nonterminal.
@@ -103,7 +105,6 @@ class Symbol {
   */
   ///@{
   friend constexpr bool operator<(const Symbol& lhs, const Symbol& rhs) {
-    static_assert(sizeof(Symbol) == sizeof(size_t), "Symbol must match size_t size");
     return lhs._storage < rhs._storage;
   }
 
@@ -137,22 +138,22 @@ class Symbol {
   /**
   \brief Returns the basic numeric representation of the symbol's id.
   */
-  explicit constexpr operator size_t() { return _storage; }
+  explicit constexpr operator std::size_t() { return _storage; }
 
  protected:
-  constexpr Symbol(Type type, size_t id = 0) noexcept
-    : _storage((static_cast<size_t>(type) << type_shift()) | (id & id_mask())) {}
+  constexpr Symbol(Type type, std::size_t id = 0) noexcept
+    : _storage((static_cast<std::size_t>(type) << type_shift()) | (id & id_mask())) {}
 
   /**
   \brief Id of this Symbol.
   */
-  size_t _storage;
+  std::size_t _storage;
 
-  static constexpr size_t id_mask() noexcept {
-    return (std::numeric_limits<size_t>::max() << 2) >> 2;
+  static constexpr std::size_t id_mask() noexcept {
+    return (std::numeric_limits<std::size_t>::max() << 2) >> 2;
   }
-  static constexpr size_t type_mask() noexcept { return ~id_mask(); }
-  static constexpr size_t type_shift() noexcept { return sizeof(size_t) * 8 - 2; }
+  static constexpr std::size_t type_mask() noexcept { return ~id_mask(); }
+  static constexpr std::size_t type_shift() noexcept { return sizeof(std::size_t) * 8 - 2; }
 };
 
 /**
@@ -161,7 +162,7 @@ class Symbol {
   \param[in] attribute Attribute of returned Symbol. Defaults to "".
   \returns A Symbol with type Terminal, given name and given attribute.
   */
-inline constexpr Symbol Terminal(size_t id) noexcept {
+inline constexpr Symbol Terminal(std::size_t id) noexcept {
   return Symbol(Symbol::Type::TERMINAL, id + 1);
 }
 
@@ -170,7 +171,7 @@ inline constexpr Symbol Terminal(size_t id) noexcept {
 \param[in] name Name of returned symbol.
 \returns A Symbol with type Nonterminal and given name.
 */
-inline constexpr Symbol Nonterminal(const size_t id) noexcept {
+inline constexpr Symbol Nonterminal(const std::size_t id) noexcept {
   return Symbol(Symbol::Type::NONTERMINAL, id);
 }
 
@@ -488,7 +489,7 @@ class Token {
   /**
   \brief Get the represented symbol's id.
   */
-  size_t id() const noexcept { return _symbol.id(); }
+  std::size_t id() const noexcept { return _symbol.id(); }
   /**
   \brief Get the represented symbol's type.
   */
@@ -608,12 +609,12 @@ class TerminalSet : public bit_set {
   /**
   \brief Constructs the terminal set with a set storage size.
   */
-  explicit TerminalSet(size_t bits) : bit_set(bits) {}
+  explicit TerminalSet(std::size_t bits) : bit_set(bits) {}
   /**
   \brief Constructs the terminal set with a set storage size and inserts the supplied terminals to
   the set.
   */
-  TerminalSet(size_t bits, std::initializer_list<Symbol> il) : bit_set(bits) {
+  TerminalSet(std::size_t bits, std::initializer_list<Symbol> il) : bit_set(bits) {
     for (auto& symbol : il) {
       insert(symbol);
     }
@@ -637,11 +638,11 @@ class TerminalSet : public bit_set {
   /**
   \brief Index into the set and get a reference to the membership of an id.
   */
-  reference operator[](size_t i) noexcept { return get_reference(i); }
+  reference operator[](std::size_t i) noexcept { return get_reference(i); }
   /**
   \brief Index into the const set and get the membership value of an id.
   */
-  bool operator[](size_t i) const noexcept {
+  bool operator[](std::size_t i) const noexcept {
     return ((_storage[i / bitsPerStorage]) >> (bitsPerStorage - (i % bitsPerStorage + 1))) & 0x1;
   }
 
@@ -665,7 +666,7 @@ class TerminalSet : public bit_set {
     if ((*this)[0]) {
       result.push_back(Symbol::eof());
     }
-    for (size_t i = 1; i < capacity(); ++i) {
+    for (std::size_t i = 1; i < capacity(); ++i) {
       if ((*this)[i]) {
         result.push_back(Terminal(i - 1));
       }
@@ -699,9 +700,9 @@ inline void swap(ctf::Attribute& lhs, ctf::Attribute& rhs) noexcept { lhs.swap(r
 
 template <>
 struct hash<ctf::Symbol> {
-  size_t operator()(const ctf::Symbol& s) const noexcept {
-    // reinterpret as a size_t
-    return std::hash<size_t>{}(reinterpret_cast<const size_t&>(s));
+  std::size_t operator()(const ctf::Symbol& s) const noexcept {
+    // reinterpret as a std::size_t
+    return std::hash<std::size_t>{}(reinterpret_cast<const std::size_t&>(s));
   }
 };
 }  // namespace std

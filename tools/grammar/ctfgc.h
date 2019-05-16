@@ -9,7 +9,7 @@ namespace ctfgc {
 
 inline namespace literals {
 
-inline constexpr ctf::Symbol operator""_nt(const char* s, size_t) {
+inline constexpr ctf::Symbol operator""_nt(const char* s, std::size_t) {
   if (ctf::c_streq(s, "Associativity"))
     return ctf::Nonterminal(0);
   if (ctf::c_streq(s, "Attribute"))
@@ -50,7 +50,7 @@ inline constexpr ctf::Symbol operator""_nt(const char* s, size_t) {
   return ctf::Nonterminal(18);
 }
 
-inline constexpr ctf::Symbol operator""_t(const char* s, size_t) {
+inline constexpr ctf::Symbol operator""_t(const char* s, std::size_t) {
   if (ctf::c_streq(s, ","))
     return ctf::Terminal(0);
   if (ctf::c_streq(s, "-"))

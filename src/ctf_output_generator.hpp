@@ -91,8 +91,8 @@ class OutputGenerator {
           os << t.attribute().get<char>();
         else if (type == typeid(double))
           os << t.attribute().get<double>();
-        else if (type == typeid(size_t))
-          os << t.attribute().get<size_t>();
+        else if (type == typeid(std::size_t))
+          os << t.attribute().get<std::size_t>();
       }
       os << "\n";
     }
