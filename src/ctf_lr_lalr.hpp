@@ -12,7 +12,7 @@ namespace ctf::lalr {
 using Item = ctf::lr1::Item;
 
 /**
-\brief The LSLALR automaton. Merges all LR(1) isocores.  
+\brief The LSLALR automaton. Merges all LR(1) isocores.
 */
 class StateMachine : public ctf::lr1::StateMachine {
  public:
@@ -35,8 +35,8 @@ class StateMachine : public ctf::lr1::StateMachine {
   /**
   \brief Merges a new state to an existing state if they are isocores.
 
-  \param[in] existingStates A vector of existing states that are isocores. Always contains 0 or 1 elements.
-  \param[in] newState The new state we are trying to merge.
+  \param[in] existingStates A vector of existing states that are isocores. Always contains 0 or 1
+  elements. \param[in] newState The new state we are trying to merge.
 
   \returns The structure containing the index of the state and whether it was merged.
   */

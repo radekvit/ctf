@@ -92,25 +92,61 @@ class Item {
 
   Item& operator=(const Item& other) = default;
   Item& operator=(Item&& other) = default;
-
+  /**
+  \brief Returns the referenced rule.
+  */
   const Rule& rule() const noexcept { return _item.rule(); }
-
+  /**
+  \brief Returns the position of the mark.
+  */
   std::size_t mark() const noexcept { return _item.mark(); }
-
+  /**
+  \brief Returns the LR(0) item this LS item represents.
+  */
   const LR0Item& lr0_item() const& noexcept { return _item; }
-
+  /**
+  \brief Returns the LR(0) item this LS item represents.
+  */
   LR0Item&& lr0_item() && noexcept { return std::move(_item); }
-
+  /**
+  \brief Returns the set of generated lookaheads of this item.
+  */
   LookaheadSet& lookaheads() & noexcept { return _generatedLookaheads; }
+  /**
+  \brief Returns the set of generated lookaheads of this item.
+  */
   const LookaheadSet& lookaheads() const& noexcept { return _generatedLookaheads; }
+  /**
+  \brief Returns the set of generated lookaheads of this item.
+  */
   LookaheadSet&& lookaheads() && noexcept { return std::move(_generatedLookaheads); }
 
+  /**
+  \brief Returns the set of lookahead sources of this item.
+  */
   vector_set<LookaheadSource>& lookahead_sources() & noexcept { return _lookaheads; }
+  /**
+  \brief Returns the set of lookahead sources of this item.
+  */
   const vector_set<LookaheadSource>& lookahead_sources() const& noexcept { return _lookaheads; }
+  /**
+  \brief Returns the set of lookahead sources of this item.
+  */
   vector_set<LookaheadSource>&& lookahead_sources() && noexcept { return std::move(_lookaheads); }
 
+  /**
+  \brief Returns true if this is a reduce item.
+  */
   bool reduce() const noexcept { return _item.reduce(); }
+  /**
+  \brief Returns true if this is not a reduce item.
+  */
   bool has_next() const noexcept { return _item.has_next(); }
+  /**
+  \brief Returns the following item after skipping the current symbol.
+
+  \param[in] las The lookahead source of the next item. Denotes this item's state and index.
+  */
   Item next(const LookaheadSource& las) const {
     vector_set<LookaheadSource> lookaheads;
     lookaheads.insert(las);
@@ -143,16 +179,39 @@ class Item {
   explicit operator string() const { return to_string(); }
 
  private:
+  /**
+  \brief The LR(0) item of this LS item.
+  */
   LR0Item _item;
+  /**
+  \brief The set of lookahead sources of this LS item.
+  */
   vector_set<LookaheadSource> _lookaheads;
+  /**
+  \brief The set of generated lookaheads of this LS item.
+  */
   LookaheadSet _generatedLookaheads;
 };
 
+/**
+\brief The result of string first. Contains the terminals in the first set and whether it can be
+reduced to an empty string.
+*/
 struct FirstResult {
   LookaheadSet symbols;
   bool empty;
 };
 
+/**
+\brief The string first function.
+
+\param[in] symbols The examined string of symbols.
+\param[in] empty The empty set for nonterminals.
+\param[in] first The first set for nonterminals.
+\param[in] tg The translation grammar for this first set.
+
+\returns The set of terminals in the first set and whether it can be reduced to an empty string.
+*/
 inline FirstResult first(const vector<Symbol>& symbols,
                          const empty_t& empty,
                          const first_t& first,
@@ -178,6 +237,16 @@ inline FirstResult first(const vector<Symbol>& symbols,
   return {result, true};
 }
 
+/**
+\brief Calculates the closure of a set of LS items.
+
+\param[in] items The set of items for this closure.
+\param[in] grammar The translation grammar.
+\param[in] e The empty set for all nonterminals.
+\param[in] f The first set for all nonterminals.
+
+\returns The closure of parameter items.
+*/
 inline vector_set<Item> closure(vector_set<Item> items,
                                 const TranslationGrammar& grammar,
                                 const empty_t& e,
@@ -230,7 +299,12 @@ inline vector_set<Item> closure(vector_set<Item> items,
   }
   return closure;
 }
+/**
+\brief Get the successor item kernels.
 
+\param[in] state The LS state we want this for.
+\param[in] id The identifier of the state.
+*/
 inline unordered_map<Symbol, vector_set<Item>> symbol_skip_kernels(const vector_set<Item>& state,
                                                                    const std::size_t id) {
   unordered_map<Symbol, vector_set<Item>> result;
@@ -250,12 +324,27 @@ inline unordered_map<Symbol, vector_set<Item>> symbol_skip_kernels(const vector_
   return result;
 }
 
-// lookahead relation based machine
+/**
+\brief The LS item-based canonical LR automaton.
+*/
 class StateMachine {
  public:
   using Item = ctf::lr1::Item;
+
+  /**
+  \brief An LS state.
+  */
   class State {
    public:
+    /**
+    \brief Constructs an LS state from its kernel.
+
+    \param[in] id The identifier of this state.
+    \param[in] kernel The kernel of this state.
+    \param[in] grammar The translation grammar of this state.
+    \param[in] empty The empty set for all nonterminals.
+    \param[in] first The first set for all terminals.
+    */
     State(std::size_t id,
           const vector_set<Item>& kernel,
           const TranslationGrammar& grammar,
@@ -270,14 +359,31 @@ class StateMachine {
         }
       }
     }
-
+    /**
+    \brief The identifier of this state.
+    */
     std::size_t id() const noexcept { return _id; }
+    /**
+    \brief Get the items of this state.
+    */
     vector_set<Item>& items() noexcept { return _items; }
+    /**
+    \brief Get the items of this state.
+    */
     const vector_set<Item>& items() const noexcept { return _items; }
 
+    /**
+    \brief Get the GOTO transition map of this state.
+    */
     unordered_map<Symbol, std::size_t>& transitions() noexcept { return _transitions; }
+    /**
+    \brief get the GOTO transition map of this state.
+    */
     const unordered_map<Symbol, std::size_t>& transitions() const noexcept { return _transitions; }
 
+    /**
+    \brief Returns true if there is at least one reduce item.
+    */
     bool has_reduce() const noexcept { return _reduce; }
 
     string to_string(symbol_string_fn to_str = ctf::to_string) const {
@@ -298,17 +404,29 @@ class StateMachine {
     explicit operator string() const { return to_string(); }
 
    private:
-    // state index
+    /**
+    \brief The identifier of this state.
+    */
     std::size_t _id;
-    // closure of kernel
+    /**
+    \brief The full item set of this state.
+    */
     vector_set<Item> _items;
 
-    // state transitions
+    /**
+    \brief The GOTO transition map.
+    */
     unordered_map<Symbol, std::size_t> _transitions;
-
+    /**
+    \brief Set to true if there are any reduce items.
+    */
     bool _reduce = false;
   };
+  /**
+  \brief Construct the canonical automaton.
 
+  \param[in] grammar The translation grammar.
+  */
   StateMachine(const TranslationGrammar& grammar)
     : _grammar(&grammar), _empty(create_empty(grammar)), _first(create_first(grammar, _empty)) {
     // initial item S' -> .S$
@@ -320,32 +438,67 @@ class StateMachine {
   }
 
   virtual ~StateMachine() = default;
-
+  /**
+  \brief Get the states of this state machine.
+  */
   const vector<State>& states() const noexcept { return _states; }
 
  protected:
+  /**
+  \brief A pointer to the translation grammar.
+  */
   const TranslationGrammar* _grammar;
+  /**
+  \brief The empty set for all nonterminals.
+  */
   empty_t _empty;
+  /**
+  \brief The first set for all nonterminals.
+  */
   first_t _first;
+  /**
+  \brief The states of the LS automaton.
+  */
   vector<State> _states;
-
+  /**
+  \brief Mapping kernels to their indices for faster isocore lookup.
+  */
   map<vector_set<Item>, vector<std::size_t>> _kernelMap;
-
+  /**
+  \brief The result of an insert operation. Contains the final state index and whether it is a new
+  state.
+  */
   struct InsertResult {
     std::size_t state;
     bool insertedNew;
   };
-
+  /**
+  \brief The result of a merge operation. Contains the merged state index if applicable and whether
+  it was merged.
+  */
   struct MergeResult {
     std::size_t state;
     bool merge;
   };
-
+  /**
+  \brief Construct the automaton with no states. We just initialize the grammar reference and
+  calculate predictive sets.
+  */
   StateMachine(const TranslationGrammar& grammar, bool)
     : _grammar(&grammar), _empty(create_empty(grammar)), _first(create_first(grammar, _empty)) {}
-
+  /**
+  \brief Get the referenced translation grammar.
+  */
   const TranslationGrammar& grammar() const noexcept { return *_grammar; }
+  /**
+  \brief Insert a state into the automaton.
 
+  \param[in] kernel The kernel of the new state.
+
+  \returns Whether it was inserted or merged with some other state.
+
+  We attempt to merge the new state with some existing isocore if the merge() function succeeds.
+  */
   InsertResult insert_state(const vector_set<Item>& kernel) {
     std::size_t i = _states.size();
     State newState(i, kernel, grammar(), _empty, _first);
@@ -362,7 +515,12 @@ class StateMachine {
     _states.push_back(std::move(newState));
     return {i, true};
   }
+  /**
+  \brief Canonical compatibility test. States are compatible if they have the same lookahead sets.
 
+  \param[in] isocores The set of isocore indices.
+  \param[in] newState The state we are trying to merge.
+  */
   virtual MergeResult merge(const std::vector<std::size_t>& isocores, State& newState) {
     auto newLookaheads = lookaheads(newState);
     for (std::size_t i = 0; i < newState.items().size(); ++i) {
@@ -391,7 +549,11 @@ class StateMachine {
   }
 
   /**
-  \brief The lookahead symbols obtained from sources.
+  \brief Get the full lookahead set for an item.
+
+  \param[in] state The LS state we are examining.
+
+  \returns A full set of lookahead symbols for this state.
   */
   vector<LookaheadSet> lookaheads(const State& state) {
     // get all back references
@@ -415,7 +577,9 @@ class StateMachine {
     }
     return result;
   }
-
+  /**
+  \brief Lookup of lookahead symbols from a source. Avoids infinite loops.
+  */
   void lookahead_lookup(const LookaheadSource& source,
                         unordered_map<LookaheadSource, LookaheadSet>& lookaheadMap) {
     const auto& state = _states[source.state];
@@ -435,7 +599,11 @@ class StateMachine {
     }
     lookaheadMap.insert_or_assign(source, std::move(symbols));
   }
+  /**
+  \brief Expands a state and generates and expands its successors.
 
+  \param[in] i The index of the expanded state.
+  */
   void expand_state(std::size_t i) {
     for (auto& [symbol, kernel] : symbol_skip_kernels(_states[i].items(), i)) {
       auto [id, inserted] = insert_state(kernel);
@@ -447,7 +615,10 @@ class StateMachine {
     }
   }
 
-  // goes through all relative lookaheads and changes them to generated lookaheads
+  /**
+  \brief Computes the full lookahead sets fro the whole automaton and replaces the sets of generated
+  lookahead symbols with the full lookahead sets.
+  */
   void finalize_lookaheads() {
     // a single map for all lookaheads
     for (auto& state : _states) {
