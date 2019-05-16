@@ -1,3 +1,8 @@
+/**
+\file ctf_lr_lalr.hpp
+\brief Contains the LSLALR automaton implementation.
+\author Radek Vít
+*/
 #ifndef CTF_LR_LALR_HPP
 #define CTF_LR_LALR_HPP
 
@@ -6,9 +11,16 @@
 namespace ctf::lalr {
 using Item = ctf::lr1::Item;
 
+/**
+\brief The LSLALR automaton. Merges all LR(1) isocores.  
+*/
 class StateMachine : public ctf::lr1::StateMachine {
  public:
-  // use the same constructors
+  /**
+  \brief Construct the LSLALR automaton from a translation grammar.
+
+  \param[in] grammar An augmented translation grammar.
+  */
   StateMachine(const TranslationGrammar& grammar) : ctf::lr1::StateMachine(grammar, true) {
     // initial item S' -> .S$
     insert_state({Item(
@@ -20,6 +32,14 @@ class StateMachine : public ctf::lr1::StateMachine {
   }
 
  protected:
+  /**
+  \brief Merges a new state to an existing state if they are isocores.
+
+  \param[in] existingStates A vector of existing states that are isocores. Always contains 0 or 1 elements.
+  \param[in] newState The new state we are trying to merge.
+
+  \returns The structure containing the index of the state and whether it was merged.
+  */
   MergeResult merge(const std::vector<std::size_t>& existingStates, State& newState) override {
     if (existingStates.empty()) {
       return {0, false};
@@ -35,8 +55,12 @@ class StateMachine : public ctf::lr1::StateMachine {
     }
     return {existingStates[0], true};
   }
-
+  /**
+  \brief Initializes the basic fields and nothing else.
+  */
   StateMachine(const TranslationGrammar& tg, bool) : ctf::lr1::StateMachine(tg, true) {}
 };
 }  // namespace ctf::lalr
+
 #endif
+/*** End of file ctf_lr_lalr.hpp ***/
