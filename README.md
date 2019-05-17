@@ -46,7 +46,7 @@ int main() {
 	// select algorithm (LALR, LSCELR or CanonicalLR1)
 	Translation t2(Lex{}, LALR{}, mygrammar::grammar, Out{}, mygrammar::to_string);
 	// load saved tables
-	Translation t3(Lex{}, std::string("filename"), Out{}, mygrammar::to_string);
+	Translation t3(Lex{}, load(std::string("filename")), Out{}, mygrammar::to_string);
 
 	/* ctf::TranslationResult::{SUCCESS,
 	                            LEXICAL_ERROR,
