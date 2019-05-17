@@ -25,10 +25,45 @@ in high compile times.
 
 We provide two tools `grammarc` and `parsergen` in the `tools/` folder. To compile `grammarc`, run `make` in the root directory of ctf.
 
+## Basic usage
+
+```
+#include <iostream>
+#include <ctf.hpp>
+
+#include "mygrammar.h"
+
+class Lex : public LexicalAnalyzer {
+	// ...
+};
+class Out : public OutputGenerator {
+	// ...
+};
+
+int main() {
+	// construct a translation from a grammar, uses LSCELR
+	Translation t1(Lex{}, mygrammar::grammar, Out{}, mygrammar::to_string);
+	// select algorithm (LALR, LSCELR or CanonicalLR1)
+	Translation t2(Lex{}, LALR{}, mygrammar::grammar, Out{}, mygrammar::to_string);
+	// load saved tables
+	Translation t3(Lex{}, std::string("filename"), Out{}, mygrammar::to_string);
+
+	/* ctf::TranslationResult::{SUCCESS,
+	                            LEXICAL_ERROR,
+								TRANSLATION_ERROR,
+								SEMANTIC_ERROR,
+								CODE_GENERATION_ERROR}
+	*/
+	auto result = t1.run(std::cin, std::cout, std::cerr, "std::cin");
+
+	return 0;
+}
+```
+
 ## Translation Grammars
 CTF uses attribute translation grammars with precedence and associativity to define translation.
 The recommended way of specifying these grammars is with our text representation.
-To translate this to CTF source files, use `tools/grammarc` to translate the text representation.
+To translate this representation to CTF source files, use `tools/grammarc`.
 
 The format of the description is shown in the following example:
 ```
