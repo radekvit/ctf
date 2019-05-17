@@ -145,7 +145,7 @@ class LexicalAnalyzer {
     int result;
     do {
       result = reader_->get();
-    } while (!accept(result));
+    } while (!accept(result) && result != std::char_traits<char>::eof());
     reader_->unget();
     if (_location == Location::invalid()) {
       return reader_->get(_location);
@@ -205,7 +205,7 @@ class LexicalAnalyzer {
   Token token_eof() { return Token(Symbol::eof(), Attribute{}, _location); }
 
   /**
-  \brief Returns a reference to the error flag.
+  \brief Set the error flag.
   */
   void set_error() noexcept { _errorFlag = true; }
 
