@@ -63,10 +63,10 @@ class Translation {
   \brief Constructs Translation with given lexical analyzer, translation
   control, translation grammar and output generator.
   \param[in] la A callable to perform lexical analysis.
-  \param[in] tc A translation control to drive the translation.
   \param[in] tg Translation grammar that defines the input and output languages.
   A copy is made.
   \param[in] og A callable to perform output generation.
+  \param[in] to_str The function for string representaton of symbols.
   */
   Translation(TLexicalAnalyzer&& la,
               const TranslationGrammar& tg,
@@ -89,6 +89,7 @@ class Translation {
   \param[in] tg Translation grammar that defines the input and output languages.
   A copy is made.
   \param[in] og A callable to perform output generation.
+  \param[in] to_str The function for string representaton of symbols.
   */
   Translation(TLexicalAnalyzer&& la,
               TTranslationControl&& tc,
@@ -108,8 +109,10 @@ class Translation {
 
   /**
   \brief Translates input from istream and outputs the translation to ostream.
-  \param[in] input Input stream.
-  \param[out] output Output stream.
+  \param[in] inputStream The input stream.
+  \param[in] outputStream The output stream.
+  \param[in] errorStream The error stream.
+  \param[in] inputName The name of the input stream. Defaults to "".
 
   \returns True when no errors were encountered.
   */

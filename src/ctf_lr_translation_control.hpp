@@ -49,6 +49,7 @@ class LRTranslationControlGeneral : public TranslationControl {
 
   \param[in] la A reference to the lexical analyzer to be used to get tokens.
   \param[in] tg The translation grammar for this translation.
+  \param[in] to_str The symbol printing function.
   */
   LRTranslationControlGeneral(LexicalAnalyzer& la,
                               TranslationGrammar& tg,
@@ -130,6 +131,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
 
   \param[in] la A reference to the lexical analyzer to be used to get tokens.
   \param[in] tg The translation grammar for this translation.
+  \param[in] to_str The symbol printing function.
   */
   LRTranslationControlTemplate(LexicalAnalyzer& la,
                                TranslationGrammar& tg,
@@ -226,6 +228,7 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
   \brief Sets translation grammar.
 
   \param[in] tg The translation grammar for this translation.
+  \param[in] to_str The symbol printing function.
   */
   void set_grammar(const TranslationGrammar& tg,
                    symbol_string_fn to_str = ctf::to_string) override {

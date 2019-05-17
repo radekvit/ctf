@@ -50,17 +50,16 @@ class Symbol {
   ~Symbol() = default;
 
   /**
-  \brief Returns a Symbol with Type::Terminal, given name and attribute.
-  \param[in] name Name of returned symbol.
-  \param[in] attribute Attribute of returned Symbol. Defaults to "".
-  \returns A Symbol with type Terminal, given name and given attribute.
+  \brief Returns a Symbol with Type::Terminal and a given id.
+  \param[in] id The id - 1 of the created terminal.
+  \returns A Symbol with type Terminal and a given id.
   */
   friend constexpr Symbol Terminal(std::size_t id) noexcept;
 
   /**
-  \brief Returns a Symbol with Type::Nonterminal, given name and attribute.
-  \param[in] name Name of returned symbol.
-  \returns A Symbol with type Nonterminal and given name.
+  \brief Returns a Symbol with Type::Nonterminal and a given id.
+  \param[in] id The id of the nonterminal.
+  \returns A Symbol with type Nonterminal and a given id.
   */
   friend constexpr Symbol Nonterminal(const std::size_t id) noexcept;
 
@@ -157,19 +156,18 @@ class Symbol {
 };
 
 /**
-  \brief Returns a Symbol with Type::Terminal, given name and attribute.
-  \param[in] name Name of returned symbol.
-  \param[in] attribute Attribute of returned Symbol. Defaults to "".
-  \returns A Symbol with type Terminal, given name and given attribute.
+  \brief Returns a terminal with a specific id with an offset.
+  \param[in] id A numerical identifier of the symbol.
+  \returns A Symbol with type Terminal and given id + 1.
   */
 inline constexpr Symbol Terminal(std::size_t id) noexcept {
   return Symbol(Symbol::Type::TERMINAL, id + 1);
 }
 
 /**
-\brief Returns a Symbol with Type::Nonterminal, given name and attribute.
-\param[in] name Name of returned symbol.
-\returns A Symbol with type Nonterminal and given name.
+\brief Returns a nonterminal with a given id.
+\param[in] id Id of the returned symbol.
+\returns A Symbol with type Nonterminal and a given id.
 */
 inline constexpr Symbol Nonterminal(const std::size_t id) noexcept {
   return Symbol(Symbol::Type::NONTERMINAL, id);
@@ -408,7 +406,7 @@ class Attribute {
   /**
   \brief Staps the contents of an Attribute with another.
 
-  \param[in/out] other The other Attribute to be swapped.
+  \param [in,out] other The other Attribute to be swapped.
   */
   void swap(Attribute& other) { _storage.swap(other._storage); }
 
@@ -587,13 +585,13 @@ class Token {
 inline namespace literals {
 /**
 \brief Returns a Symbol of Type::Terminal with given name.
-\param[in] s C string representing the name of the returned Symbol.
+\param[in] id The id - 1 of the created terminal.
 \returns Symbol with type Terminal and given name.
 */
 inline constexpr Symbol operator""_t(unsigned long long int id) { return Terminal(id); }
 /**
 \brief Returns a Symbol of Type::Nonterminal with given name.
-\param[in] s C string representing the name of the returned Symbol.
+\param[in] id The id of the created nonterminal.
 \returns Symbol with type Terminal and given name.
 */
 inline constexpr Symbol operator""_nt(unsigned long long int id) { return Nonterminal(id); }

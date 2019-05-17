@@ -1,3 +1,8 @@
+/**
+\file ctf_lr_lscelr.hpp
+\brief Contains the LSCELR automaton implementation.
+\author Radek Vít
+*/
 #ifndef CTF_LR_LSCELR_HPP
 #define CTF_LR_LSCELR_HPP
 
@@ -9,7 +14,13 @@ namespace ctf::lscelr {
 using Item = ctf::lr1::Item;
 using LookaheadSet = ctf::lr1::LookaheadSet;
 using LookaheadSource = ctf::lr1::LookaheadSource;
+/**
+\brief Get a specific successor item kernel.
 
+\param[in] state The LS state we want this for.
+\param[in] s The symbols we skip over in the state.
+\param[in] id The identifier of the state.
+*/
 inline vector_set<Item> symbol_skip_kernel(const vector_set<Item>& state,
                                            Symbol s,
                                            const std::size_t id) {
@@ -26,10 +37,17 @@ inline vector_set<Item> symbol_skip_kernel(const vector_set<Item>& state,
   }
   return result;
 }
-
+/**
+\brief The LSCELR automaton.
+*/
 class StateMachine : public ctf::lalr::StateMachine {
  public:
-  // use the same constructors
+  /**
+  \brief Constructs the LSCELR automaton. Merges all isocores with the same potential conflict
+  contributions.
+
+  \param[in] grammar The translation grammar of this automaton.
+  */
   StateMachine(const TranslationGrammar& grammar) : ctf::lalr::StateMachine(grammar, true) {
     // initial item S' -> .S$
     insert_state({Item(
@@ -52,15 +70,31 @@ class StateMachine : public ctf::lalr::StateMachine {
   }
 
  protected:
+  /**
+  \brief The set of potential conflict contributions for all states.
+  */
   vector<std::optional<vector<LookaheadSet>>> _contributions;
+  /**
+  \brief The set of states that need to be split.
+  */
   vector_set<std::size_t> _statesToSplit;
-  vector<std::optional<vector<vector<LookaheadSet>>>> _contributionLookaheads;
+  /**
+  \brief The set of lookaheads that contribute to conflicts for states that have them.
 
+  This serves as cache so that we don't recompute the set for every attempt to merge.
+  */
+  vector<std::optional<vector<vector<LookaheadSet>>>> _contributionLookaheads;
+  /**
+  \brief A single conflict. Contains the state where it manifests and the conflicted symbols for
+  each item.
+  */
   struct Conflict {
     std::size_t state;
     unordered_map<std::size_t, LookaheadSet> contributions;
   };
-
+  /**
+  \brief Detect all conflicts and return their representation.
+  */
   vector<Conflict> detect_conflicts() {
     vector<Conflict> result;
     for (auto& state : _states) {
@@ -75,14 +109,23 @@ class StateMachine : public ctf::lalr::StateMachine {
     }
     return result;
   }
-
+  /**
+  \brief All possible LR actions or conflict.
+  */
   enum class Action {
     NONE,
     REDUCE,
     SHIFT,
     CONFLICT,
   };
-  // list all reduce contributions to R/R and S/R conflicts for individual items
+  /**
+  \brief Obtain all conflicts for a single state.
+
+  \param[in] state The examined state.
+  \param[in] stateLookaheads The full lookahead set of the state.
+
+  \returns A map where the keys are item indices and the values are the conflicted terminals.
+  */
   unordered_map<std::size_t, LookaheadSet> conflicts(State& state,
                                                      const vector<LookaheadSet>& stateLookaheads) {
     unordered_map<std::size_t, LookaheadSet> result;
@@ -131,14 +174,24 @@ class StateMachine : public ctf::lalr::StateMachine {
     }
     return result;
   }
+  /**
+  \brief Add a conflicted symbol to the contribution set of a single item.
 
+  \param[in] item The item's id.
+  \param[in] symbol The conflicted symbol.
+  \param[in] map The conflict map.
+  */
   void add_to_lookahead(std::size_t item,
                         Symbol symbol,
                         unordered_map<std::size_t, LookaheadSet>& map) {
     auto& contribution = map.try_emplace(item, grammar().terminals()).first->second;
     contribution[symbol] = true;
   }
+  /**
+  \brief Mark conflict contributions for all states.
 
+  \param[in] conflicts The detected conflicts in all states.
+  */
   void mark_conflicts(const vector<Conflict>& conflicts) {
     for (auto& conflict : conflicts) {
       for (const auto& [item, contributions] : conflict.contributions) {
@@ -146,7 +199,13 @@ class StateMachine : public ctf::lalr::StateMachine {
       }
     }
   }
+  /**
+  \brief Recursively mark the conflict contributions caused by a single conflict.
 
+  \param[in] stateIndex The state we mark the contributions for.
+  \param[in] itemIndex The index of the conflicted item.
+  \param[in] contributions The set of conflicted symbols to mark.
+  */
   void mark_conflict(std::size_t stateIndex, std::size_t itemIndex, LookaheadSet contributions) {
     auto& state = _states[stateIndex];
     auto& item = state.items()[itemIndex];
@@ -171,7 +230,13 @@ class StateMachine : public ctf::lalr::StateMachine {
       mark_conflict(nextStateIndex, nextItem, contributions);
     }
   }
+  /**
+  \brief Locate the index for splitting lookahead sources so that the first state source is kept.
 
+  \param[in] item The examined item.
+
+  \returns The index of the first lookahead source that is different from the first source's state.
+  */
   std::size_t split_location(const Item& item) {
     auto& sources = item.lookahead_sources();
     std::size_t split = 1;
@@ -184,7 +249,12 @@ class StateMachine : public ctf::lalr::StateMachine {
     }
     return split;
   }
+  /**
+  \brief Split all conflicted states to eliminate LALR-caused conflicts.
 
+  First, we split states with multiple sources and then we regenerate the corresponding successor
+  states.
+  */
   void split_states() {
     vector<vector_set<LookaheadSource>> splitSources;
     splitSources.reserve(_statesToSplit.size());
@@ -235,7 +305,13 @@ class StateMachine : public ctf::lalr::StateMachine {
       }
     }
   }
+  /**
+  \brief Attempt to insert a new state after splitting states.
 
+  \param[in] kernel The kernel of the inserted item.
+
+  \returns A structure containing the state's index and whether it was merged.
+  */
   InsertResult insert_state_lscelr(const vector_set<Item>& kernel) {
     std::size_t i = _states.size();
     State newState(i, kernel, grammar(), _empty, _first);
@@ -250,7 +326,13 @@ class StateMachine : public ctf::lalr::StateMachine {
     _states.push_back(std::move(newState));
     return {i, true};
   }
+  /**
+  \brief Recursively expand new states after the initial state splitting.
 
+  \param[in] i The index of the expanded state.
+
+  We use the LSCELR compatibility test for all merging.
+  */
   void expand_state_lscelr(std::size_t i) {
     for (auto& [symbol, kernel] : symbol_skip_kernels(_states[i].items(), i)) {
       auto [id, inserted] = insert_state_lscelr(kernel);
@@ -261,7 +343,18 @@ class StateMachine : public ctf::lalr::StateMachine {
       }
     }
   }
+  /**
+  \brief Try to merge a new state to some existing state that first the LSCELR merge compatibility
+  test.
 
+  \param[in] isocores The set of states that are isocores of newState.
+  \param[in] newState The new state we are attempting to merge with the existing states.
+
+  \returns The structure containing the index of the state and whether it was merged.
+
+  Two states are compatible if they are isocores and have the same potential conflict contributions
+  (the mask is stored for the first isocore).
+  */
   MergeResult merge_lscelr(const std::vector<std::size_t>& isocores, const State& newState) {
     // there is always a state from LALR
     auto& contribution = _contributions[isocores[0]];
@@ -299,12 +392,27 @@ class StateMachine : public ctf::lalr::StateMachine {
     contributionLookaheads.push_back(newLookaheads);
     return {0, false};
   }
+  /**
+  \brief Get the set of lookaheads masked with the potential contributions for this state.
 
+  \param[in] state The examined state.
+  \param[in] masks Potential contributions for each item.
+
+  \returns The lookahead set masked with the contributions.
+  */
   vector<LookaheadSet> lookaheads_lscelr(const State& state, const vector<LookaheadSet>& masks) {
     unordered_map<LookaheadSource, LookaheadSet> lookaheadMap;
     return lookaheads_lscelr(state, masks, lookaheadMap);
   }
+  /**
+  \brief Get the set of lookaheads masked with the potential contributions for this state.
 
+  \param[in] state The examined state.
+  \param[in] masks Potential contributions for each item.
+  \param[in,out] lookaheadMap A map containing the full lookahead sets for some sources.
+
+  \returns The lookahead set masked with the contributions.
+  */
   vector<LookaheadSet> lookaheads_lscelr(
     const State& state,
     const vector<LookaheadSet>& masks,
@@ -339,7 +447,14 @@ class StateMachine : public ctf::lalr::StateMachine {
 
     return result;
   }
+  /**
+  \brief Obtain the lookahead set for a single source masked with potential contributions and store
+  it in a map.
 
+  \param[in] source The examined source.
+  \param[in] lookaheadMask The set of potential contributions.
+  \param[in,out] lookaheadMap A map containing the full lookahead sets for some sources.
+  */
   void lookahead_lookup_lscelr(const LookaheadSource& source,
                                LookaheadSet& lookaheadMask,
                                unordered_map<LookaheadSource, LookaheadSet>& lookaheadMap) {
@@ -374,3 +489,4 @@ class StateMachine : public ctf::lalr::StateMachine {
 };
 }  // namespace ctf::lscelr
 #endif
+/*** End of file ctf_lr_lscelr.hpp ***/

@@ -92,6 +92,7 @@ class Rule {
   terminal in the input. Implicitly no attribute actions take place.
   The numbers say which output symbols are the targets for each input token's
   attribute.
+  \param[in] precedenceSymbol The precedence symbols of this rule.
   */
   Rule(const Symbol nonterminal,
        const vector<Symbol>& input,
@@ -151,6 +152,7 @@ class Rule {
 
   \param[in] nonterminal Starting symbol.
   \param[in] both Vector of input symbols and at the same time output symbols.
+  \param[in] precedenceSymbol The precedence symbols of this rule.
 
   Attribute targets are created to match all terminals to themselves.
   */
@@ -326,7 +328,8 @@ class TranslationGrammar {
   from the rules' inputs and starting symbol.
 
   \param[in] rules A vector of rules.
-  \param[in] starting_symbol The starting symbol. Precondition: This symbol
+  \param[in] starting_symbol The starting symbol. Precondition: This symbol is a nonterminal.
+  \param[in] precedences The vector of precedence levels.
   */
   TranslationGrammar(const vector<Rule>& rules,
                      const Symbol starting_symbol,
@@ -339,7 +342,8 @@ class TranslationGrammar {
   from the rules' inputs and starting symbol.
 
   \param[in] rules A vector of rules.
-  \param[in] starting_symbol The starting symbol. Precondition: This symbol
+  \param[in] starting_symbol The starting symbol. Precondition: This symbol is a nonterminal.
+  \param[in] precedences The vector of precedence levels.
   */
   TranslationGrammar(vector<Rule>&& rules,
                      const Symbol starting_symbol,
@@ -356,6 +360,7 @@ class TranslationGrammar {
   erased.
   \param[in] rules A vector of all rules.
   \param[in] starting_symbol The starting symbol.
+  \param[in] precedences The vector of precedence levels.
 
   Checks rules for validity with supplied terminals and nonterminals.
   */
@@ -380,6 +385,7 @@ class TranslationGrammar {
   erased.
   \param[in] rules A vector of all rules.
   \param[in] starting_symbol The starting symbol.
+  \param[in] precedences The vector of precedence levels.
 
   Checks rules for validity with supplied terminals and nonterminals.
   */

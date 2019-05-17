@@ -826,7 +826,7 @@ class tstack {
   \brief Searches for an element between a given position and the end.
 
   \param[in] target The reference element for the search.
-  \param[in] it The first element of the search.
+  \param[in] from The first element of the search.
   \param[in] predicate Predicate to find the target. Defaults to operator ==.
 
   \returns An iterator to the element defined by target and
@@ -849,7 +849,7 @@ class tstack {
   \brief Searches for an element in a const tstack.
 
   \param[in] target The reference element for the search.
-  \param[in] it The first element of the search.
+  \param[in] from The first element of the search.
   \param[in] predicate Predicate to find the target. Defaults to operator ==.
 
   \returns A const iterator to the element defined by target and
@@ -904,7 +904,7 @@ class tstack {
   \brief Searches for an element between a given position and the beginning.
 
   \param[in] target The reference element for the search.
-  \param[in] it The first element of the backward search.
+  \param[in] from The first element of the backward search.
   \param[in] predicate Predicate to find the target. Defaults to operator ==.
 
   \returns An iterator to the element defined by target and
@@ -929,7 +929,7 @@ class tstack {
   \brief Searches for an element in a const tstack.
 
   \param[in] target The reference element for the search.
-  \param[in] it The first element of the search.
+  \param[in] from The first element of the search.
   \param[in] predicate Predicate to find the target. Defaults to operator ==.
 
   \returns A const iterator to the element defined by target and
@@ -1051,6 +1051,7 @@ class tstack {
   \param[in] target The reference element for the search.
   \param[in] string A string of elements to be pushed to tstack instead of the
   given element.
+  \param[in] from The start iterator of the operation.
   \param[in] predicate Predicate to find the target. Defaults to operator ==. If
   no element on the tstack makes this predicate true, nothing happens.
 
@@ -1102,6 +1103,7 @@ class tstack {
   \param[in] target The reference element for the search.
   \param[in] string A string of elements to be pushed to tstack instead of the
   given element.
+  \param[in] from The start iterator of the operation.
   \param[in] predicate Predicate to find the target. Defaults to operator ==. If
   no element on the tstack makes this predicate true, nothing happens.
 

@@ -174,27 +174,26 @@ class LexicalAnalyzer {
   const Location& location() const noexcept { return _location; }
 
   /**
-  \brief Constructs a terminal symbol and inserts the current symbol location
+  \brief Constructs a token and inserts the current symbol location
   automatically.
 
-  \param[in] name The name of the created Terminal
-  \param[in] attr The attribute of the created Terminal
+  \param[in] s The symbols contained in the token.
+  \param[in] attr The attribute of the token.
 
   \returns A terminal Symbol with the current stored _location.
   */
   Token token(Symbol s, const Attribute& attr = Attribute{}) { return Token(s, attr, _location); }
 
   /**
-  \brief Constructs a terminal symbol and inserts the current symbol location
-  automatically.
+  \brief Constructs a token and inserts the current symbol location automatically.
 
-  \param[in] name The name of the created Terminal
-  \param[in] attr The attribute of the created Terminal
+  \param[in] id The id - 1 of the contained terminal.
+  \param[in] attr The attribute of the token.
 
-  \returns A terminal Symbol with the current stored _location.
+  \returns A terminal Symbol with the current stored location.
   */
-  Token token(std::size_t i, const Attribute& attr = Attribute{}) {
-    return Token(Terminal(i), attr, _location);
+  Token token(std::size_t id, const Attribute& attr = Attribute{}) {
+    return Token(Terminal(id), attr, _location);
   }
 
   /**
