@@ -1,3 +1,6 @@
-.PHONY: doc
+.PHONY: doc clean
 doc:
 	doxygen
+
+clean:
+	-rm -r html

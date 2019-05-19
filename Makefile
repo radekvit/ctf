@@ -25,3 +25,4 @@ doc:
 clean:
 	$(MAKE) -C test clean
 	$(MAKE) -C $(TOOLS) clean
+	$(MAKE) -C $(DOC) clean
