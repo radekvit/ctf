@@ -665,6 +665,46 @@ class bit_set {
     result ^= rhs;
     return result;
   }
+  /**
+  \brief Checks if the left set is a subset of the right set.
+
+  \pre lhs.capacity() == rhs.capacity()
+  \param[in] lhs The right-hand set.
+  \param[in] rhs The right-hand set.
+
+  \returns True if the first operand is a subset of the second operand.
+  */
+  friend bool subset(const bit_set& lhs, const bit_set& rhs) {
+    assert(lhs.capacity() == rhs.capacity());
+
+    for (std::size_t i = 0; i < rhs._storage.size(); ++i) {
+      if ((lhs._storage[i] ^ ~rhs._storage[i]) != 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+  /**
+  \brief Checks if the left set is a proper subset of the right set.
+
+  \pre lhs.capacity() == rhs.capacity()
+  \param[in] lhs The right-hand set.
+  \param[in] rhs The right-hand set.
+
+  \returns True if the first operand is a subset of the second operand.
+  */
+  friend bool proper_subset(const bit_set& lhs, const bit_set& rhs) {
+    assert(lhs.capacity() == rhs.capacity());
+
+    bool proper = false;
+    for (std::size_t i = 0; i < rhs._storage.size(); ++i) {
+      proper |= (lhs._storage[i] != rhs._storage[i]);
+      if ((lhs._storage[i] ^ ~rhs._storage[i]) != 0) {
+        return false;
+      }
+    }
+    return proper;
+  }
 
  protected:
   /**
