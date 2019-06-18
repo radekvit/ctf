@@ -120,7 +120,7 @@ By using these methods, you will gain automatic tracking of position in the sour
 ## Output Generators
 For implementing output generators, we recommend using `ctf::OutputGenerator` as a base class to comply with the required interface.
 
-* `void output(const ctf::tstack<Token>& tokens)`: This method performs the output generator's function. You obtain a string of output tokens and produce the text output to the designated output stream.
+* `void output(const ctf::tstack<ctf::Token>& tokens)`: This method performs the output generator's function. You obtain a string of output tokens and produce the text output to the designated output stream.
 * `void reset_private()`: This method is called before each invokation of the prepared translation. If you plan on using the same `Translation` object multiple times, you should implement resetting your output generator's custom attributes.
 
 ### Implementing output()
