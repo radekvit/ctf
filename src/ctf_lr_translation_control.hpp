@@ -83,7 +83,7 @@ class LRTranslationControlGeneral : public TranslationControl {
       vector<tstack<Token>::iterator> iterators;
       for (auto& i : target) {
         auto oit = obegin;
-        for (std::size_t x = 0; x < outputSize - i; ++x) {
+        for (std::size_t x = 0; x < outputSize - i - 1; ++x) {
           --oit;
         }
         if (oit->type() == Symbol::Type::TERMINAL || oit->type() == Symbol::Type::EOI)
@@ -206,10 +206,8 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
     for (auto& ruleIndex : reverse(appliedRules)) {
       auto& rule = _translationGrammar->rules()[ruleIndex];
       _input.replace_last(rule.nonterminal(), rule.input());
-      obegin = _output.replace_last(rule.nonterminal(), rule.output(), obegin);
+      obegin = --(_output.replace_last(rule.nonterminal(), rule.output(), obegin));
       create_attibute_actions(obegin, rule.actions(), rule.output().size(), attributeActions);
-      if (obegin == _output.end())
-        --obegin;
       // apply attribute actions for all current rightmost terminals
       for (auto workingTerminalIt = _input.crbegin();
            workingTerminalIt != _input.crend() &&
