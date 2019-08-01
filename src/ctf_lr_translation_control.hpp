@@ -208,7 +208,8 @@ class LRTranslationControlTemplate : public LRTranslationControlGeneral {
       _input.replace_last(rule.nonterminal(), rule.input());
       obegin = _output.replace_last(rule.nonterminal(), rule.output(), obegin);
       create_attibute_actions(obegin, rule.actions(), rule.output().size(), attributeActions);
-
+      if (obegin == _output.end())
+        --obegin;
       // apply attribute actions for all current rightmost terminals
       for (auto workingTerminalIt = _input.crbegin();
            workingTerminalIt != _input.crend() &&

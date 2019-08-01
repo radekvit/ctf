@@ -1005,7 +1005,7 @@ class tstack {
                        }) {
     if (begin() == end())
       return end();
-    return search(target, --end(), predicate);
+    return search_last(target, --end(), predicate);
   }
   /**
   \brief Searches for an element in a const tstack.
@@ -1023,7 +1023,7 @@ class tstack {
                              }) const {
     if (begin() == end())
       return end();
-    return search(target, --end(), predicate);
+    return search_last(target, --end(), predicate);
   }
 
   struct ReplaceResult {
