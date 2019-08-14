@@ -158,12 +158,12 @@ class OutputGenerator {
     set_error();
   }
 
-  void fatal_error(const string& message) {
+  [[noreturn]] void fatal_error(const string& message) {
     error(message);
     throw SemanticException("Semantic error encountered.");
   }
 
-  void fatal_error(tstack<Token>::const_iterator it, const string& message) {
+    [[noreturn]] void fatal_error(tstack<Token>::const_iterator it, const string& message) {
     error(it, message);
     throw SemanticException("Semantic error encountered.");
   }

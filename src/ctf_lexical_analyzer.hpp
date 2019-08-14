@@ -232,7 +232,7 @@ class LexicalAnalyzer {
   \brief Outputs an error message with the location automatically printed before
   it, sets the error flag and throws LexicalException.
   */
-  void fatal_error(const string& message) {
+  [[noreturn]] void fatal_error(const string& message) {
     error(message);
     throw LexicalException("Lexical error encountered.");
   }
